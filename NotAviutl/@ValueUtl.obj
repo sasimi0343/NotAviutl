@@ -1,0 +1,37 @@
+@[Value] 4Variable
+--track0:Value1,-9999,9999,0,0.001
+--track1:Value2,-9999,9999,0,0.001
+--track2:Value3,-9999,9999,0,0.001
+--track3:Value4,-9999,9999,0,0.001
+--dialog:ID,id=0;
+
+if (varutl == nil) then
+	varutl = {}
+end
+
+varutl[tostring(id)] = {obj.track0, obj.track1, obj.track2, obj.track3}
+
+@[Value] Single Variable
+--track0:Value,-9999,9999,0,0.001
+--track1:ID,0,9999,0,1
+--dialog:Lagging,lag=0;
+
+if (varutl == nil) then
+	varutl = {}
+end
+
+if (lag < 1) then
+	lag = 1
+end
+
+if (lag >= 2) then
+	lag = math.floor(lag)
+	local frame = math.floor(obj.frame / lag) * lag
+	local time = frame / obj.framerate
+	
+	varutl[tostring(obj.track1)] = obj.getvalue(0, time)
+else
+
+varutl[tostring(obj.track1)] = obj.track0
+
+end

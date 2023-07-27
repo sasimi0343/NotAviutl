@@ -1,0 +1,602 @@
+@[3DShape]Box
+--track0:Size,0,9999,100,1
+
+--if (sur == nil) then sur = {} end
+
+local w = obj.track0 / 2
+
+local p1 = { x = -w, y = -w, z = -w}
+local p2 = { x = w, y = -w, z = -w}
+local p3 = { x = w, y = w, z = -w}
+local p4 = { x = -w, y = w, z = -w}
+
+local p5 = { x = -w, y = -w, z = w}
+local p6 = { x = w, y = -w, z = w}
+local p7 = { x = w, y = w, z = w}
+local p8 = { x = -w, y = w, z = w}
+
+local s1 = {p1, p2, p3, p4, 75}
+local s2 = {p1, p2, p6, p5, 100}
+local s3 = {p5, p6, p7, p8, 75}
+local s4 = {p5, p1, p4, p8, 50}
+local s5 = {p8, p7, p3, p4, 25}
+local s6 = {p2, p6, p7, p3, 50}
+
+sur = {s1, s2, s3, s4, s5, s6}
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0
+
+}
+
+geos = {geo}
+
+@[3DShape]Ball
+--track0:Size,0,2000,200
+--track1:Poly,2,99,28,1
+
+sur = {}
+
+--obj.effect()
+--obj.setoption('antialias',0)
+r = obj.track0*obj.getvalue("zoom")/100
+w = obj.track1
+h = obj.track1
+
+local lights = (w-1) * (h-1)
+
+for y=0,h-1 do
+	y0 = -r*math.cos(math.pi*y    /h)
+	r0 =  r*math.sin(math.pi*y    /h)
+	y1 = -r*math.cos(math.pi*(y+1)/h)
+	r1 =  r*math.sin(math.pi*(y+1)/h)
+	v0 = obj.h*y    /h;
+	v1 = obj.h*(y+1)/h;
+	for x=0,w-1 do
+		x0 =  r0*math.sin(math.pi*2*x    /w)
+		x1 =  r0*math.sin(math.pi*2*(x+1)/w)
+		x2 =  r1*math.sin(math.pi*2*(x+1)/w)
+		x3 =  r1*math.sin(math.pi*2*x    /w)
+		z0 = -r0*math.cos(math.pi*2*x    /w)
+		z1 = -r0*math.cos(math.pi*2*(x+1)/w)
+		z2 = -r1*math.cos(math.pi*2*(x+1)/w)
+		z3 = -r1*math.cos(math.pi*2*x    /w)
+		u0 = obj.w*x    /w;
+		u1 = obj.w*(x+1)/w;
+		
+		local p1 = { x = x0, y = y0, z = z0}
+		local p2 = { x = x1, y = y0, z = z1}
+		local p3 = { x = x2, y = y1, z = z2}
+		local p4 = { x = x3, y = y1, z = z3}
+		
+		table.insert(sur, {p1, p2, p3, p4, (((math.abs(x-(w/2))*math.abs(h-y)*2)/lights)*100)})
+		
+		--obj.drawpoly(x0,y0,z0,x1,y0,z1,x2,y1,z2,x3,y1,z3,u0,v0,u1,v0,u1,v1,u0,v1)
+	end
+end
+
+obj.setoption("focus_mode","fixed_size")
+
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0
+
+}
+
+geos = {geo}
+
+@[3DPlane]Dimentionize
+--track0:Œú‚Ý,0,2000,150,1
+--track1:±ÙÌ§è‡’l,0,255,128,1
+--track2:012,0,2,0,0.01
+--track3:Šg‘å—¦,0,1000,100
+--dialog:’†S,cen={0,0,0};‰F/col,col=nil;
+--check0:ŒX‚«ŒvŽZ,1
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0,
+isdn = true
+
+}
+
+geos = {geo}
+
+@[3D]Scale
+--track0:X,-999,999,1,0.01
+--track1:Y,-999,999,1,0.01
+--track2:Z,-999,999,1,0.01
+
+for _,v2 in pairs(geos) do
+	local subsur = {}
+	for k,v in pairs(v2.surface) do
+		local p1 = v[1]
+		local p2 = v[2]
+		local p3 = v[3]
+		local p4 = v[4]
+		
+		p1 = { x = p1.x * obj.track0, y = p1.y * obj.track1, z = p1.z * obj.track2 }
+		p2 = { x = p2.x * obj.track0, y = p2.y * obj.track1, z = p2.z * obj.track2 }
+		p3 = { x = p3.x * obj.track0, y = p3.y * obj.track1, z = p3.z * obj.track2 }
+		p4 = { x = p4.x * obj.track0, y = p4.y * obj.track1, z = p4.z * obj.track2 }
+		
+		table.insert(subsur, {p1, p2, p3, p4, v[5]})
+	end
+	v2.surface = subsur
+end
+
+@[3D]Rotate
+--track0:X,-999,999,1,0.01
+--track1:Y,-999,999,1,0.01
+--track2:Z,-999,999,1,0.01
+
+for k,v in pairs(geos) do
+	v.rx = v.rx + obj.track0
+	v.ry = v.ry + obj.track1
+	v.rz = v.rz + obj.track2
+end
+
+@[3D]Position
+--track0:X,-999,999,1,0.01
+--track1:Y,-999,999,1,0.01
+--track2:Z,-999,999,1,0.01
+for _,v2 in pairs(geos) do
+	v2.ox = v2.ox + obj.track0
+	v2.oy = v2.oy + obj.track1
+	v2.oz = v2.oz + obj.track2
+end
+
+@[3D]Point Position
+--track0:X,-999,999,1,0.01
+--track1:Y,-999,999,1,0.01
+--track2:Z,-999,999,1,0.01
+--check0:Same Position,0
+--dialog:Geometory Index,indexA={0};Point Index,indexB={0};
+
+local avi3d = require("avi3d")
+avi3d.SetPosition(obj, geos, indexA, indexB, obj.track0, obj.track1, obj.track2, obj.check0)
+
+@[3D]RandomPlace
+--track0:Count,1,999,10,1
+--track1:Range,0,9999,500,0.1
+--track2:Angle,0,9999,100,0.1
+--track3:Seed,0,9999,0,1
+--dialog:Random Option,randopt=0;
+
+local seed = (obj.track3+1) * 6
+
+local subgeo = {}
+
+for k,v in pairs(geos) do
+	for i=0,obj.track0 do
+	
+local ng = {
+
+surface = v.surface,
+shading = {},
+ox = v.ox,
+oy = v.oy,
+oz = v.oz,
+rx = v.rx,
+ry = v.ry,
+rz = v.rz
+
+}
+		
+		ng.ox = rand(-obj.track1, obj.track1, i, seed+1)
+		ng.oy = rand(-obj.track1, obj.track1, i, seed+2)
+		ng.oz = rand(-obj.track1, obj.track1, i, seed+3)
+		
+		if (randopt == 0 or randopt == 1) then ng.rx = rand(-obj.track2, obj.track2, i, seed+4) end
+		if (randopt == 0 or randopt == 2) then ng.ry = rand(-obj.track2, obj.track2, i, seed+5) end
+		if (randopt == 0 or randopt == 3) then ng.rz = rand(-obj.track2, obj.track2, i, seed+6) end
+		
+		if (not (i == obj.track0)) then
+			table.insert(subgeo, ng)
+		end
+	end
+end
+
+geos = subgeo
+
+@[3D]RandomAngle
+--track0:X,0,9999,100,0.1
+--track1:Y,0,9999,100,0.1
+--track2:Z,0,9999,100,0.1
+--track3:Seed,0,9999,0,1
+
+local seed = (obj.track3+1) * 3
+
+local i = 0
+for k,v in pairs(geos) do
+	i = i + 1
+	
+	v.rx = rand(-100, 100, i, seed+1)/100 * obj.track0
+	v.ry = rand(-100, 100, i, seed+2)/100 * obj.track1
+	v.rz = rand(-100, 100, i, seed+3)/100 * obj.track2
+	
+end
+
+
+@[3D]RowPlace_1
+--track0:X,-9999,9999,0,1
+--track1:Y,-9999,9999,0,1
+--track2:Z,-9999,9999,0,1
+
+local subgeo = {}
+
+RP = {}
+RP.x = obj.track0
+RP.y = obj.track1
+RP.z = obj.track2
+
+@[3D]RowPlace_2
+--track0:XScale,-9999,9999,0,1
+--track1:YScale,-9999,9999,0,1
+--track2:ZScale,-9999,9999,0,1
+--dialog:Center/chk,center=1;
+
+if (not (RP == nil)) then
+
+local subgeo = {}
+
+for k,v in pairs(geos) do
+
+for x=0,RP.x do
+
+for y=0,RP.y do
+
+for z=0,RP.z do
+
+
+local ng = {
+
+surface = v.surface,
+shading = {},
+ox = v.ox,
+oy = v.oy,
+oz = v.oz,
+rx = v.rx,
+ry = v.ry,
+rz = v.rz
+
+}
+
+ng.ox = ng.ox + (obj.track0 * (x - (RP.x/2 * center)))
+ng.oy = ng.oy + (obj.track1 * (y - (RP.y/2 * center)))
+ng.oz = ng.oz + (obj.track2 * (z - (RP.z/2 * center)))
+
+if (not (i == obj.track0)) then
+	table.insert(subgeo, ng)
+end
+
+end
+
+end
+
+end
+
+end
+
+geos = subgeo
+
+end
+
+@[3D]CirclePlace
+--track0:Radius,0,9999,200,0.1
+--track1:Count,0,9999,3,1
+--dialog:SinCosTan,sct={1,1,1};
+
+local subgeo = {}
+
+for k,v in pairs(geos) do
+
+for i=0,obj.track1 do
+
+local ng = {
+
+surface = v.surface,
+shading = {},
+ox = v.ox,
+oy = v.oy,
+oz = v.oz,
+rx = v.rx,
+ry = v.ry,
+rz = v.rz
+
+}
+
+local rad = math.rad(360 * (i/obj.track1))
+
+ng.ox = ng.ox + (math.sin(rad) * obj.track0 * sct[1])
+ng.oy = ng.oy + (math.cos(rad) * obj.track0 * sct[2])
+ng.oz = ng.oz + (math.cos(rad) * obj.track0 * sct[3])
+
+if (not (i == obj.track0)) then
+	table.insert(subgeo, ng)
+end
+
+end
+
+end
+
+geos = subgeo
+
+
+@[3DShading]LightsSettings_1
+--track0:Intensity,0,200,100,0.1
+--track1:Contrast,-100,100,0,0.1
+--dialog:Blur/chk,blur=0;
+
+for k,v in pairs(geos) do
+	for _,s in pairs(v.surface) do
+		s[5] = s[5] * (obj.track0 / 100)
+		s[5] = 50 + ((s[5]-50) * ((obj.track1+100)/100))
+	end
+	v.shading = { blur = (blur == 1) }
+end
+
+if (blur == 1) then
+	obj.effect("‚Ú‚©‚µ")
+end
+
+@[3DLine]LineStart
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Z,-9999,9999,0,0.1
+
+if (lines == nil) then
+	lines = {}
+end
+
+linepoints = {}
+
+line = {
+	ox = 0,
+	oy = 0,
+	oz = 0,
+	rx = 0,
+	ry = 0,
+	rz = 0,
+	points = linepoints
+}
+
+table.insert(linepoints, {obj.track0, obj.track1, obj.track2})
+
+@[3DLine]LinePoint
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Z,-9999,9999,0,0.1
+--track3:Repeat,1,9999,1,1
+
+if (not (linepoints == nil)) then
+
+for i=1,obj.track3 do
+	table.insert(linepoints, {obj.track0 * i, obj.track1 * i, obj.track2 * i})
+end
+
+end
+
+@[3DLine]Function
+--track0:Quality,1,9999,50,1
+--track1:XRange-,-9999,0,-600,1
+--track2:XRange+,0,9999,600,1
+--dialog:X[X|Y|Z],xaxis=0;Y[X|Y|Z],yaxis=1;Function,func="return 0";
+
+if (not (linepoints == nil)) then
+
+local range = obj.track2 - obj.track1
+local start = obj.track2 / obj.track0
+
+local kijunx = linepoints[1][1]
+local kijuny = linepoints[1][2]
+local kijunz = linepoints[1][3]
+
+local did = false
+local func_tion = load(
+function()
+	if (did) then return nil end
+	did = true
+	return func
+end, "3DLineFunction")
+
+for i=start,(range/obj.track0) do
+	x = i * obj.track0
+	local y = func_tion()
+	
+	local point = {0, 0, 0}
+	if (xaxis == 0) then
+		point[1] = x + kijunx
+	elseif (xaxis == 1) then
+		point[2] = x + kijuny
+	else
+		point[3] = x + kijunz
+	end
+	
+	if (yaxis == 0) then
+		point[1] = y + kijunx
+	elseif (yaxis == 1) then
+		point[2] = y + kijuny
+	else
+		point[3] = y + kijunz
+	end
+	
+	table.insert(linepoints, point)
+end
+
+end
+
+@[3DLine]RandomPosition
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Z,-9999,9999,0,0.1
+--track3:Seed,1,9999,1,1
+
+if (not (linepoints == nil)) then
+
+local i = 0
+for k,v in pairs(linepoints) do
+	local x = rand(-1000,1000,obj.track3, i*3) / 1000 * obj.track0
+	local y = rand(-1000,1000,obj.track3, i*3+1) / 1000 * obj.track1
+	local z = rand(-1000,1000,obj.track3, i*3+2) / 1000 * obj.track2
+	
+	v[1] = v[1] + x
+	v[2] = v[2] + y
+	v[3] = v[3] + z
+	
+	i = i + 1
+end
+
+end
+
+@[3DLine]ToGeometory
+--track0:Width,0,9999,5,0.1
+
+if (not (line == nil)) then
+
+local width = obj.track0/2
+
+local points = line.points
+
+sur = {}
+
+local pp1, pp2, pp3, pp4
+
+for k,v in pairs(points) do
+	local p1 = {x = v[1]+width, y = v[2]+width, z = v[3]}
+	local p2 = {x = v[1]+width, y = v[2]-width, z = v[3]}
+	local p3 = {x = v[1]-width, y = v[2]-width, z = v[3]}
+	local p4 = {x = v[1]-width, y = v[2]+width, z = v[3]}
+	
+	if (pp1 == nil) then
+		table.insert(sur, {p1, p2, p3, p4, 75})
+	else
+		table.insert(sur, {p1, pp1, pp2, p2, 50})
+		table.insert(sur, {p2, pp2, pp3, p3, 100})
+		table.insert(sur, {p3, pp3, pp4, p4, 50})
+		table.insert(sur, {p4, pp4, pp1, p1, 25})
+	end
+	
+	pp1 = p1
+	pp2 = p2
+	pp3 = p3
+	pp4 = p4
+end
+
+if (#points > 1) then
+	table.insert(sur, {pp1, pp2, pp3, pp4, 75})
+end
+
+geo = {
+
+surface = sur,
+shading = {},
+ox = line.ox,
+oy = line.oy,
+oz = line.oz,
+rx = line.rx,
+ry = line.ry,
+rz = line.rz
+
+}
+
+geos = {geo}
+
+end
+
+@[3D]Render
+--dialog:Lights/chk,lights=1;
+
+local avi3d = require("avi3d")
+
+if (not (world == nil)) then
+	if (not (world.texcomp == 0 or (world.dcoe and obj.getinfo("saving")))) then obj.effect("ƒŠƒTƒCƒY", "Šg‘å—¦", (100-world.texcomp)) end
+	
+	if (world.ppl) then
+		for k,v in pairs(geos) do
+			v.ox = v.ox + obj.x
+			v.oy = v.oy + obj.y
+			v.oz = v.oz + obj.z
+		end
+		local ob = {geometory = geos, texture = #world.objs}
+		table.insert(world.objs, ob)
+		require("rikky_module")
+		rikky_module.image("w", "ms_tex_" .. ob.texture)
+		
+		obj.alpha = 0
+		return
+	end
+end
+
+for k,v in pairs(geos) do
+	obj.ox = v.ox
+	obj.oy = v.oy
+	obj.oz = v.oz
+	obj.rx = v.rx
+	obj.ry = v.ry
+	obj.rz = v.rz
+	if (v.isdn) then
+		require("dimensionize")
+		obj.effect()
+		obj.setoption("antialias",1)
+		dimensionize.func()
+	else
+		obj.copybuffer("cache:avi3d_image_1", "obj")
+		avi3d.Draw(obj, v.surface, (lights == 1), nil, v)
+		obj.copybuffer("obj", "cache:avi3d_image_1")
+	end
+end
+
+@[3DModeling] Divide
+--track0:X,0,100,1,1
+--track1:Y,0,100,1,1
+--track2:Z,0,100,1,1
+--dialog:X[add],divX=0;Y[add],divY=0;Z[add],divZ=0;
+
+if (divX == nil) then
+	divX = 0
+end
+if (divY == nil) then
+	divY = 0
+end
+if (divZ == nil) then
+	divZ = 0
+end
+
+local avi3d = require("avi3d")
+for k,v in pairs(geos) do
+avi3d.Saibunka(obj, v.surface, obj.track1 + divY, obj.track0 + divX, obj.track2 + divZ)
+end
+
+
+
+@[3DSprite] Sprite
+local w2,h2 = obj.w/2, obj.h/2
+
+local p1 = {x = -w2, y = -h2, z = 0}
+local p2 = {x = w2, y = -h2, z = 0}
+local p3 = {x = w2, y = h2, z = 0}
+local p4 = {x = w2, y = h2, z = 0}
+
+local avi3d = require("avi3d")
+avi3d.LightToTexture(world.lights, {p1, p2, p3, p4, 100})

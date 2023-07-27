@@ -1,0 +1,41 @@
+@[Liquid] Tracking
+--track0:Blur,0,9999,5,1
+--track1:Friction,1,9999,2,0.1
+--dialog:NoiseX,noiseX=0;NoiseY,noiseY=0;NoiseSeed,noiseSeed=0;NoiseStrength,noiseAlpha=100;
+
+liquid = liquid or {}
+local layer = tostring(obj.layer)
+
+local x,y,z = obj.getvalue("x") + obj.ox + obj.cx, obj.getvalue("y") + obj.oy + obj.cy, obj.getvalue("z") + obj.oz + obj.cz
+local rz = obj.rz + obj.getvalue("rz")
+
+if (obj.frame == 0) then
+	liquid[layer] = {
+		x = x,
+		y = y,
+		z = z,
+		rz = rz
+	}
+end
+
+local liq = liquid[layer]
+
+local dx,dy,dz,drz = x - liq.x,y - liq.y,z - liq.z,rz - liq.rz
+
+if ( (not (noiseX == 0)) or (not (noiseY == 0))) then
+	obj.copybuffer("cache:na_liquid", "obj")
+	obj.effect("ノイズ", "周期X", noiseX, "周期Y", noiseY, "seed", noiseSeed, "mode", 1, "強さ", noiseAlpha)
+	obj.copybuffer("tmp", "obj")
+	obj.copybuffer("obj", "cache:na_liquid")
+else
+	obj.copybuffer("tmp", "obj")
+end
+
+obj.effect("ディスプレイスメントマップ", "X", 0, "Y", 0, "param0", dx, "param1", dy, "ぼかし", obj.track0, "type", 0, "name", "*tempbuffer", "元のサイズに合わせる", 1)
+
+liquid[layer] = {
+	x = x - (dx / obj.track1),
+	y = y - (dy / obj.track1),
+	z = z - (dz / obj.track1),
+	rz = rz - (drz / obj.track1)
+}

@@ -1,0 +1,29 @@
+@[3DShading] Point Light
+--track0:Intensity,0,9999,100,0.1
+--track1:Range,0,9999,100,0.1
+--track2:Contrast,1,100,1,1
+--track3:Specular,0,100,50,0.1
+
+if (world == nil) then return end
+
+local light = {
+	intensity = obj.track0,
+	range = obj.track1,
+	contrast = obj.track2,
+	x = obj.x + obj.ox,
+	y = obj.y + obj.oy,
+	z = obj.z + obj.oz,
+	type = "pointlight",
+	specular = obj.track3
+}
+
+table.insert(world.lights, light)
+
+@[3DShading] MaterialSettings
+--track0:Smoothness,0,100,0,0.1
+--track1:Emitting,0,100,0,0.1
+--dialog:Style,style=0;
+
+for k,v in pairs(geos) do
+	v.shading = { smooth = obj.track0, emitting = obj.track1, style = style }
+end

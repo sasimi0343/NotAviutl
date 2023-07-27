@@ -1,0 +1,92 @@
+@[3DEnvironment]
+--track0:TextureComp,0,100,0,0.1
+--dialog:DontCompOnExport/chk,dontcomponexport=1;
+--check0:PostProcLights,0
+world = {}
+world.texcomp = obj.track0
+world.dcoe = (dontcomponexport == 1)
+world.ppl = obj.check0
+world.objs = {}
+world.lights = {}
+
+@[3DRender]
+if (not (world == nil)) then
+
+local avi3d = require("avi3d")
+require("rikky_module")
+
+for k,v in pairs(world.objs) do
+	for _,v2 in pairs(v.geometory) do
+		obj.load("figure", "四角形", 0xffffff, 1)
+		rikky_module.image("r", "ms_tex_" .. v.texture)
+		obj.ox = v2.ox
+		obj.oy = v2.oy
+		obj.oz = v2.oz
+		obj.rx = v2.rx
+		obj.ry = v2.ry
+		obj.rz = v2.rz
+		rikky_module.image("w", "ms_image_1")
+		avi3d.Draw(obj, v2.surface, true, world.lights, v2)
+		rikky_module.image("r", "ms_image_1")
+	end
+end
+
+
+end
+
+@[3D]Arrow_Type2
+--track0:サイズ,0,2000,100,1
+--track1:太さ,0,100,25,0.1
+--track2:へこみ,0,100,80,0.1
+--track3:傘,0,100,0,0.1
+--dialog:色/col,color=0xffffff;奥行,deep=100;
+obj.setoption("drawtarget","tempbuffer", obj.track0, obj.track0)
+
+obj.load("figure", "四角形", color, obj.track0, obj.track0-((obj.track2/100)*obj.track0))
+obj.effect("斜めクリッピング", "中心X", -obj.track3, "中心Y", obj.track3, "角度", 45, "ぼかし", 0)
+obj.draw()
+
+obj.load("figure", "四角形", color, obj.track0)
+obj.effect("斜めクリッピング", "中心X", 0, "中心Y", 0, "角度", -45, "ぼかし", 0, "幅", math.max(1, (obj.track1/100)*obj.track0*1.5))
+obj.draw()
+
+obj.setoption("drawtarget","framebuffer")
+obj.load("tempbuffer")
+obj.draw()
+
+obj.load("tempbuffer")
+
+local avi3d = require("avi3d")
+
+
+local x1 = obj.track0/2
+local y1 = ((obj.track1/100)*obj.track0)
+local y2 = -((obj.track1/100)*obj.track0) + (obj.track0/2)
+
+obj.drawpoly(-x, -x, deep, x, -x, deep, x, x, deep, -x, x, deep)
+
+obj.load("figure", "四角形", color, obj.track0)
+
+local p1 = { x = -x1, y = y2, z = 0 }
+local p2 = { x = -x1, y = y2, z = deep }
+local p3 = { x = y2, y = -x1, z = deep }
+local p4 = { x = y2, y = -x1, z = 0 }
+local s1 = { p1, p2, p3, p4 }
+
+local p5 = { x = -x1, y = x1, z = deep}
+local p6 = { x = -x1, y = x1, z = 0}
+local s2 = { p1, p2, p5, p6 }
+
+local p7 = { x = -y2, y = x1, z = 0 }
+local p8 = { x = -y2, y = x1, z = deep }
+local p9 = { x = x1, y = -y2, z = deep }
+local p10 = { x = x1, y = -y2, z = 0 }
+local s3 = { p7, p8, p9, p10 }
+
+local s4 = { p7, p8, p5, p6 }
+
+local p11 = { x = (y2 / (2 * (obj.track2/100))), y = -x1 * (1-(obj.track2/100)), z = deep}
+local p12 = { x = (y2 / (2 * (obj.track2/100))), y = -x1 * (1-(obj.track2/100)), z = 0}
+local s5 = { p3, p4, p11, p12 }
+
+avi3d.Draw(obj, {s1, s2, s3, s4, s5})

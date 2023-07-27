@@ -1,0 +1,86 @@
+@[3DShape]Corn
+--track0:Radius,0,9999,100,0.1
+--track1:Height,0,9999,100,0.1
+--track2:Poly,2,999,180,1
+
+local r = obj.track0
+local h = obj.track1/2
+local poly = obj.track2
+
+local apex = { x = 0, y = -h, z = 0}
+
+local p1
+local sur = {}
+
+for i=0,poly do
+	local angle = (i / poly) * 360
+	if (p1 == nil) then
+		p1 = { x = math.sin(math.rad(angle)) * r, y = h, z = math.cos(math.rad(angle)) * r}
+	end
+	
+	angle = ((i+1) / poly) * 360
+	local p2 = { x = math.sin(math.rad(angle)) * r, y = h, z = math.cos(math.rad(angle)) * r}
+	
+	table.insert(sur, {apex, p1, p2, apex, (math.sin(math.rad(angle / 2))) * 100})
+	
+	p1 = p2
+end
+
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0
+
+}
+
+geos = {geo}
+
+@[3DShape]BoxEx
+--track0:Width,0,9999,100,0.1
+--track1:Height,0,9999,100,0.1
+--track2:Depth,0,9999,100,0.1
+
+--if (sur == nil) then sur = {} end
+
+local w = obj.track0 / 2
+local h = obj.track1 / 2
+local d = obj.track2 / 2
+
+local p1 = { x = -w, y = -h, z = -d}
+local p2 = { x = w, y = -h, z = -d}
+local p3 = { x = w, y = h, z = -d}
+local p4 = { x = -w, y = h, z = -d}
+
+local p5 = { x = -w, y = -h, z = d}
+local p6 = { x = w, y = -h, z = d}
+local p7 = { x = w, y = h, z = d}
+local p8 = { x = -w, y = h, z = d}
+
+local s1 = {p1, p2, p3, p4, 75}
+local s2 = {p1, p2, p6, p5, 100}
+local s3 = {p5, p6, p7, p8, 75}
+local s4 = {p5, p1, p4, p8, 50}
+local s5 = {p8, p7, p3, p4, 25}
+local s6 = {p2, p6, p7, p3, 50}
+
+sur = {s1, s2, s3, s4, s5, s6}
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0
+
+}
+
+geos = {geo}

@@ -1,0 +1,89 @@
+@[Modeling] Background
+obj.load("figure", "îwåi", 0x444444, 1)
+obj.ox = -obj.x
+obj.oy = -obj.y
+obj.oz = -obj.z
+--obj.draw(-obj.x, -obj.y, -obj.z)
+local avi3d_editor = require("avi3d_editor")
+avi3d_editor.ResetUI()
+
+@[Modeling] The Model
+
+if (sur == nil) then
+
+local w = 100 / 2
+
+local p1 = { x = -w, y = -w, z = -w}
+local p2 = { x = w, y = -w, z = -w}
+local p3 = { x = w, y = w, z = -w}
+local p4 = { x = -w, y = w, z = -w}
+
+local p5 = { x = -w, y = -w, z = w}
+local p6 = { x = w, y = -w, z = w}
+local p7 = { x = w, y = w, z = w}
+local p8 = { x = -w, y = w, z = w}
+
+local s1 = {p1, p2, p3, p4, 75}
+local s2 = {p1, p2, p6, p5, 100}
+local s3 = {p5, p6, p7, p8, 75}
+local s4 = {p5, p1, p4, p8, 50}
+local s5 = {p8, p7, p3, p4, 25}
+local s6 = {p2, p6, p7, p3, 50}
+
+sur = {s1, s2, s3, s4, s5, s6}
+
+end
+
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0
+
+}
+
+geos = {geo}
+
+@[Modeling] Select(Point)
+--track0:PointNum,1,9999,0,1
+
+local avi3d = require("avi3d")
+
+selection = avi3d.GetPoint(geos, 1, obj.track0, true)
+
+@[Modeling] Select(Surface)
+--track0:SurfaceNum,1,9999,0,1
+
+if (obj.track0 <= #sur) then
+selection = sur[obj.track1]
+
+@[Modeling] Divide
+
+local avi3d = require("avi3d")
+avi3d.Saibunka(obj, sur, obj.track1 + divY, obj.track0 + divX, obj.track2 + divZ)
+
+@[Modeling] Render
+local avi3d = require("avi3d")
+avi3d.Draw(obj, sur, true)
+
+local avi3d_editor = require("avi3d_editor")
+avi3d_editor.DrawAllPoints(sur)
+
+@[Modeling(Debug)] Slider
+
+if (debugSlider == nil) then
+	debugSlider = {}
+end
+
+local avi3d_editor = require("avi3d_editor")
+avi3d_editor.Slider(debugSlider, -300, -300, 400, 0, 100, 50, 1)
+
+@[Modeling] PostRender
+
+local avi3d_editor = require("avi3d_editor")
+avi3d_editor.PostRender()

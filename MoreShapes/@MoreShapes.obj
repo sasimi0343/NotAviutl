@@ -1,0 +1,300 @@
+@Cross
+--track0:サイズ,0,9999,100,1
+--track1:縦横比,0,100,75,0.1
+--dialog:色1/col,color1=0xffffff;色2/col,color2=0xffffff;異なる色/chk,diffcolor=0;モード,mode=0;
+
+obj.setoption("drawtarget","tempbuffer", obj.track0, obj.track0)
+
+obj.load("figure", "四角形", color1, obj.track0)
+obj.effect("クリッピング", "左", (obj.track1 / 200) * obj.track0, "右", (obj.track1 / 200) * obj.track0)
+--obj.aspect = obj.track1 / 100
+local yof = 0
+if (mode >= 1) then
+	obj.effect("クリッピング", "上", obj.track0/4)
+	yof = -obj.track0/2
+end
+obj.setoption("drawtarget","tempbuffer")
+obj.draw(0,yof,0,1,1,0,0,0)
+
+obj.setoption("drawtarget","framebuffer")
+
+if (diffcolor == 1) then
+obj.load("figure", "四角形", color2, obj.track0)
+else
+obj.load("figure", "四角形", color1, obj.track0)
+end
+obj.effect("クリッピング", "左", (obj.track1 / 200) * obj.track0, "右", (obj.track1 / 200) * obj.track0)
+
+if (mode >= 2) then
+	obj.effect("クリッピング", "上", obj.track0/2)
+end
+--obj.rz = 90
+obj.setoption("drawtarget","tempbuffer")
+obj.draw(0,0,0,1,1,0,0,90)
+
+--obj.copybuffer("obj","tmp")
+obj.setoption("drawtarget","framebuffer")
+obj.load("tempbuffer")
+obj.aspect = 0
+
+
+@Arrow_Type1
+--track0:サイズ,0,2000,100,1
+--track1:縦横比,-100,100,-10,0.1
+--track2:へこみ,0,100,80,0.1
+--dialog:色/col,color=0xffffff;
+obj.load("figure", "三角形", color, obj.track0)
+obj.aspect = obj.track1 / 100
+obj.effect("マスク", "サイズ", obj.track0, "Y", ((100 - obj.track2)/100) * obj.track0, "type", 3, "マスクの反転", 1)
+
+@Arrow_Type2
+--track0:サイズ,0,2000,100,1
+--track1:太さ,0,100,25,0.1
+--track2:へこみ,0,100,80,0.1
+--track3:傘,0,100,0,0.1
+--dialog:色/col,color=0xffffff;
+obj.setoption("drawtarget","tempbuffer", obj.track0, obj.track0)
+
+obj.load("figure", "四角形", color, obj.track0, obj.track0-((obj.track2/100)*obj.track0))
+obj.effect("斜めクリッピング", "中心X", -obj.track3, "中心Y", obj.track3, "角度", 45, "ぼかし", 0)
+obj.draw()
+
+obj.load("figure", "四角形", color, obj.track0)
+obj.effect("斜めクリッピング", "中心X", 0, "中心Y", 0, "角度", -45, "ぼかし", 0, "幅", math.max(1, (obj.track1/100)*obj.track0))
+obj.draw()
+
+obj.setoption("drawtarget","framebuffer")
+obj.load("tempbuffer")
+
+@Box
+--track0:サイズ,0,9999,100,1
+--track1:角度,0,360,45,0.1
+--track2:枠幅,0,4000,5,1
+--track3:線幅,0,4000,5,1
+--dialog:色/col,color=0xffffff;
+
+obj.setoption("drawtarget","tempbuffer", obj.track0, obj.track0)
+obj.load("figure", "四角形", color, obj.track0, obj.track2)
+obj.draw()
+
+obj.load("figure", "四角形", color, obj.track0, 4000)
+obj.effect("斜めクリッピング", "中心X", 0, "中心Y", 0, "角度", obj.track1, "幅", obj.track3)
+obj.draw()
+
+obj.setoption("drawtarget","framebuffer")
+obj.load("tempbuffer")
+
+@StopSign
+--track0:サイズ,0,9999,100,1
+--track1:角度,0,360,45,0.1
+--track2:枠幅,0,4000,5,1
+--track3:線幅,0,4000,5,1
+--dialog:色/col,color=0xffffff;
+
+obj.setoption("drawtarget","tempbuffer", obj.track0, obj.track0)
+obj.load("figure", "円", color, obj.track0, obj.track2)
+obj.draw()
+
+obj.load("figure", "円", color, obj.track0, 4000)
+obj.effect("斜めクリッピング", "中心X", 0, "中心Y", 0, "角度", obj.track1, "幅", obj.track3)
+obj.draw()
+
+obj.setoption("drawtarget","framebuffer")
+obj.load("tempbuffer")
+
+@AnimeEffect
+--file:
+
+@Layer
+--track0:Layer,1,99,0,1
+--check0:基本情報を保持,0
+--dialog:追加エフェクト/chk,tuika=1;
+
+obj.load("layer", obj.track0, (tuika == 1))
+if (obj.check0 and (not (obj.getvalue("layer" .. obj.track0 .. ".x") == nil))) then
+	local layerr = "layer" .. obj.track0 .. "."
+	obj.ox = obj.getvalue(layerr .. "x")
+	obj.oy = obj.getvalue(layerr .. "y")
+	obj.oz = obj.getvalue(layerr .. "z")
+	obj.rx = obj.getvalue(layerr .. "rx")
+	obj.ry = obj.getvalue(layerr .. "ry")
+	obj.rz = obj.getvalue(layerr .. "rz")
+	obj.zoom = obj.getvalue(layerr .. "zoom")/100
+	obj.alpha = obj.getvalue(layerr .. "alpha")
+	obj.aspect = obj.getvalue(layerr .. "aspect")
+end
+
+@CheckPattern
+--track0:サイズ,0,9999,100,1
+--track1:ライン幅,0,9999,4000,1
+--dialog:Color1/col,color1=0xffffff;Color2/col,color2=0xaaaaaa;
+
+local ox,oy,oz,rx,ry,rz,zoom,alpha,aspect = obj.ox,obj.oy,obj.ox,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect
+
+obj.setoption("drawtarget","tempbuffer", obj.track0, obj.track0)
+obj.load("figure", "四角形", color1, obj.track0/2)
+obj.draw(-obj.track0/4, -obj.track0/4)
+obj.draw(obj.track0/4, obj.track0/4)
+
+obj.load("figure", "四角形", color2, obj.track0/2)
+obj.draw(-obj.track0/4, obj.track0/4)
+obj.draw(obj.track0/4, -obj.track0/4)
+
+obj.setoption("drawtarget","framebuffer")
+obj.load("tempbuffer")
+
+if (obj.track0 > obj.track1) then
+	obj.effect("マスク", "type", 2, "サイズ", (obj.track0 - obj.track1), "マスクの反転", 1)
+end
+
+@OneWayPath
+--track0:サイズ,0,9999,100,1
+--track1:ライン幅,0,9999,2,1
+--track2:Index,1,9999,1,0.1
+--dialog:再生速度,pbr=1.0;縦,vert=2;横,hori=2;グリッドを表示/chk,showgrid=1;Goal,goal={0, 0};リアルタイム/chk,rtcalc=1;
+
+owp_data = {} or owp_data
+
+local index = math.floor(obj.track2)
+
+function CalcPath(i)
+	local goalX = hori - goal[1]
+	local goalY = vert - goal[2]
+	local x = 0
+	local y = 0
+	local path = {}
+	local through = {}
+	local pathnum = {}
+	--print("i = " .. i)
+	while ((not (x == goalX)) or (not (y == goalY))) do
+		--print(x .. ", " .. y)
+		local dir = {down = true, right = true, up = true, left = true}
+		if (x == 0) then
+			dir["left"] = false
+		end
+		if (y == 0) then
+			dir["up"] = false
+		end
+		if (x == hori) then
+			dir["right"] = false
+		end
+		if (y == vert) then
+			dir["down"] = false
+		end
+		--for k,v in pairs(dir) do print(k .. " = " .. tostring(v)) end
+		
+		if (dir["right"] and through[(x+1).."_"..y]) then
+			dir["right"] = false
+		end
+		if (dir["left"] and through[(x-1).."_"..y]) then
+			dir["left"] = false
+		end
+		if (dir["down"] and through[x.."_"..(y+1)]) then
+			dir["down"] = false
+		end
+		if (dir["up"] and through[x.."_"..(y-1)]) then
+			dir["up"] = false
+		end
+		--for k,v in pairs(dir) do print(k .. " = " .. tostring(v)) end
+		
+		through[x .. "_" .. y] = true
+		
+		local dircount = 0
+		for k,v in pairs(dir) do
+			if (v) then dircount = dircount + 1 end
+		end
+		
+		local pathcount = 0
+		for k,v in pairs(pathnum) do
+			pathcount = pathcount + v
+		end
+		
+		local imamade = 1
+		if (not (pathcount == 0)) then
+			imamade = pathcount
+		end
+		
+		local di = (math.floor((i)/imamade))%(dircount)
+		local dir_array = {}
+		for k,v in pairs(dir) do
+			if (v) then table.insert(dir_array, k) end
+		end
+		--print(di)
+		if (dircount == 0) then
+			return CalcPath(i+(hori*vert))
+		end
+		
+		table.insert(pathnum, dircount)
+		
+		local d = dir_array[di+1]
+		table.insert(path, {dir = d, x = x, y = y})
+		if (d == "down") then
+			y = y + 1
+		elseif (d == "up") then
+			y = y - 1
+		elseif (d == "left") then
+			x = x - 1
+		elseif (d == "right") then
+			x = x + 1
+		end
+		
+		--print(d)
+	end
+	
+	return path
+end
+
+if (rtcalc == 0 and((not (owp_data.vert == vert)) or (not (owp_data.hori == hori)))) then
+	owp_data = {}
+	owp_data.vert = vert
+	owp_data.hori = hori
+	owp_data.path = {}
+	
+	for i=0,index do
+		table.insert(owp_data.path, CalcPath(i))
+	end
+	
+end
+
+
+owp_data.spath = nil
+if (rtcalc == 1) then
+	owp_data.spath = CalcPath(index)
+else
+	owp_data.spath = owp_data.path[index]
+end
+
+
+
+--Draw
+local w = obj.track0 * hori + obj.track1
+local h = obj.track0 * vert + obj.track1
+obj.setoption("drawtarget", "tempbuffer", w, h)
+
+obj.load("figure", "四角形", 0xffffff, 1)
+for k,v in pairs(owp_data.spath) do
+	--print("x = " .. v.x .. ", y = " .. v.y .. ", dir = " .. v.dir)
+	local x = (-w/2)+0.5
+	local y = (-h/2)+0.5
+	local w = obj.track1
+	local h = obj.track1
+	
+	x = x + (v.x * obj.track0)
+	y = y + (v.y * obj.track0)
+	if (v.dir == "down") then
+		h = obj.track0
+	elseif (v.dir == "up") then
+		h = -obj.track0
+		y = y + 1
+	elseif (v.dir == "right") then
+		w = obj.track0
+	elseif (v.dir == "left") then
+		w = -obj.track0
+		x = x + 1
+	end
+	
+	obj.drawpoly(x,y,0, x+w,y,0, x+w,y+h,0, x,y+h,0)
+end
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")

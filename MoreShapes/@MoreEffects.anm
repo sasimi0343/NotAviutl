@@ -1,0 +1,157 @@
+@[Effect] CircleGradient
+--track0:X,-999,999,0,0.1
+--track1:Y,-999,999,0,0.1
+--track2:Width,0,9999,100,1
+--track3:Alpha,0,100,100,0.1
+--dialog:Color1/col,color1=0xffffff;Color2/col,color2=0x000000;
+
+local diameter2d = math.pow(obj.w, 2) + math.pow(obj.h, 2)
+local diameter = math.sqrt(diameter2d)
+
+local x = obj.ox
+local y = obj.oy
+local z = obj.oz
+local rz = obj.rz
+local rx = obj.rx
+local ry = obj.ry
+local zoom = obj.zoom
+local alpha = obj.alpha
+
+obj.copybuffer("cache:me_circlegradient1", "obj") --<元画像
+
+obj.setoption("drawtarget", "tempbuffer", obj.w, obj.h)
+
+obj.load("figure", "四角形", 0xffffff, diameter)
+obj.effect("グラデーション", "幅", obj.track2, "color", color1, "color2", color2, "角度", 90)
+obj.effect("極座標変換")
+
+obj.copybuffer("cache:me_circlegradient2", "obj") --<グラデーション
+
+obj.draw()
+
+obj.load("figure", "四角形", 0xffffff, diameter)
+obj.copybuffer("obj", "cache:me_circlegradient1") -->元画像
+obj.setoption("blend", "alpha_sub")
+
+obj.draw()
+
+obj.copybuffer("cache:me_circlegradient1", "tmp") --<グラデーション - 元画像
+
+obj.load("figure", "四角形", 0xffffff, diameter)
+obj.copybuffer("obj", "cache:me_circlegradient2") -->グラデーション
+
+obj.setoption("blend", 0)
+obj.draw()
+
+obj.load("figure", "四角形", 0xffffff, diameter)
+obj.copybuffer("obj", "cache:me_circlegradient1") -->グラデーション - 元画像
+obj.setoption("blend", "alpha_sub")
+obj.draw()
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")
+
+
+obj.ox = x
+obj.oy = y
+obj.oz = z
+obj.rz = rz
+obj.rx = rx
+obj.ry = ry
+obj.zoom = zoom
+obj.alpha = alpha
+
+
+@[Effect] ClipToAboveObject
+--track0:Layer,-98,99,1,1
+--dialog:Relative/chk,rel=0;
+--check0:Reversed,0
+
+local tlayer = math.abs(obj.track0)
+
+if (rel == 1) then
+	tlayer = obj.track0 + obj.layer
+elseif (tlayer == 0) then
+	return
+end
+
+if (tlayer <= 0 or (obj.getvalue("layer" .. tlayer .. ".x") == nil)) then
+	return
+end
+
+local x1 = obj.ox + obj.x
+local y1 = obj.oy + obj.y
+local z1 = obj.oz + obj.z
+local rz1 = obj.rz
+local rx1 = obj.rx
+local ry1 = obj.ry
+local zoom1 = obj.zoom
+local alpha1 = obj.alpha
+local aspect1 = obj.aspect
+
+local w,h = obj.w,obj.h
+
+if (not obj.check0) then
+	obj.copybuffer("cache:me_clipping1", "obj")
+end
+
+obj.setoption("drawtarget", "tempbuffer", obj.w, obj.h)
+obj.draw()
+
+obj.load("layer", tlayer, true)
+
+local lat = "layer" .. tlayer .. "."
+
+local x2 = obj.getvalue(lat .. "x") - obj.x
+local y2 = obj.getvalue(lat .. "y") - obj.y
+local z2 = obj.getvalue(lat .. "z") - obj.z
+obj.rx = obj.getvalue(lat .. "rx")
+obj.ry = obj.getvalue(lat .. "ry")
+obj.rz = obj.getvalue(lat .. "rz")
+obj.zoom = obj.getvalue(lat .. "zoom")/100
+obj.alpha = obj.getvalue(lat .. "alpha")
+obj.aspect = obj.getvalue(lat .. "aspect")
+obj.setoption("blend", "alpha_sub")
+
+obj.draw(x2,y2,z2)
+
+if (not obj.check0) then
+	obj.copybuffer("cache:me_clipping2", "tmp") -- 元画像 - 対象
+	
+	obj.setoption("drawtarget", "tempbuffer", w, h)
+	obj.load("figure", "四角形", 0xffffff, 1)
+	obj.setoption("blend", 0)
+	obj.copybuffer("obj", "cache:me_clipping1")
+	obj.rx = rx1
+	obj.ry = ry1
+	obj.rz = rz1
+	obj.zoom = zoom1
+	obj.alpha = alpha1
+	obj.aspect = aspect1
+	obj.draw(x1 - obj.x, y1 - obj.y, z1 - obj.z)
+	
+	obj.load("figure", "四角形", 0xffffff, 1)
+	obj.copybuffer("obj", "cache:me_clipping2")
+	obj.setoption("blend", "alpha_sub")
+	obj.rx = rx1
+	obj.ry = ry1
+	obj.rz = rz1
+	obj.zoom = zoom1
+	obj.alpha = alpha1
+	obj.aspect = aspect1
+	obj.draw(x1 - obj.x, y1 - obj.y, z1 - obj.z)
+end
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")
+obj.setoption("blend", 0)
+
+obj.ox = x1 - obj.x
+obj.oy = y1 - obj.y
+obj.oz = z1 - obj.z
+obj.rz = rz1
+obj.rx = rx1
+obj.ry = ry1
+obj.zoom = zoom1
+obj.alpha = alpha1
+obj.aspect = aspect1

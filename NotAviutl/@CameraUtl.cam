@@ -1,0 +1,38 @@
+@[Camera] FrameSave
+--track0:ID,0,9999,0,1
+--dialog:X,x=0;Y,y=0;Z,z=0;TargetX,tx=0;TargetY,ty=0;TargetZ,tz=1024;Roll,roll=0;
+--check0:Addition,1
+if (rikky_module == nil) then require("rikky_module") end
+
+local cam = obj.getoption("camera_param")
+
+local subcam = {}
+for k,v in pairs(cam) do
+	subcam[k] = v
+end
+
+if (obj.check0) then
+	subcam.x = subcam.x + x
+	subcam.y = subcam.y + y
+	subcam.z = subcam.z + z
+	subcam.tx = subcam.tx + tx
+	subcam.ty = subcam.ty + ty
+	subcam.tz = subcam.tz + tz
+	subcam.rz = subcam.rz + roll
+else
+	
+	subcam.x = x
+	subcam.y = y
+	subcam.z = z
+	subcam.tx = tx
+	subcam.ty = ty
+	subcam.tz = tz
+	subcam.rz = roll
+end
+
+obj.setoption("camera_param", cam)
+
+obj.load("framebuffer")
+rikky_module.image("w", "na_camera_frame" .. obj.track0)
+
+obj.setoption("camera_param", cam)

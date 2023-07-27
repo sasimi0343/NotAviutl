@@ -1,0 +1,205 @@
+@[Screen] Difference
+--track0:Threshold,0,255,0,1
+--track1:Size,1,100,1,0.1
+--check0:Alpha,1
+--dialog:Reverse/chk,reverse=1;AlphaGain/chk,alphagain=0;Options,sut_options={interpolate = 0};Repeat/chk,repeated=0;NoiseSettings,noise="";
+
+if (rikky_module == nil) then require("rikky_module") end
+
+if (noise == nil) then noise = "" end
+
+local noisesettings = {"Opacity", "20", 0, 100, "LowQuality", "1", 1, 100, "Type", "0", 0, 6, "Alpha", "false", 0, 0}
+local noise_opacity, noise_lowquality, noise_type, noise_alpha = rikky_module.parameterCS(noise, 5, noisesettings)
+local noise_alphamode = 1
+if (noise_alpha) then
+	noise_alphamode = 0
+end
+
+obj.load("framebuffer")
+obj.ox = 0
+obj.oy = 0
+obj.oz = 0
+obj.rx = 0
+obj.ry = 0
+obj.rz = 0
+obj.zoom = 1
+obj.alpha = 1
+
+
+if (repeated == nil) then
+	repeated = 0
+end
+
+if (obj.track1 > 1 and (not (obj.frame == 0))) then
+	local w,h = obj.w, obj.h
+	if (sut_options == nil) then
+		sut_options = {interpolate = 0}
+	end
+	obj.effect("リサイズ", "拡大率", 100/obj.track1, "補間なし", 1)
+	obj.effect("リサイズ", "X", w, "Y", h, "補間なし", sut_options.interpolate, "ドット数でサイズ指定", 1)
+end
+
+rikky_module.image("w", "na_screen_differ1")
+
+if (not (obj.frame == 0)) then
+
+if ( rikky_module.image("r", "na_screen_differ2") ) then
+	if (not (noise_type == 0)) then
+		obj.effect("ノイズ", "強さ", noise_opacity, "type", noise_type, "mode", noise_alphamode)
+	end
+	local pfunction = function(objr, objg, objb, obja, argr, argg, argb, arga, x, y)
+		local r, g, b, a = objr, objg, objb, obja
+		--print(tostring(r) .. ", " .. tostring(g) .. ", " .. tostring(b) .. ", " .. tostring(a))
+		local same = (r == argr and g == argg and b == argb and a == arga)
+		if ((not same) and obj.track0 > 0) then
+			local s_r = ((r >= argr - obj.track0) and (r <= argr + obj.track0))
+			local s_g = ((g >= argg - obj.track0) and (g <= argg + obj.track0))
+			local s_b = ((b >= argb - obj.track0) and (b <= argb + obj.track0))
+			same = (s_r and s_g and s_b)
+		end
+		if ((reverse == 0 and same) or (reverse == 1 and (not same))) then
+			if (alphagain == 1) then
+				a = 255
+			end
+			return r, g, b, a
+		end
+		if (obj.check0) then a = 0 else a = 255 end
+		return 0, 0, 0, a
+	end
+	local imgdata, w, h = rikky_module.image("i", "na_screen_differ1")
+	local _, w2, h2 = rikky_module.image("i", "na_screen_differ2")
+	--print(w2)
+	--print(h2)
+	--print(w)
+	--print(h)
+	--print("----")
+	--print(imgdata)
+	
+	if (w2 == w and h2 == h) then rikky_module.pixelfunction(pfunction, imgdata) end
+	
+	rikky_module.image("w", "na_screen_differ1")
+end
+
+else
+
+if (reverse == 1 and obj.check0) then
+	obj.alpha = 0
+end
+
+end
+
+rikky_module.image("w", "na_screen_differ2")
+
+rikky_module.image("r", "na_screen_differ1")
+
+if ((obj.frame > 0) and repeated == 1) then
+	rikky_module.image("w", "na_screen_differ_sub")
+	obj.draw()
+	
+	obj.load("framebuffer")
+	rikky_module.image("w", "na_screen_differ1")
+	rikky_module.image("w", "na_screen_differ2")
+	
+	rikky_module.image("r", "na_screen_differ_sub")
+end
+
+
+@[Screen] PrevFrame
+
+require("rikky_module")
+
+--obj.load("framebuffer")
+
+if (not (obj.frame == 0)) then
+
+rikky_module.image("r", "na_screen_prev2")
+rikky_module.image("w", "na_screen_prev1")
+
+end
+
+obj.load("framebuffer")
+
+if (not (obj.frame == 0)) then
+
+rikky_module.image("w", "na_screen_prev2")
+rikky_module.image("r", "na_screen_prev1")
+
+else
+
+obj.alpha = 0
+
+end
+
+@[Screen] JPEG Compress
+--track0:Comp,0,100,0,1
+--track1:ID,0,9999,0,1
+--check0:Preview,0
+
+if (rikky_module == nil) then require("rikky_module") end
+
+obj.load("framebuffer")
+
+if (obj.check0 or obj.getinfo("saving")) then
+	local pa = rikky_module.getinfo("aup")
+	
+	if (pa == "") then
+		pa = rikky_module.getinfo("path")
+	else
+		local nam = rikky_module.getinfo("aup", 1)
+		pa = string.sub(pa, 1, -#nam-5)
+	end
+	
+	local dirn = pa .. "na_jpegcomp"
+	local filn = dirn .. "\\" .. "na_jpeg_cache_" .. tostring(obj.track1) .. "_" .. tostring(obj.frame) .. ".jpeg"
+	
+	local folders = rikky_module.dir(pa, "")
+	local notexist = true
+	for k,v in pairs(folders) do
+		if (v == dirn) then
+			notexist = false
+		end
+	end
+	if (notexist) then os.execute("mkdir \"" .. dirn .. "\"") end
+	
+	--os.remove(filn)
+	rikky_module.jpg(filn, obj.track0)
+	
+	obj.load("image", filn)
+end
+
+
+@[Screen] Frame Cache
+--track1:ID,0,9999,0,1
+--check0:Cached,0
+
+if (rikky_module == nil) then require("rikky_module") end
+
+obj.load("framebuffer")
+
+if (obj.check0 or obj.getinfo("saving")) then
+	local pa = rikky_module.getinfo("aup")
+	
+	if (pa == "") then
+		pa = rikky_module.getinfo("path")
+	else
+		local nam = rikky_module.getinfo("aup", 1)
+		pa = string.sub(pa, 1, -#nam-5)
+	end
+	
+	local dirn = pa .. "na_jpegcomp"
+	local filn = dirn .. "\\" .. "na_jpeg_cache_" .. tostring(obj.track1) .. "_" .. tostring(obj.frame) .. ".jpeg"
+	
+	local folders = rikky_module.dir(pa, "")
+	local notexist = true
+	for k,v in pairs(folders) do
+		if (v == dirn) then
+			notexist = false
+		end
+	end
+	if (notexist) then os.execute("mkdir \"" .. dirn .. "\"") end
+	
+	--os.remove(filn)
+	rikky_module.jpg(filn, obj.track0)
+	
+	obj.load("image", filn)
+end

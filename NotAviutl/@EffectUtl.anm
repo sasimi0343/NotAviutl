@@ -1,0 +1,462 @@
+@[Effect] AlphaContrast
+--track0:Contrast,-255,255,0,0.1
+--track1:Threshold,0,255,0,1
+--check0:Max
+
+require("rikky_module")
+
+local secondrange = (255 - obj.track1) / 2
+local secondthre = obj.track1 + secondrange
+
+local pfunction = function(objr, objg, objb, obja, argr, argg, argb, arga, x, y)
+	local r, g, b, a = objr, objg, objb, obja
+	if (not obj.check0) then
+		if (a > obj.track1) then
+			if (a > secondthre) then
+				local ano = (a - secondthre) / secondrange
+				local nor = math.pow(ano, obj.track0)
+				if (obj.track0 < 0) then
+					nor = 1-math.pow(ano, -obj.track0)
+				end
+				a = nor * secondrange + secondthre
+			else
+				local ano = (a - obj.track1) / secondrange
+				local nor = math.pow((1-ano), obj.track0)
+				if (obj.track0 < 0) then
+					nor = 1-math.pow((1-ano), -obj.track0)
+				end
+				a = nor * secondrange + obj.track1
+			end
+		else
+			
+		end
+	else
+		if (a > obj.track1) then
+			a = 255
+		else
+			a = 0
+		end
+	end
+	return r, g, b, a
+end
+
+rikky_module.pixelfunction(pfunction)
+
+@[Effect] BorderClip
+--track0:Size,0,9999,3,1
+--track1:Blur,0,9999,0,1
+--dialog:Color/col,color=0xffffff;
+--check0:Reversed
+
+require("rikky_module")
+
+local ox,oy,oz,rx,ry,rz,zoom,alpha,aspect = obj.ox, obj.oy, obj.oz, obj.rx, obj.ry, obj.rz, obj.zoom, obj.alpha, obj.aspect
+
+if (obj.check0) then
+	rikky_module.image("w", "na_effect_bc1")
+	
+	obj.effect("反転", "透明度反転", 1 )
+	obj.setoption("antialias", 0)
+	rikky_module.image("w", "na_effect_bc2")
+	
+	obj.setoption("drawtarget", "tempbuffer", obj.w, obj.h)
+	rikky_module.image("r", "na_effect_bc1")
+	obj.setoption("antialias", 0)
+	obj.draw()
+	
+	rikky_module.image("r", "na_effect_bc2")
+	obj.effect("縁取り", "サイズ", obj.track0, "ぼかし", obj.track1)
+	obj.setoption("blend", "alpha_sub")
+	obj.setoption("antialias", 0)
+	obj.draw()
+	
+	obj.setoption("blend", 0)
+	obj.setoption("drawtarget", "framebuffer")
+	obj.setoption("antialias", 1)
+	obj.load("tempbuffer")
+else
+	obj.setoption("antialias", 0)
+	rikky_module.image("w", "na_effect_bc1")
+	obj.effect("縁取り", "サイズ", obj.track0, "ぼかし", obj.track1, "color", color)
+	
+	obj.setoption("drawtarget", "tempbuffer", obj.w, obj.h)
+	obj.setoption("antialias", 0)
+	obj.draw()
+	
+	rikky_module.image("r", "na_effect_bc1")
+	obj.setoption("blend", "alpha_sub")
+	obj.setoption("antialias", 0)
+	obj.draw()
+	
+	obj.setoption("blend", 0)
+	obj.setoption("drawtarget", "framebuffer")
+	obj.setoption("antialias", 1)
+	obj.load("tempbuffer")
+end
+
+obj.ox, obj.oy, obj.oz, obj.rx, obj.ry, obj.rz, obj.zoom, obj.alpha, obj.aspect = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect
+
+@[Effect] Segmented
+--track0:Amount,1,99,1,1
+--track1:CalcMode,0,1,0,1
+--track2:Direction,0,1,0,1
+--dialog:Position,pos={};
+
+if (rikky_module == nil) then require("rikky_module") end
+
+local iw = obj.w
+local ih = obj.h
+local id = obj.w
+
+local sw = obj.w
+local sh = obj.h
+local sd = obj.w
+local sd_op = obj.h
+if (obj.track2 == 0) then
+	id = obj.w
+	sw = obj.w / (obj.track0+1)
+	sd = sw
+	sd_op = sh
+else
+	id = obj.h
+	sh = obj.h / (obj.track0+1)
+	sd = sh
+	sd_op = sw
+end
+
+--print(sd_op .. ", " .. ih)
+
+local direction = "左"
+local direction_axis = "X"
+local direction_op = "右"
+local direction_axis_op = "Y"
+
+if (obj.track2 == 0) then
+	direction = "左"
+	direction_axis = "X"
+	direction_op = "右"
+	direction_axis_op = "Y"
+else
+	direction = "上"
+	direction_axis = "Y"
+	direction_op = "下"
+	direction_axis_op = "X"
+end
+
+rikky_module.image("w", "na_effect_sg1")
+obj.setoption("drawtarget", "tempbuffer", iw, ih)
+
+local currentL = 0
+for i=0,(obj.track0-1) do
+	rikky_module.image("r", "na_effect_sg1")
+	
+	obj.effect("クリッピング", direction, i*sd, direction_op, (obj.track0-i)*sd)
+	
+	local position = pos[i+1]
+	if (position == nil) then position = 0.5 else position = pos[i+1]/100 end
+	
+	obj.effect("リサイズ", direction_axis, math.ceil(position * (id-currentL)), direction_axis_op, sd_op, "ドット数でサイズ指定", 1)
+	--print(sd_op .. ", " .. obj.h)
+	local ox = 0
+	local oy = 0
+	
+	if (obj.track2 == 0) then
+		ox = currentL + math.ceil(obj.w / 2) - (id / 2)
+	else
+		oy = currentL + math.ceil(obj.h / 2) - (id / 2)
+	end
+	
+	currentL = currentL + (position * (id-currentL))
+	
+	if (obj.track2 == 0) then
+		if (not (ox == math.floor(ox))) then
+			obj.effect("領域拡張", "右", 1, "左", 1, "塗りつぶし", 1)
+		end
+	else
+		if (not (oy == math.floor(oy))) then
+			obj.effect("領域拡張", "上", 1, "下", 1, "塗りつぶし", 1)
+		end
+	end
+	
+	obj.draw(ox, oy)
+end
+
+	rikky_module.image("r", "na_effect_sg1")
+	obj.effect("クリッピング", direction, obj.track0*sd)
+	local position = (id - currentL)/100
+	obj.effect("リサイズ", direction_axis, math.ceil(id-currentL), direction_axis_op, sd_op, "ドット数でサイズ指定", 1)
+	local ox = 0
+	local oy = 0
+	
+	if (obj.track2 == 0) then
+		ox = currentL + math.ceil(obj.w / 2) - (id / 2)
+	else
+		oy = currentL + math.ceil(obj.h / 2) - (id / 2)
+	end
+	
+	currentL = currentL + position
+	
+	if (obj.track2 == 0) then
+		if (not (ox == math.floor(ox))) then
+			obj.effect("領域拡張", "右", 1, "左", 1, "塗りつぶし", 1)
+		end
+	else
+		if (not (oy == math.floor(oy))) then
+			obj.effect("領域拡張", "上", 1, "下", 1, "塗りつぶし", 1)
+		end
+	end
+	
+	obj.draw(ox, oy)
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")
+
+
+@[Effect] FlatShadow
+--track0:Length,0,9999,50,1
+--track1:Angle,-720,720,30,0.1
+--dialog:Color/col,color=0xffffff;CenterTo/chk,center=0;ReduceProc,reduce=0;
+
+if (rikky_module == nil) then require("rikky_module") end
+
+local ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz = obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz
+
+local originalcolor = (color == nil)
+local radang = math.rad(obj.track1)
+local sin,cos = math.sin(radang),math.cos(radang)
+local addw = cos * obj.track0
+local addh = sin * obj.track0
+local reducemode = reduce
+reduce = (reduce >= 1)
+
+if (center == 0) then
+	addw = addw * 2
+	addh = addh * 2
+end
+
+if (reducemode == 2) then
+obj.setoption("drawtarget", "tempbuffer", obj.w + math.abs(cos), obj.h + math.abs(sin))
+else
+obj.setoption("drawtarget", "tempbuffer", obj.w + math.abs(addw), obj.h + math.abs(addh))
+end
+
+rikky_module.image("w", "na_effect_fs_original")
+
+if (not (originalcolor)) then
+	obj.effect("単色化", "color", color, "輝度を保持する", 0)
+end
+
+if (reduce) then rikky_module.image("w", "na_effect_fs") end
+local w,h = obj.w, obj.h
+
+if (reduce) then
+	local clip = (reducemode == 2)
+	if (clip) then
+		obj.setoption("antialias", 0)
+		obj.draw(cos * 4, sin * 4)
+		obj.setoption("blend", "alpha_sub")
+		obj.draw()
+		obj.setoption("blend", 0)
+		obj.load("tempbuffer")
+		w,h = obj.w, obj.h
+		rikky_module.image("w", "na_effect_fs")
+		obj.setoption("drawtarget", "tempbuffer", obj.w + math.abs(addw), obj.h + math.abs(addh))
+		rikky_module.image("r", "na_effect_fs")
+	end
+	local i = 0
+	local j = 0
+	local lastnum = 0
+	
+	local iw,ih = w,h
+	
+	print("=================")
+	
+	while (i <= obj.track0) do
+		i = math.pow(2, j) + lastnum
+		
+		local x = 0
+		local y = 0
+		
+		if (j > 1) then
+			obj.load("tempbuffer")
+			iw = obj.w
+			ih = obj.h
+			rikky_module.image("w", "na_effect_fs2")
+			rikky_module.image("r", "na_effect_fs2")
+		end
+		if (i > obj.track0) then
+			lastnum = math.pow(2, j-1) + lastnum
+			j = 0
+			i = lastnum + 1
+			rikky_module.image("r", "na_effect_fs")
+			print("> " .. lastnum)
+		end
+		local pos = i / 2
+		if (center == 1) then
+			pos = i - (obj.track0 / 2)
+		end
+		obj.draw((cos * pos) + x, (sin * pos) + y)
+		
+		j = j + 1
+		
+		print(i)
+	end
+else
+	for i=0,obj.track0 do
+		local pos = i
+		if (center == 1) then
+			pos = i - (obj.track0 / 2)
+		end
+		obj.draw(cos * pos, sin * pos)
+	end
+end
+
+rikky_module.image("r", "na_effect_fs_original")
+if (center == 1) then obj.draw(cos * (-obj.track0 / 2), sin * (-obj.track0 / 2)) else obj.draw(0, 0) end
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")
+--obj.cx = 0
+--obj.cy = 0
+
+obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz
+
+@[Effect] Z-Shadow
+--track0:Length,0,9999,50,1
+--track1:X,-9999,9999,0,0.1
+--track2:Y,-9999,9999,0,0.1
+--dialog:Color/col,color=0xffffff;
+
+if (obj.track0 == 0) then
+	return
+end
+
+if (rikky_module == nil) then require("rikky_module") end
+
+local ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz = obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz
+
+local originalcolor = (color == nil)
+
+
+local distperX = obj.track1 / obj.track0
+local distperY = obj.track2 / obj.track0
+local addw = math.max(0, obj.track1 - obj.w)
+local addh = math.max(0, obj.track2 - obj.h)
+
+obj.setoption("drawtarget", "tempbuffer", obj.w + math.abs(addw), obj.h + math.abs(addh))
+
+rikky_module.image("w", "na_effect_zs")
+
+if (not (originalcolor)) then
+	obj.effect("単色化", "color", color, "輝度を保持する", 0)
+end
+for i=0,obj.track0 do
+	local pos = i
+	obj.draw(distperX * pos, distperY * pos, i)
+end
+
+rikky_module.image("r", "na_effect_zs")
+obj.draw(0, 0)
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")
+--obj.cx = 0
+--obj.cy = 0
+
+obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz
+
+
+
+@[Effect] 傾斜変形
+--track0:X,-720,720,0,0.1
+--track1:Y,-720,720,0,0.1
+--dialog:InScreen/chk,insc=1;
+
+if (((obj.track0-90)%180 == 0) or ((obj.track1-90)%180 == 0)) then
+	obj.alpha = 0
+	return
+end
+
+if (rikky_module == nil) then require("rikky_module") end
+
+local ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz = obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz
+
+rikky_module.image("w", "na_effect_keisya")
+local h,w = obj.h,obj.w
+local radX = math.rad(obj.track0)
+local radY = math.rad(obj.track1)
+local tanX = math.tan(radX)
+local tanY = math.tan(radY)
+
+local imgdata = {}
+
+local kaisiX_max = math.ceil(h * tanX)
+
+local sizeW = obj.w + math.abs(tanX * obj.h)
+
+obj.setoption("drawtarget", "tempbuffer", sizeW, obj.h)
+
+local pfunctionX = function(objr, objg, objb, obja, argr, argg, argb, arga, x, y)
+	local r, g, b, a = objr, objg, objb, obja
+	local kaisiX = math.ceil(y * tanX)
+	if (kaisiX > 0) then
+		x = x - kaisiX
+	else
+		x = x - (kaisiX - kaisiX_max)
+	end
+	if (imgdata[x] == nil) then
+		return 0, 0, 0, 0
+	end
+	return imgdata[x][y].r, imgdata[x][y].g, imgdata[x][y].b, imgdata[x][y].a
+end
+
+local pfunction_b = function(r, g, b, a, ar, ag, ab, aa, x, y)
+	if (imgdata[x] == nil) then
+		imgdata[x] = {}
+	end
+	imgdata[x][y] = {r = r, g = g, b = b, a = a}
+	return r,g,b,a
+end
+
+for k,v in pairs(imgdata) do
+	print(v)
+end
+
+rikky_module.pixelfunction(pfunction_b)
+
+if (not (obj.track0%180 == 0)) then
+	obj.load("tempbuffer")
+	rikky_module.pixelfunction(pfunctionX)
+end
+
+
+local sizeH = obj.h + math.abs(tanY * obj.w)
+local kaisiY_max = math.ceil(w * tanY)
+obj.setoption("drawtarget", "tempbuffer", sizeW, sizeH)
+imgdata = {}
+rikky_module.pixelfunction(pfunction_b)
+
+local pfunctionY = function(objr, objg, objb, obja, argr, argg, argb, arga, x, y)
+	local r, g, b, a = objr, objg, objb, obja
+	local kaisiY = math.ceil(x * tanY)
+	if (kaisiY > 0) then
+		y = y - kaisiY
+	else
+		y = y - (kaisiY - kaisiY_max)
+	end
+	if (imgdata[x][y] == nil) then
+		return 0, 0, 0, 0
+	end
+	return imgdata[x][y].r, imgdata[x][y].g, imgdata[x][y].b, imgdata[x][y].a
+end
+
+if (not (obj.track1%180 == 0)) then
+	obj.load("tempbuffer")
+	rikky_module.pixelfunction(pfunctionY)
+end
+
+obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz
+
+
+@[Group] Test
+print(obj.index)

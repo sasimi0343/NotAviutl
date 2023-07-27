@@ -1,0 +1,6 @@
+@[Utility] Nothing
+
+obj.alpha = 0
+obj.zoom = 0
+
+return

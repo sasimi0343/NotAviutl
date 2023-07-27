@@ -1,0 +1,6 @@
+@[Camera] Frame
+--track0:ID,0,9999,0,1
+if (rikky_module == nil) then require("rikky_module") end
+
+obj.load("framebuffer")
+rikky_module.image("r", "na_camera_frame" .. obj.track0)

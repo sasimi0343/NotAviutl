@@ -87,3 +87,143 @@ avi3d_editor.Slider(debugSlider, -300, -300, 400, 0, 100, 50, 1)
 
 local avi3d_editor = require("avi3d_editor")
 avi3d_editor.PostRender()
+
+@[Modeling] Select(Box)
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Z,-9999,9999,0,0.1
+--dialog:Width,width=100;Height,height=100;Depth,depth=100;SelectMode,mode=0;
+--check0:ShowBox
+
+selection_points = selection_points or {}
+selection_geos = selection_geos or {}
+
+local sel_points = {}
+local sel_geos = {}
+
+local dx = obj.track0 - (width / 2)
+local dy = obj.track1 - (height / 2)
+local dz = obj.track2 - (depth / 2)
+
+local dx2 = obj.track0 + (width / 2)
+local dy2 = obj.track1 + (height / 2)
+local dz2 = obj.track2 + (depth / 2)
+
+function IsIn(point)
+	local x = point.x
+	local y = point.y
+	local z = point.z
+	
+	if (
+	(x >= dx and x <= dx2) and 
+	(y >= dy and y <= dy2) and 
+	(z >= dz and z <= dz2)
+	) then
+		return true
+	end
+	return false
+end
+
+local i = 0
+for _,v2 in pairs(geos) do
+	local l = 0
+	for k,v in pairs(v2.surface) do
+		for j=1,4 do
+			if (IsIn(v[j])) then
+				table.insert(sel_geos, i)
+				table.insert(sel_points, l)
+			end
+			l = l + 1
+		end
+	end
+	i = i + 1
+end
+
+if (mode == 0) then
+	selection_points = sel_points
+	selection_geos = sel_geos
+elseif (mode == 1) then
+	for k,v in pairs(sel_points) do
+		table.insert(selection_points, v)
+	end
+	for k,v in pairs(sel_geos) do
+		table.insert(selection_geos, v)
+	end
+elseif (mode == 2 or mode == 3) then
+	for _,v in pairs(sel_points) do
+		local inc = false
+		local i = {}
+		for k,v2 in pairs(selection_points) do
+			if (v == v2) then
+				table.insert(i, k)
+				inc = true
+			end
+		end
+		for _,k in pairs(i) do
+			table.remove(selection_points, k)
+		end
+		if (mode == 3 and (not inc)) then table.insert(selection_points, v) end
+	end
+	for _,v in pairs(sel_geos) do
+		local inc = false
+		local i = {}
+		for k,v2 in pairs(selection_geos) do
+			if (v == v2) then
+				table.insert(i, k)
+				inc = true
+			end
+		end
+		for _,k in pairs(i) do
+			table.remove(selection_geos, k)
+		end
+		if (mode == 3 and (not inc)) then table.insert(selection_geos, v) end
+	end
+end
+
+if (obj.check0) then
+	obj.copybuffer("cache:avi3d_modeling_selection", "obj")
+	obj.load("figure", "四角形", 0xff0000, 1)
+	obj.effect("透明度", "透明度", 70)
+	
+local w = width / 2
+local h = height / 2
+local d = depth / 2
+
+local p1 = { x = dx, y = dy, z = dz}
+local p2 = { x = dx2, y = dy, z = dz}
+local p3 = { x = dx2, y = dy2, z = dz}
+local p4 = { x = dx, y = dy2, z = dz}
+
+local p5 = { x = dx, y = dy, z = dz2}
+local p6 = { x = dx2, y = dy, z = dz2}
+local p7 = { x = dx2, y = dy2, z = dz2}
+local p8 = { x = dx, y = dy2, z = dz2}
+
+local s1 = {p1, p2, p3, p4, 75}
+local s2 = {p1, p2, p6, p5, 100}
+local s3 = {p5, p6, p7, p8, 75}
+local s4 = {p5, p1, p4, p8, 50}
+local s5 = {p8, p7, p3, p4, 25}
+local s6 = {p2, p6, p7, p3, 50}
+
+sur = {s1, s2, s3, s4, s5, s6}
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0
+
+}
+	
+	local avi3d = require("avi3d")
+	avi3d.Draw(obj, geo.surface, false, nil, v)
+	
+	obj.setoption("draw_state", false)
+	obj.load("figure", "四角形", 0xffffff, 1)
+	obj.copybuffer("obj", "cache:avi3d_modeling_selection")
+end

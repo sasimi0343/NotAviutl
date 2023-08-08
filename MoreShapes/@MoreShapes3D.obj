@@ -1,6 +1,6 @@
 @[3DEnvironment]
 --track0:TextureComp,0,100,0,0.1
---dialog:DontCompOnExport/chk,dontcomponexport=1;
+--dialog:DontCompOnExport/chk,dontcomponexport=1;Shadows/chk,shadow=0;
 --check0:PostProcLights,0
 world = {}
 world.texcomp = obj.track0
@@ -8,12 +8,22 @@ world.dcoe = (dontcomponexport == 1)
 world.ppl = obj.check0
 world.objs = {}
 world.lights = {}
+world.surface_all = {}
+world.shadow = (shadow == 1)
 
 @[3DRender]
 if (not (world == nil)) then
 
 local avi3d = require("avi3d")
 require("rikky_module")
+
+for k,v in pairs(world.objs) do
+	for _,v2 in pairs(v.geometory) do
+		for _,v3 in pairs(v2.surface) do
+			table.insert(world.surface_all, v3)
+		end
+	end
+end
 
 for k,v in pairs(world.objs) do
 	for _,v2 in pairs(v.geometory) do
@@ -26,7 +36,7 @@ for k,v in pairs(world.objs) do
 		obj.ry = v2.ry
 		obj.rz = v2.rz
 		rikky_module.image("w", "ms_image_1")
-		avi3d.Draw(obj, v2.surface, true, world.lights, v2)
+		avi3d.Draw(obj, v2.surface, true, world.lights, v2, world)
 		rikky_module.image("r", "ms_image_1")
 	end
 end

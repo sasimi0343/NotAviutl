@@ -5,7 +5,7 @@ if (rikky_module == nil) then
 	require("rikky_module")
 end
 
-function Draw(obj, tbl, lights, lightsinfo, geo)
+function Draw(obj, tbl, lights, lightsinfo, geo, world)
 	rikky_module.image("w", "avi3d_image")
 	--obj.copybuffer("cache:avi3d_image", "obj")
 	for k,v in pairs(tbl) do
@@ -16,7 +16,7 @@ function Draw(obj, tbl, lights, lightsinfo, geo)
 		if (not (lightsinfo == nil)) then
 			if (not (geo.shading == nil) and (not (geo.shading.style == nil)) and (not (geo.shading.style == 0))) then
 				v[5] = 100
-				LightToTexture(lightsinfo, v)
+				LightToTexture(lightsinfo, v, world, v)
 			else
 				v[5] = 0
 				for _,light in pairs(lightsinfo) do
@@ -240,7 +240,7 @@ function GetPoint(geo, indexA, indexB, samecheck)
 			local l = 0
 			for _,v2 in pairs(v.surface) do
 				local br1 = false
-				for j=1,3 do
+				for j=1,4 do
 					if (indexB == l) then
 						table.insert(points, v2[j])
 						if (not samecheck) then return points end
@@ -250,7 +250,7 @@ function GetPoint(geo, indexA, indexB, samecheck)
 					l = l + 1
 				end
 				if (br1) then
-					br2 = tru
+					br2 = true
 					break
 				end
 			end
@@ -317,7 +317,7 @@ function Lighting(obj, surface, light, geo)
 	return surface
 end
 
-function LightPixel(hx, hy, hz, lights)
+function LightPixel(hx, hy, hz, lights, world, surface)
 	hx,hy,hz = gct.Rot_rpy({hx, hy, hz}, math.rad(obj.rz), math.rad(obj.ry), math.rad(obj.rx))
 	
 	local dx,dy,dz = obj.x+obj.ox+hx,obj.y+obj.oy+hy,obj.z+obj.oz+hz
@@ -326,8 +326,8 @@ function LightPixel(hx, hy, hz, lights)
 	for k,v in pairs(lights) do
 		local sx,sy,sz = math.abs(dx - v.x),math.abs(dy - v.y),math.abs(dz - v.z)
 		
-		local d_xy = ((sx * sx) + (sy * sy))
-		local d_yz = ((sy * sy) + (sz * sz))
+		--local d_xy = ((sx * sx) + (sy * sy))
+		--local d_yz = ((sy * sy) + (sz * sz))
 		local d_zx = ((sz * sz) + (sx * sx))
 		
 		local distance = math.sqrt(d_zx + (sy * sy))
@@ -336,10 +336,141 @@ function LightPixel(hx, hy, hz, lights)
 		local inte = (v.intensity/100) * math.pow((range / v.range), v.contrast)
 		
 		intensity = intensity + (math.max(1 - intensity, 0) * (inte))
+		
+		if (world.shadow) then
+			intensity = (1 - ShadowPixel(dx, dy, dz, v, world, surface)) * intensity
+		end
 	end
 	--print(intensity)
 	
 	return intensity
+end
+
+function Distance(posA, posB)
+	local xA,yA,zA = posA[1],posA[2],posA[3]
+	local xB,yB,zB = posB[1],posB[2],posB[3]
+	
+	local sx,sy,sz = math.abs(xA - xB),math.abs(yA - yB),math.abs(zA - zB)
+	--local d_xy = ((sx * sx) + (sy * sy))
+	--local d_yz = ((sy * sy) + (sz * sz))
+	local d_zx = ((sz * sz) + (sx * sx))
+	local distance = math.sqrt(d_zx + (sy * sy))
+	
+	return distance
+end
+
+function Normalize(pos, distance)
+	local x,y,z = pos[1],pos[2],pos[3]
+	x = x / distance
+	y = y / distance
+	z = z / distance
+	return {x, y, z}
+end
+
+function InBox(pos8, pos)
+	local pos1 = pos8[1]
+	local pos2 = pos8[2]
+	local pos3 = pos8[3]
+	local pos4 = pos8[4]
+	local pos5 = pos8[5]
+	local pos6 = pos8[6]
+	local pos7 = pos8[7]
+	local pos8 = pos8[8]
+	
+	--‚Ç‚¤Œ©‚½‚Á‚Ä“ü‚Á‚Ä‚¢‚È‚¢Žž
+	if (pos.x > math.max(pos1.x, pos2.x, pos3.x, pos4.x, pos5.x, pos6.x, pos7.x, pos8.x)) then
+		return false
+	elseif (pos.x < math.min(pos1.x, pos2.x, pos3.x, pos4.x, pos5.x, pos6.x, pos7.x, pos8.x)) then
+		return false
+	end
+	
+	if (pos.y > math.max(pos1.y, pos2.y, pos3.y, pos4.y, pos5.y, pos6.y, pos7.y, pos8.y)) then
+		return false
+	elseif (pos.y < math.min(pos1.y, pos2.y, pos3.y, pos4.y, pos5.y, pos6.y, pos7.y, pos8.y)) then
+		return false
+	end
+	
+	if (pos.z > math.max(pos1.z, pos2.z, pos3.z, pos4.z, pos5.z, pos6.z, pos7.z, pos8.z)) then
+		return false
+	elseif (pos.z < math.min(pos1.z, pos2.z, pos3.z, pos4.z, pos5.z, pos6.z, pos7.z, pos8.z)) then
+		return false
+	end
+	
+	
+	--X
+	local x = pos.x
+	local y = pos.y
+	local z = pos.z
+	local xd1Max = pos1.x - pos2.x
+	local yd1Max = pos2.y + ((pos1.y - pos2.y) * ((x - pos2.x) / xd1Max))
+	local zd1Max = pos2.z + ((pos1.z - pos2.z) * ((x - pos2.x) / xd1Max))
+	
+	local xd2Max = pos3.x - pos4.x
+	local yd2Max = pos4.y + ((pos3.y - pos4.y) * ((x - pos4.x) / xd2Max))
+	local zd2Max = pos4.z + ((pos3.z - pos4.z) * ((x - pos4.x) / xd2Max))
+	
+	if (
+	((y >= yd1Max and y <= yd2Max) or (y >= yd2Max and y <= yd1Max)) and
+	((z >= zd1Max and z <= zd2Max) or (z >= zd2Max and y <= zd1Max))
+	) then
+		return true
+	end
+	
+	return false
+end
+
+function PointToArray(p)
+	return {p.x, p.y, p.z}
+end
+function ArrayToPoint(p)
+	return {x = p[1], y = p[2], z = p[3]}
+end
+
+function NormalizedVector(p1, p2, p3)
+	local p21 = ArrayToPoint({SubtractPosition(p2, p1)})
+	local p31 = ArrayToPoint({SubtractPosition(p3, p1)})
+	
+	--local x,y,z = AddPosition(p21, p31)
+	gct.Vector.Cross(PointToArray(p21), PointToArray(p31))
+end
+
+function ShadowPixel(dx, dy, dz, light, world, surface)
+	local shadow = 0
+	--local lights = world.lights
+	local surs = world.surface_all
+	
+	local sx,sy,sz = math.abs(dx - light.x),math.abs(dy - light.y),math.abs(dz - light.z)
+	--local d_xy = ((sx * sx) + (sy * sy))
+	--local d_yz = ((sy * sy) + (sz * sz))
+	local d_zx = ((sz * sz) + (sx * sx))
+	local distance = math.sqrt(d_zx + (sy * sy))
+	if (light.range < distance) then
+		return 0
+	end
+	for k,v in pairs(surs) do
+		if (not (v == surface)) then
+			
+			local nA = gct.Vector.Norm_surface(PointToArray(v[1]), PointToArray(v[2]), PointToArray(v[3]))
+			local nB = gct.Vector.Norm_surface(PointToArray(v[2]), PointToArray(v[3]), PointToArray(v[4]))
+			
+			local iA = gct.Vector.Pos_plane_intersection_segment(PointToArray(light), {dx, dy, dz}, nA, distance)
+			local iB = gct.Vector.Pos_plane_intersection_segment(PointToArray(light), {dx, dy, dz}, nB, distance)
+			
+			if (not ((iA == false) and (iB == false))) then
+				return 1
+			end
+		
+		end
+		
+		--for i=1,4 do
+		--	local point = v[i]
+		--	
+		--	local nA = gct.Vector.Norm_surface(PointToArray())
+		--end
+		--shadow = 1
+		--return 1
+	end
+	return 0
 end
 
 function LightToMaterialEx(light)
@@ -377,6 +508,14 @@ function LightToMaterialEx(light)
 	return li
 end
 
+function AddPosition(posA, posB)
+	local x = posB.x + posA.x
+	local y = posB.y + posA.y
+	local z = posB.z + posA.z
+	
+	return x,y,z
+end
+
 function SubtractPosition(posB, posA)
 	local x = posB.x - posA.x
 	local y = posB.y - posA.y
@@ -385,7 +524,7 @@ function SubtractPosition(posB, posA)
 	return x,y,z
 end
 
-function LightToTexture(lights, surface)
+function LightToTexture(lights, surface, world, csur)
 	--local w,h = obj.w, obj.h
 	rikky_module.image("w", "avi3d_lighting_a")
 	local _, w, h = rikky_module.image("i", "avi3d_lighting_a")
@@ -436,7 +575,7 @@ function LightToTexture(lights, surface)
 		--print(nx .. ", " .. ny)
 		--end
 		
-		inte = LightPixel(realpos.x, realpos.y, realpos.z, lights)
+		inte = LightPixel(realpos.x, realpos.y, realpos.z, lights, world, csur)
 		
 		return math.max(math.min(r * inte, 255), 0), math.max(math.min(g * inte, 255), 0), math.max(math.min(b * inte, 255), 0), a
 	end

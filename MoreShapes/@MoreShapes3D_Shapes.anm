@@ -84,3 +84,133 @@ rz = 0
 }
 
 geos = {geo}
+
+@[3DShape]LaserEmitter
+--track0:Size,0,9999,10,0.1
+--track1:Height,0,9999,100,0.1
+--track2:Bevel%,0,100,50,0.1
+--track3:EmitterHeight,0,9999,7,0.1
+--dialog:EmitterTop/chk,emittertop=1;Laser/chk,laser=0;
+
+local s = obj.track0 / 2
+local h = obj.track1 / 2
+local b = obj.track2 / 100
+local bs = s * b
+local eh = obj.track3
+
+local p11 = { x = -s, y = h, z = -s}
+local p12 = { x = s, y = h, z = -s}
+local p13 = { x = s, y = h, z = s}
+local p14 = { x = -s, y = h, z = s}
+
+local p21 = { x = -bs, y = h - eh, z = -bs}
+local p22 = { x = bs, y = h - eh, z = -bs}
+local p23 = { x = bs, y = h - eh, z = bs}
+local p24 = { x = -bs, y = h - eh, z = bs}
+
+local s1 = {p11, p12, p13, p14, 75}
+local s2 = {p11, p21, p24, p14, 100}
+local s3 = {p11, p12, p22, p21, 75}
+local s4 = {p12, p22, p23, p13, 50}
+local s5 = {p13, p23, p24, p13, 25}
+local s6 = {p21, p22, p23, p24, 50}
+
+sur = {s1, s2, s3, s4, s5, s6}
+
+if (emittertop == 1) then
+	
+	local p11 = { x = -s, y = -h, z = -s}
+	local p12 = { x = s, y = -h, z = -s}
+	local p13 = { x = s, y = -h, z = s}
+	local p14 = { x = -s, y = -h, z = s}
+	
+	local p21 = { x = -bs, y = -h + eh, z = -bs}
+	local p22 = { x = bs, y = -h + eh, z = -bs}
+	local p23 = { x = bs, y = -h + eh, z = bs}
+	local p24 = { x = -bs, y = -h + eh, z = bs}
+	
+	local s1 = {p11, p12, p13, p14, 75}
+	local s2 = {p11, p21, p24, p14, 100}
+	local s3 = {p11, p12, p22, p21, 75}
+	local s4 = {p12, p22, p23, p13, 50}
+	local s5 = {p13, p23, p24, p13, 25}
+	local s6 = {p21, p22, p23, p24, 50}
+	
+	table.insert(sur, s1)
+	table.insert(sur, s2)
+	table.insert(sur, s3)
+	table.insert(sur, s4)
+	table.insert(sur, s5)
+	table.insert(sur, s6)
+	
+end
+
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0
+
+}
+
+geos = {geo}
+
+@[3DShape]Ring
+--track0:Radius,0,9999,300,0.1
+--track1:Poly,3,360,4,1
+--track2:Width,0,9999,50,0.1
+
+local r2 = obj.track0 + obj.track2
+sur = {}
+
+for i=0,obj.track1-1 do
+	local i2 = i+1
+	
+	local rad1 = (i / obj.track1) * math.pi * 2
+	local rad2 = (i2 / obj.track1) * math.pi * 2
+	
+	local cos = math.cos(rad1)
+	local sin = math.sin(rad1)
+	
+	local p1 = {x = cos * obj.track0, y = sin * obj.track0, z = -obj.track2}
+	local p2 = {x = cos * r2, y = sin * r2, z = -obj.track2}
+	local p3 = {x = cos * r2, y = sin * r2, z = obj.track2}
+	local p4 = {x = cos * obj.track0, y = sin * obj.track0, z = obj.track2}
+	
+	cos = math.cos(rad2)
+	sin = math.sin(rad2)
+	
+	local p5 = {x = cos * obj.track0, y = sin * obj.track0, z = -obj.track2}
+	local p6 = {x = cos * r2, y = sin * r2, z = -obj.track2}
+	local p7 = {x = cos * r2, y = sin * r2, z = obj.track2}
+	local p8 = {x = cos * obj.track0, y = sin * obj.track0, z = obj.track2}
+	
+	
+	local s1 = {p1, p2, p6, p5, 100}
+	local s2 = {p1, p4, p8, p5, 75}
+	local s3 = {p2, p3, p7, p6, 75}
+	local s4 = {p4, p3, p7, p8, 50}
+	
+	table.insert(sur, s1)
+	table.insert(sur, s2)
+	table.insert(sur, s3)
+	table.insert(sur, s4)
+end
+
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0
+}
+geos = {geo}

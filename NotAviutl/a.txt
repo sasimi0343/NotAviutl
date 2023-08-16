@@ -126,18 +126,16 @@ local grz = obj.rz + obj.getvalue("rz")
 for k,v in pairs(na_group.objs) do
 	local x,y,z,zoom,alpha,rx,ry,rz,w,h = v.x,v.y,v.z,v.zoom,v.alpha,v.rx,v.ry,v.rz,v.w,v.h
 	
-	local length = math.sqrt(math.pow(w / 2, 2) + math.pow(h / 2, 2))
-	local baseangle = math.atan2(h/2, w/2) --math.asin((h / 2) / length)
-	local baseangle_anti = (math.pi - baseangle)
+	local length = math.sqrt(math.pow(obj.w / 2, 2) + math.pow(obj.h / 2, 2))
 	
-	local p1x = math.cos(math.rad(-rz) + baseangle) * length
-	local p1y = math.sin(math.rad(-rz) + baseangle) * length
-	local p2x = math.cos(math.rad(-rz) - baseangle) * length
-	local p2y = math.sin(math.rad(-rz) - baseangle) * length
-	local p3x = math.cos(math.rad(-rz) + baseangle_anti) * length
-	local p3y = math.sin(math.rad(-rz) + baseangle_anti) * length
-	local p4x = math.cos(math.rad(-rz) - baseangle_anti) * length
-	local p4y = math.sin(math.rad(-rz) - baseangle_anti) * length
+	local p1x = math.cos(math.rad(-grz + 45)) * length
+	local p1y = math.sin(math.rad(-grz + 45)) * length
+	local p2x = math.cos(math.rad(-grz - 45)) * length
+	local p2y = math.sin(math.rad(-grz - 45)) * length
+	local p3x = math.cos(math.rad(-grz + 135)) * length
+	local p3y = math.sin(math.rad(-grz + 135)) * length
+	local p4x = math.cos(math.rad(-grz - 135)) * length
+	local p4y = math.sin(math.rad(-grz - 135)) * length
 	
 	local imaxx = math.max(p1x, p2x, p3x, p4x)
 	local iminx = math.min(p1x, p2x, p3x, p4x)

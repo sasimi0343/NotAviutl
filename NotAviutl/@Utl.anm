@@ -4,3 +4,40 @@ obj.alpha = 0
 obj.zoom = 0
 
 return
+
+@[Utility] MakeGroup
+
+require("rikky_module")
+
+local _, isgroup = rikky_module.getinfo("group")
+if (not isgroup) then return end
+if (na_group == nil) then return end
+	
+	local x = obj.ox - obj.cx + obj.getvalue("x")
+	local y = obj.oy - obj.cy + obj.getvalue("y")
+	local z = obj.oz - obj.cz + obj.getvalue("z")
+	local rx = obj.rx + obj.getvalue("rx")
+	local ry = obj.ry + obj.getvalue("ry")
+	local rz = (obj.rz + obj.getvalue("rz")) / 2
+	local zoom = obj.zoom * (obj.getvalue("zoom")/100)
+	local alpha = obj.alpha * obj.getvalue("alpha")
+	local aspect = obj.aspect * obj.getvalue("aspect")
+	
+	local z_x = 100
+	local z_y = 100
+	if (aspect > 0) then
+		z_x = (1-aspect)*100
+		obj.effect("リサイズ", "X", z_x, "Y", z_y)
+	else
+		z_y = (1+aspect)*100
+		obj.effect("リサイズ", "X", z_x, "Y", z_y)
+	end
+	
+	local gobj = {x = x, y = y, z = z, rx = rx, ry = ry, rz = rz, zoom = zoom, alpha = alpha, aspect = aspect, w = obj.w, h = obj.h}
+	gobj.image = #na_group.objs
+	rikky_module.image("w", "na_groupobj_" .. gobj.image)
+	
+	table.insert(na_group.objs, gobj)
+
+obj.alpha = 0
+obj.zoom = 0

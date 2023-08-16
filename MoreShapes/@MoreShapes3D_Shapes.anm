@@ -214,3 +214,145 @@ ry = 0,
 rz = 0
 }
 geos = {geo}
+
+@[3DShape]NanoBot
+--track0:Size,0,9999,500,0.1
+
+local uv1 = {{x = 0, y = 0}, {x = obj.w / 4, y = 0}, {x = obj.w / 4, y = obj.h / 4}, {x = 0, y = obj.h / 4}}
+local uv2 = {{x = obj.w / 2, y = 0}, {x = obj.w, y = 0}, {x = obj.w, y = obj.h / 4}, {x = obj.w / 2, y = obj.h / 4}}
+local uv3 = {{x = 0, y = obj.h / 2}, {x = obj.w / 2, y = obj.h / 2}, {x = obj.w / 2, y = obj.h}, {x = 0, y = obj.h}}
+
+local p1 = {x = -1, y = -2.5, z = 1}
+local p2 = {x = 1, y = -2.5, z = 1}
+local p3 = {x = 1, y = -2.5, z = -1}
+local p4 = {x = -1, y = -2.5, z = -1}
+
+local p5 = {x = -1, y = -0.5, z = 1}
+local p6 = {x = 1, y = -0.5, z = 1}
+local p7 = {x = 1, y = -0.5, z = -1}
+local p8 = {x = -1, y = -0.5, z = -1}
+
+local a = 0.9
+local p4i = {x = -1 * a, y = (-1 * a) - 1.5, z = -1}
+local p3i = {x = 1 * a, y = (-1 * a) - 1.5, z = -1}
+local p7i = {x = 1 * a, y = (1 * a) - 1.5, z = -1}
+local p8i = {x = -1 * a, y = (1 * a) - 1.5, z = -1}
+
+local p4iF = {x = p4i.x, y = p4i.y, z = -0.83}
+local p3iF = {x = p3i.x, y = p3i.y, z = -0.83}
+local p7iF = {x = p7i.x, y = p7i.y, z = -0.83}
+local p8iF = {x = p8i.x, y = p8i.y, z = -0.83}
+
+local s1 = {p1, p2, p3, p4, 100, uv1}
+local s2 = {p1, p2, p6, p5, 75, uv1}
+local s3 = {p1, p4, p8, p5, 75, uv1}
+local s4 = {p2, p3, p7, p6, 75, uv1}
+local s5 = {p5, p6, p7, p8, 50, uv1}
+
+local s6 = {p4, p4i, p8i, p8, 80, uv1}
+local s7 = {p4, p3, p3i, p4i, 80, uv1}
+local s8 = {p3, p3i, p7i, p7, 80, uv1}
+local s9 = {p7, p7i, p8i, p8, 80, uv1}
+
+local s10 = {p4i, p4iF, p8iF, p8i, 60, uv1}
+local s11 = {p4i, p3i, p3iF, p4iF, 60, uv1}
+local s12 = {p3i, p3iF, p7iF, p7i, 60, uv1}
+local s13 = {p7i, p7iF, p8iF, p8i, 60, uv1}
+
+local s14 = {p4iF, p3iF, p7iF, p8iF, 10, uv3}
+
+--Eyes
+local p9 = {x = -0.6, y = -2, z = -0.84}
+local p10 = {x = -0.3, y = -2, z = -0.84}
+local p11 = {x = -0.3, y = -1.3, z = -0.84}
+local p12 = {x = -0.6, y = -1.3, z = -0.84}
+
+local s15 = {p9, p10, p11, p12, 100, uv2}
+
+local p13 = {x = 0.6, y = -2, z = -0.84}
+local p14 = {x = 0.3, y = -2, z = -0.84}
+local p15 = {x = 0.3, y = -1.3, z = -0.84}
+local p16 = {x = 0.6, y = -1.3, z = -0.84}
+
+local s16 = {p13, p14, p15, p16, 100, uv2}
+
+--Body
+local p17 = {x = -0.8, y = -0.5, z = -0.8}
+local p18 = {x = 0.8, y = -0.5, z = -0.8}
+local p19 = {x = 0.8, y = -0.5, z = 0.6}
+local p20 = {x = -0.8, y = -0.5, z = 0.6}
+
+local p21 = {x = -0.8, y = 1.5, z = -0.4}
+local p22 = {x = 0.8, y = 1.5, z = -0.4}
+local p23 = {x = 0.8, y = 1.5, z = 1}
+local p24 = {x = -0.8, y = 1.5, z = 1}
+
+local s17 = {p17, p18, p22, p21, 60, uv1}
+local s18 = {p19, p20, p24, p23, 60, uv1}
+local s19 = {p17, p20, p24, p21, 60, uv1}
+local s20 = {p18, p19, p23, p22, 60, uv1}
+local s21 = {p21, p22, p23, p24, 40, uv1}
+
+--Arm_Left
+local p25 = {x = -0.8, y = -0.5, z = -0.7}
+local p26 = {x = -0.8, y = -0.5, z = 0.5}
+local p27 = {x = -0.8, y = 0.1, z = 0.5}
+local p28 = {x = -0.8, y = 0.1, z = -0.7}
+
+local p29 = {x = -2, y = 0.9, z = -0.7}
+local p30 = {x = -2, y = 0.9, z = 0.5}
+local p31 = {x = -2, y = 1.5, z = 0.5}
+local p32 = {x = -2, y = 1.5, z = -0.7}
+
+local s22 = {p25, p26, p30, p29, 70, uv1}
+local s23 = {p28, p27, p31, p32, 70, uv1}
+local s24 = {p30, p26, p27, p31, 70, uv1}
+local s25 = {p29, p25, p28, p32, 70, uv1}
+local s26 = {p29, p30, p31, p32, 40, uv1}
+
+--Arm_Right
+
+local p25m = {x = 0.8, y = -0.5, z = -0.7}
+local p26m = {x = 0.8, y = -0.5, z = 0.5}
+local p27m = {x = 0.8, y = 0.1, z = 0.5}
+local p28m = {x = 0.8, y = 0.1, z = -0.7}
+
+local p29m = {x = 2, y = 0.9, z = -0.7}
+local p30m = {x = 2, y = 0.9, z = 0.5}
+local p31m = {x = 2, y = 1.5, z = 0.5}
+local p32m = {x = 2, y = 1.5, z = -0.7}
+
+local s22m = {p25m, p26m, p30m, p29m, 70, uv1}
+local s23m = {p28m, p27m, p31m, p32m, 70, uv1}
+local s24m = {p30m, p26m, p27m, p31m, 70, uv1}
+local s25m = {p29m, p25m, p28m, p32m, 70, uv1}
+local s26m = {p29m, p30m, p31m, p32m, 40, uv1}
+
+sur = {s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20, s21, s22, s23, s24, s25, s26, s22m, s23m, s24m, s25m, s26m}
+
+local b = obj.track0
+
+for k,v in pairs(sur) do
+	for i=1,4 do
+		local p = v[i]
+		if (not p.changed) then
+			p.x = p.x * b
+			p.y = p.y * b
+			p.z = p.z * b
+			p.changed = true
+		end
+	end
+end
+
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0
+}
+geos = {geo}

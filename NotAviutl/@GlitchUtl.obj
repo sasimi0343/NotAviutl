@@ -1,0 +1,18 @@
+@[Glitch] Noise
+--track0:Width,0,9999,100,1
+--track1:Height,0,9999,100,1
+--track2:Seed,0,9999,0,1
+
+if (rikky_module == nil) then require("rikky_module") end
+
+local pfunction = function(r, g, b, a, _, _, _, _, x, y)
+	r = rand(0, 255, obj.track2, x * 3 + (y * obj.w))
+	g = rand(0, 255, obj.track2, x * 3 + (y * obj.w) + 1)
+	b = rand(0, 255, obj.track2, x * 3 + (y * obj.w) + 2)
+	a = 255
+	return r,g,b,a
+end
+
+obj.load("figure", "四角形", 0xffffff, 1)
+obj.effect("リサイズ", "X", obj.track0, "Y", obj.track1, "ドット数でサイズ指定", 1, "補間しない", 1)
+rikky_module.pixelfunction(pfunction)

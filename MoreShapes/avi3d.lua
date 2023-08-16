@@ -338,7 +338,7 @@ function LightPixel(hx, hy, hz, lights, world, surface)
 		intensity = intensity + (math.max(1 - intensity, 0) * (inte))
 		
 		if (world.shadow) then
-			intensity = (1 - ShadowPixel(dx, dy, dz, v, world, surface)) * intensity
+			intensity = (1 - ShadowPixel(hx, hy, hz, dx, dy, dz, v, world, surface)) * intensity
 		end
 	end
 	--print(intensity)
@@ -434,7 +434,18 @@ function NormalizedVector(p1, p2, p3)
 	gct.Vector.Cross(PointToArray(p21), PointToArray(p31))
 end
 
-function ShadowPixel(dx, dy, dz, light, world, surface)
+function PointToString(pos)
+	return pos[1] .. ", " .. pos[2] .. ", " .. pos[3]
+end
+
+function NotNormalized(a,b,c)
+	local AB=gct.Vector.Sub(b,a)
+	local BC=gct.Vector.Sub(c,b)
+	local N = gct.Vector.Cross(AB,BC)
+	return N
+end
+
+function ShadowPixel(hx,hy,hz, dx, dy, dz, light, world, surface)
 	local shadow = 0
 	--local lights = world.lights
 	local surs = world.surface_all
@@ -447,28 +458,38 @@ function ShadowPixel(dx, dy, dz, light, world, surface)
 	if (light.range < distance) then
 		return 0
 	end
-	for k,v in pairs(surs) do
-		if (not (v == surface)) then
-			
-			local nA = gct.Vector.Norm_surface(PointToArray(v[1]), PointToArray(v[2]), PointToArray(v[3]))
-			local nB = gct.Vector.Norm_surface(PointToArray(v[2]), PointToArray(v[3]), PointToArray(v[4]))
-			
-			local iA = gct.Vector.Pos_plane_intersection_segment(PointToArray(light), {dx, dy, dz}, nA, distance)
-			local iB = gct.Vector.Pos_plane_intersection_segment(PointToArray(light), {dx, dy, dz}, nB, distance)
-			
-			if (not ((iA == false) and (iB == false))) then
-				return 1
+	for _,geo in pairs(world.objs) do
+		for _,geo in pairs(geo.geometory) do
+			for k,v in pairs(geo.surface) do
+				if (not (v == surface)) then
+					
+					local nA = gct.Vector.Norm_surface(PointToArray(v[1]), PointToArray(v[2]), PointToArray(v[3]))
+					local nB = gct.Vector.Norm_surface(PointToArray(v[2]), PointToArray(v[3]), PointToArray(v[4]))
+					
+					--local dA = Distance({0, 0, 0}, NotNormalized(PointToArray(v[1]), PointToArray(v[2]), PointToArray(v[3])))
+					--local dB = Distance({0, 0, 0}, NotNormalized(PointToArray(v[2]), PointToArray(v[3]), PointToArray(v[4])))
+					
+					local iA = gct.Vector.Pos_plane_intersection_segment(PointToArray(light), {hx, hy, hz}, nA, distance)
+					local iB = gct.Vector.Pos_plane_intersection_segment(PointToArray(light), {hx, hy, hz}, nB, distance)
+					
+					if (not ((iA == false) and (iB == false))) then
+						--gct.Draw_line3D(PointToArray(light), {hx, hy, hz}, 5, 0xff0000, 1)
+						--if (not (iA == false)) then print(PointToString(iA)) end
+						--if (not (iB == false)) then print(PointToString(iB)) end
+						return 1
+					end
+				
+				end
+				
+				--for i=1,4 do
+				--	local point = v[i]
+				--	
+				--	local nA = gct.Vector.Norm_surface(PointToArray())
+				--end
+				--shadow = 1
+				--return 1
 			end
-		
 		end
-		
-		--for i=1,4 do
-		--	local point = v[i]
-		--	
-		--	local nA = gct.Vector.Norm_surface(PointToArray())
-		--end
-		--shadow = 1
-		--return 1
 	end
 	return 0
 end

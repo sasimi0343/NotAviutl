@@ -1,0 +1,217 @@
+
+@[PositionCalibration]
+obj.cx = 0
+obj.cy = 0
+obj.cz = 0
+
+@[ShowDelayed]
+--dialog:[Global]Delay,gd=1;
+if (obj.frame <= obj.index * gd) then
+	obj.alpha = 0
+end
+
+@Blink
+--track0:Freq,0,999,1,1
+--track1:Time,1,999,1,1
+--track2:Alpha,0,1,0,0.01
+--dialog:[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;[Global]Debug/chk,dbg=0;
+
+local et = require("et")
+et.Blink(obj, gt, gd, ggd, {
+    freq = obj.track0,
+    tim = obj.track1,
+    alpha = obj.track2,
+    dbg=dbg
+})
+
+@Raster
+--track0:Freq,0,999,1,1
+--track1:Width,0,999,100,1
+--track2:Height,0,999,100,1
+--dialog:[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Vertical/chk,vert=0;Random/chk,isrand=0;
+
+local et = require("et")
+et.Raster(obj, gt, gd, ggd, {
+    freq = obj.track0,
+    width = obj.track1,
+    height = obj.track2,
+    isvert = vert,
+    isrand = isrand
+})
+
+@Move
+--dialog:[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Start X,sx=0;Start Y,sy=0;Start Z,sz=0;End X,ex=0;End Y,ey=0;End Z,ez=0;Reverse Mode,revmode=0;
+
+local et = require("et")
+et.Move(obj, gt, gd, ggd, {
+    sx = sx,
+    sy = sy,
+    sz = sz,
+    ex = ex,
+    ey = ey,
+    ez = ez,
+    eas = eas,
+    revmode = revmode
+})
+
+@RandomMove90Deg
+--track0:Range,0,9999,100,0.1
+--dialog:[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Seed,seed=1;
+
+local et = require("et")
+et.RandomMove90Deg(obj, gt, gd, ggd, {
+    range = obj.track0,
+    eas = eas,
+    seed = seed
+})
+
+@RandomPos
+--track0:Range,0,9999,100,0.1
+--track1:RangeChange,-9999,9999,0,0.1
+--dialog:[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Seed,seed=1;Direction,dir=0;
+
+local et = require("et")
+et.RandomPos(obj, gt, gd, ggd, {
+    range = obj.track0,
+    eas = eas,
+    seed = seed,
+    dir = dir,
+    rangeChange = obj.track1
+})
+
+@Zoom
+--track0:Zoom,0,9999,100,0.1
+--track1:ZoomChange,-9999,9999,0,0.1
+--dialog:[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Seed,seed=1;
+
+local et = require("et")
+et.Zoom(obj, gt, gd, ggd, {
+    zoom = obj.track0,
+    eas = eas,
+    seed = seed,
+    zoomchange = obj.track1
+})
+
+@Rotate
+--dialog:[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Start X,sx=0;Start Y,sy=0;Start Z,sz=0;End X,ex=0;End Y,ey=0;End Z,ez=0;Reverse Mode,revmode=0;
+
+local et = require("et")
+et.Rotate(obj, gt, gd, ggd, {
+    sx = sx,
+    sy = sy,
+    sz = sz,
+    ex = ex,
+    ey = ey,
+    ez = ez,
+    eas = eas,
+    revmode = revmode
+})
+
+@FanClipping
+--track0:Šî€Šp,-1080,1080,90
+--dialog:[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Start X,sx=0;Start Y,sy=0;Start Angle,sa=0;End X,ex=0;End Y,ey=0;End Angle,ea=0;Reverse Mode,revmode=0;
+
+local et = require("et")
+et.FanClipping(obj, gt, gd, ggd, {
+    sx = sx,
+    sy = sy,
+    sa = sa,
+    ex = ex,
+    ey = ey,
+    ea = ea,
+    eas = eas,
+    revmode = revmode
+})
+
+@SquareClip
+--track0:Start%,0,100,100,0.1
+--track1:End%,0,100,0,0.1
+--track2:Seed,-4,9999,0,1
+--dialog:[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Easing2,eas2=-1;Hide/chk,hide=1;Color/col,color=0xffffff;
+
+local et = require("et")
+et.SquareClip(obj, gt, gd, ggd, {
+	st = obj.track0,
+	ed = obj.track1,
+	seed = obj.track2,
+	hide = (hide == 1),
+	eas = eas,
+	eas2 = eas2,
+	color = color,
+})
+
+@[Transion] RandomTransion
+--dialog:[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easings,eas={-1};Seed,seed=0;Transions,transion={1};
+
+if (obj.frame <= obj.index * gd) then
+	obj.alpha = 0
+	return
+end
+
+local et = require("et")
+
+local multiple = ((obj.rand(0, 1, seed, obj.index * 10 + 1)) - 0.5) * 2
+local easing = eas[obj.rand(1, #eas, seed, obj.index * 10 + 2)]
+
+local transions = {
+	function ()
+	local xy = 0
+	local sx = obj.w * multiple
+	local sy = obj.h * multiple
+	if (obj.w < obj.h) then
+		xy = 1
+		sx = 0
+	else
+		sy = 0
+	end
+	
+	et.Move(obj, gt, gd, ggd, {
+		sx = sx,
+		sy = sy,
+		sz = 0,
+		ex = 0,
+		ey = 0,
+		ez = 0,
+		eas = easing,
+		revmode = 0
+	})
+	end,
+	function()
+	et.Zoom(obj, gt, gd, ggd, {
+		zoom = 0,
+		eas = easing,
+		zoomchange = 100
+	})
+	et.Rotate(obj, gt, gd, ggd, {
+		sx = 0,
+		sy = 0,
+		sz = 90 * multiple,
+		ex = 0,
+		ey = 0,
+		ez = 0,
+		eas = easing,
+		revmode = 0
+	})
+	end,
+	function()
+	et.Blink(obj, gt, gd, ggd, {
+		freq = 1,
+		tim = 1,
+		alpha = 0,
+	})
+	et.Rotate(obj, gt, gd, ggd, {
+		sx = 0,
+		sy = 0,
+		sz = 90 * multiple,
+		ex = 0,
+		ey = 0,
+		ez = 0,
+		eas = easing,
+		revmode = 0
+	})
+	end
+}
+
+local transion = transions[transion[obj.rand(1, #transion, seed, obj.index * 10 + 3)]]
+
+transion()

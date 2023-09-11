@@ -1,0 +1,90 @@
+@[Motion] Trail
+--track0:Alpha,0,100,50,0.1
+--track1:Zoom,0,100,100,0.1
+--track2:Length,1,100,10,1
+--dialog:TrackValue/chk,trackvalue=0;OnlyFirstFrame/chk,imagesave=1;Color/col,color=0xffff00;
+
+require("rikky_module")
+
+if (motion_trail == nil) then
+	motion_trail = {}
+end
+
+local index = tostring(obj.layer) .. "_" .. tostring(obj.index)
+
+if (motion_trail[index] == nil) then
+	motion_trail[index] = {frame = obj.frame, kf = {}}
+	motion_trail[index].kf[tostring(obj.frame)] = {
+		x = obj.getvalue("x") + obj.ox - obj.cx,
+		y = obj.getvalue("y") + obj.oy - obj.cy,
+		z = obj.getvalue("z") + obj.oz - obj.cz,
+		rx = obj.rx,
+		ry = obj.ry,
+		rz = obj.rz,
+		alpha = obj.alpha * obj.getvalue("alpha"),
+		zoom = obj.zoom * (obj.getvalue("zoom")/100),
+		aspect = obj.aspect * obj.getvalue("aspect"),
+	}
+end
+
+local t2 = motion_trail[index]
+
+if (obj.frame == 0) then
+	for i=0, t2.frame do
+		rikky_module.image("c", "na_motion_layer" .. index .. "_" .. t2.frame)
+	end
+end
+
+if ((not (imagesave == 1)) or ((imagesave == 1) and (obj.frame == 0))) then
+	if (imagesave == 1) then
+		rikky_module.image("w", "na_motion_layer" .. index .. "_" .. 0)
+	else
+		rikky_module.image("w", "na_motion_layer" .. index .. "_" .. obj.frame)
+	end
+	
+	
+end
+
+rikky_module.image("w", "na_motion_original")
+
+for i=math.max(obj.frame-obj.track2, 0), obj.frame do
+	if (imagesave == 1) then
+		rikky_module.image("r+", "na_motion_layer" .. index .. "_" .. 0)
+	else
+		rikky_module.image("r+", "na_motion_layer" .. index .. "_" .. i)
+	end
+	
+	local t = motion_trail[index].kf[tostring(i)]
+	
+	if (not (t == nil)) then
+		
+		if (not (color == "")) then
+			obj.effect("íPêFâª", "color", color, "ãPìxÇï€éùÇ∑ÇÈ", 0)
+		end
+		
+		local alphachange = ((t.alpha - (obj.track0 / 100)) / obj.track2) * (obj.frame - i)
+		
+		obj.draw(-obj.x -obj.ox +obj.cx + t.x, -obj.y -obj.oy +obj.cy + t.y, -obj.z -obj.oz +obj.cz + t.z, t.zoom, t.alpha - alphachange, t.rx - obj.rx, t.ry - obj.ry, t.rz - obj.rz)
+	end
+end
+
+
+
+rikky_module.image("r+", "na_motion_original")
+
+
+	motion_trail[index].kf[tostring(obj.frame)] = {
+		x = obj.getvalue("x") + obj.ox - obj.cx,
+		y = obj.getvalue("y") + obj.oy - obj.cy,
+		z = obj.getvalue("z") + obj.oz - obj.cz,
+		rx = obj.rx,
+		ry = obj.ry,
+		rz = obj.rz,
+		alpha = obj.alpha * obj.getvalue("alpha"),
+		zoom = obj.zoom * (obj.getvalue("zoom")/100),
+		aspect = obj.aspect * obj.getvalue("aspect"),
+	}
+	t2.frame = math.max(obj.frame, t2.frame)
+	
+local t = motion_trail[index].kf[tostring(obj.frame)]
+obj.draw(0, 0, 0, t.zoom, t.alpha, 0, 0, 0)

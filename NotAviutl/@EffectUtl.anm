@@ -457,6 +457,148 @@ end
 
 obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz
 
+@[Effect] InnerShadow
+--track0:X,-100,100,5
+--track1:Y,-100,100,5
+--track2:Alpha,0,100,40
+--track3:Blur,0,200,10,1
+--check0:Shadow Only,0
+--dialog:Color/col,local color=0x000000;シャドー補正/chk,local opt=1; └補正サイズ,local opt2=20;Bright/chk,bright=0;
+
+if (rikky_module == nil) then require("rikky_module") end
+
+rikky_module.image("w", "na_effect_innershadow0")
+
+local obj_cp = {
+	ox = obj.ox,
+	oy = obj.oy,
+	oz = obj.oz,
+	zoom = obj.zoom,
+	aspect = obj.aspect,
+	rx = obj.rx,
+	ry = obj.ry,
+	rz = obj.rz,
+	alpha = obj.alpha,
+	cx = obj.cx,
+	cy = obj.cy,
+	cz = obj.cz
+};
+
+local master_cp = {
+	zoom = obj.getvalue("zoom") / 100
+}
+
+local w = obj.w / master_cp.zoom;
+local h = obj.h / master_cp.zoom;
+
+if opt == 1 then
+	w = w + (opt2 or 20)
+	h = h + (opt2 or 20)
+end
+
+if (obj.track2 == 0) then
+	return 0
+else
+	obj.setoption("drawtarget", "tempbuffer", w, h)
+	obj.load("figure", "四角形", color, math.max(w, h))
+	obj.draw()
+	obj.setoption("blend", "alpha_sub")
+	rikky_module.image("r+", "na_effect_innershadow0")
+	obj.draw()
+	obj.setoption("blend", 0)
+	
+	obj.setoption("drawtarget", "framebuffer")
+	
+	obj.load("tempbuffer")
+	rikky_module.image("w", "na_effect_innershadow1")
+
+	obj.setoption("drawtarget", "tempbuffer")
+	if (obj.check0 == false) then
+		rikky_module.image("r", "na_effect_innershadow0")
+		obj.draw()
+	end
+	rikky_module.image("r+", "na_effect_innershadow1")
+	obj.effect("ぼかし", "範囲", obj.track3)
+	if (bright == 1) then
+		obj.effect("色調補正", "明るさ", 200)
+	end
+	obj.draw(obj.track0, obj.track1, 0, 1, obj.track2 / 100)
+	obj.setoption("blend", "alpha_sub")
+	rikky_module.image("r+", "na_effect_innershadow1")
+	obj.draw()
+	obj.setoption("blend", 0)
+	obj.setoption("drawtarget", "framebuffer")
+
+	obj.load("tempbuffer")
+end
+
+
+obj.ox = obj_cp.ox
+obj.oy = obj_cp.oy
+obj.oz = obj_cp.oz
+obj.zoom = obj_cp.zoom
+obj.aspect = obj_cp.aspect
+obj.rx = obj_cp.rx
+obj.ry = obj_cp.ry
+obj.rz = obj_cp.rz
+obj.alpha = obj_cp.alpha
+obj.cx = obj_cp.cx
+obj.cy = obj_cp.cy
+obj.cz = obj_cp.cz
+
+@[Effect] QuickStrech
+--track0:X,0,6000,0,1
+--track1:Y,0,6000,0,1
+--track2:Size,0,9999,50,1
+--track3:Strech,0,9999,50,0.1
+--dialog:Direction[RDLU],direction=0;
+
+if (rikky_module == nil) then require("rikky_module") end
+
+rikky_module.image("w", "na_effect_quickstrech1")
+
+local dir = {"上", "右", "左", "下"}
+local dire = dir[1]
+local dirX = 0
+local dirY = -1
+local w,h = obj.track2,obj.track2
+local ow,oh = obj.w,obj.h
+if (direction == 0) then
+	dire = dir[2]
+	dirX = 1
+	w = 1
+	dirY = 0
+elseif (direction == 1) then
+	dire = dir[4]
+	dirX = 0
+	dirY = 1
+	h = 1
+elseif (direction == 2) then
+	dire = dir[3]
+	dirX = -1
+	w = 1
+	dirY = 0
+elseif (direction == 3) then
+	dire = dir[1]
+	dirX = 0
+	dirY = -1
+	h = 1
+end
+
+obj.copybuffer("tmp", "obj")
+obj.load("tempbuffer", obj.track0 + math.min(dirX, 0), obj.track1 + math.min(dirY, 0), w, h)
+obj.effect("領域拡張", dire, math.max(math.abs(dirX), math.abs(dirY)) * obj.track3, "塗りつぶし", 1)
+local sw,sh = obj.w, obj.h
+rikky_module.image("w", "na_effect_quickstrech2")
+
+obj.setoption("drawtarget", "tempbuffer", ow, oh)
+rikky_module.image("r+", "na_effect_quickstrech1")
+obj.draw()
+rikky_module.image("r+", "na_effect_quickstrech2")
+obj.draw((-ow / 2) + (sw/2) + obj.track0, (-oh / 2) + (sh/2) + obj.track1)
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")
 
 @[Group] Test
 print(obj.index)

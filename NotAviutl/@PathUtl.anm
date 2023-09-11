@@ -1,0 +1,354 @@
+@[Path] MakePath
+--track0:Precision,1,200,100,0.1
+--track1:Connection,0,100,0,1
+--dialog:Background Color/col,color=nil;[Global]Delay,gdelay=0;[Global]Time,gtime=0;[Global]Global Delay,ggd=0;[ET]Easing,geasing=-1;[ET]BlinkTime,gblinktime=0;[ET]ConnectionStart,gsc=0;[ET]PrecisionStart,gsp=0;
+
+require("rikky_module")
+pathutl = {paths = {}, effects = {}, drawpoint = {}}
+
+local connection = obj.track1
+local precision = obj.track0
+
+if (not (gtime == 0)) then
+	if (obj.frame >= gdelay * obj.index + ggd) then
+		if (obj.frame < gdelay * obj.index + ggd + gtime) then
+			local et = require("et_lib")
+			connection = et.easing(geasing, obj, gtime, gdelay, gsc, obj.track1, ggd)
+			precision = et.easing(geasing, obj, gtime, gdelay, gsp, obj.track0, ggd)
+		else
+			if (gblinktime == -1) then
+				connection = obj.track1
+				precision = obj.track0
+			else
+				if (gblinktime == 0 or (obj.frame >= gdelay * obj.index + ggd + gtime + gblinktime)) then
+					return
+				elseif ((obj.frame-(gdelay * obj.index))%2 == 0) then
+					return
+				end
+				connection = obj.track1
+				precision = obj.track0
+			end
+		end
+	else
+		connection = gsc
+		precision = gsp
+	end
+end
+
+
+
+
+local rpaths, num = rikky_module.linedetection(precision, color, true)
+
+if (connection == 0) then
+	for k,v in pairs(rpaths) do
+		local upath = {paths = {}, color1 = nil, color2 = nil}
+		upath.paths[1] = {x = v.x0, y = v.y0}
+		upath.paths[2] = {x = v.x1, y = v.y1}
+		
+		table.insert(pathutl.paths, upath)
+	end
+else
+	local round = function (num, per)
+		return math.floor(num / per) * per
+	end
+	local almostsame = function (p1, p2, per)
+		return (round(p1.x, per) == round(p2.x, per)) and (round(p1.y, per) == round(p2.y, per))
+	end
+	
+	local allpaths = {}
+	for k,v in pairs(rpaths) do
+		local upath = {paths = {}, color1 = nil, color2 = nil}
+		upath.paths[1] = {x = v.x0, y = v.y0}
+		upath.paths[2] = {x = v.x1, y = v.y1}
+		
+		table.insert(allpaths, upath)
+	end
+	
+	local allposes = {}
+	for k,v in pairs(allpaths) do
+		for _,v2 in pairs(v.paths) do
+			allposes[round(v2.x, connection) .. "_" .. round(v2.y, connection)] = v2
+		end
+	end
+	
+	for k,v in pairs(allpaths) do
+		for i=1,#v.paths do
+			local v2 = v.paths[i]
+			local pos = allposes[round(v2.x, connection) .. "_" .. round(v2.y, connection)]
+			if (not (pos == nil)) then v.paths[i] = pos end
+		end
+	end
+	
+	local function tostringpos(upath)
+		return "(" .. upath.paths[1].x .. "," .. upath.paths[1].y .. ")"
+	end
+	
+	local did = {}
+	local didpoints = {}
+	local allupaths = {}
+	local currentupath = {paths = {}, color1 = nil, color2 = nil}
+	local lastpos = nil
+	local function check(upath)
+		did[upath] = true
+		if (not didpoints[upath.paths[1]]) then
+			table.insert(currentupath.paths, upath.paths[1])
+			didpoints[upath.paths[1]] = true
+		end
+		if (not didpoints[upath.paths[2]]) then
+			table.insert(currentupath.paths, upath.paths[2])
+			didpoints[upath.paths[2]] = true
+		end
+		for k,v in pairs(allpaths) do
+			if ((not (did[v])) and (v.paths[1] == upath.paths[2])) then
+				--print(">" .. tostringpos(v))
+				check(v)
+			end
+		end
+		
+		lastpos = upath.paths[1]
+	end
+	
+	for k,v in pairs(allpaths) do
+		if (not (did[v])) then
+			--print(tostringpos(v))
+			check(v)
+			if (not (lastpos == nil)) then
+				table.insert(currentupath.paths, lastpos)
+			end
+			table.insert(allupaths, currentupath)
+			currentupath = {paths = {}, color1 = nil, color2 = nil}
+			didpoints = {}
+			lastpos = nil
+		end
+	end
+	
+	for k,v in pairs(allupaths) do
+		table.insert(pathutl.paths, v)
+	end
+end
+
+@[Path] BeginPath
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+
+pathutl = {paths = {}, effects = {}, drawpoint = {}}
+local upath = {paths = {}, color1 = nil, color2 = nil}
+
+upath.paths[1] = {x = obj.track0, y = obj.track1}
+
+table.insert(pathutl.paths, upath)
+
+@[Path] Colors
+--track0:Hue,0,360,5,0.1
+--track1:Sat,0,100,10,0.1
+--track2:Vue,0,100,10,0.1
+--dialog:Base Color/col,color=0xffffff;Seed,seed=1;Color1/chk,setcol1=1;Color2/chk,setcol2=0;
+
+local i = 0
+for k,val in pairs(pathutl.paths) do
+	local h,s,v = HSV(color)
+	h = h + obj.rand(-obj.track0 / 2, obj.track0 / 2, seed, i * 3 + 1)
+	if (h >= 360) then
+		h = h - 360
+	elseif (h < 0) then
+		h = h + 360
+	end
+	
+	s = s + obj.rand(-obj.track1 / 2, obj.track1 / 2, seed, i * 3 + 2)
+	if (s >= 100) then
+		s = 100
+	elseif (s <= 0) then
+		s = 0
+	end
+	
+	v = v + obj.rand(-obj.track2 / 2, obj.track2 / 2, seed, i * 3 + 3)
+	if (v >= 100) then
+		v = 100
+	elseif (v <= 0) then
+		v = 0
+	end
+	
+	local col = HSV(h,s,v)
+	
+	if (setcol1 == 1) then val.color1 = col end
+	if (setcol2 == 1) then val.color2 = col end
+	
+	i = i + 1
+end
+
+@[Path] Point Move
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--dialog:Selection,selection={};
+
+local index = 0
+for k,v in pairs(pathutl.paths) do
+	for _,v2 in pairs(v.paths) do
+		local contains = false
+		for _,v3 in pairs(selection) do
+			if (index == v3) then
+				contains = true
+				break
+			end
+		end
+		if (contains) then
+			v2.x = v2.x + obj.track0
+			v2.y = v2.y + obj.track1
+		end
+		
+		index = index + 1
+	end
+end
+
+@[Path] SelectPoints (Index)
+--track0:Index,0,9999,0,1
+pathutl_selection = {obj.track0}
+
+@[Path] SelectPoints (Range)
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Width,0,9999,100,0.1
+--track3:Height,0,9999,100,0.1
+
+function IsRange(pos)
+	return (pos.x >= obj.track0 - (obj.track2 / 2) and pos.x <= obj.track0 + (obj.track2 / 2)) and
+			(pos.y >= obj.track1 - (obj.track3 / 2) and pos.y <= obj.track1 + (obj.track3 / 2))
+end
+
+pathutl_selection = {}
+local index = 0
+for k,v in pairs(pathutl.paths) do
+	for _,v2 in pairs(v.paths) do
+		if (IsRange(v2)) then
+			table.insert(pathutl_selection, index)
+		end
+		index = index + 1
+	end
+end
+
+@[Path] DrawPoints
+--track0:Size,0,9999,10,1
+--track1:Border,0,9999,4000,1
+--dialog:Selection,selection=nil;Figure/fig,figure=nil;Color/col,color=0xffffff;
+
+table.insert(pathutl.drawpoint, {
+	size = obj.track0,
+	border = obj.track1,
+	figure = figure,
+	color = color
+})
+
+@[Path] DrawPath
+--track0:Border,0,9999,3,0.1
+--dialog:Color Override/col,color=nil;Figure/fig,figure=nil;PolyAlpha,polyalpha=0.0;BorderDrawMethod,bdm=0;
+
+if (#pathutl.paths == 0) then
+	return
+end
+
+require("rikky_module")
+
+local ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz = obj.ox, obj.oy, obj.oz, obj.rx, obj.ry, obj.rz, obj.zoom, obj.alpha, obj.aspect, obj.cx, obj.cy, obj.cz
+
+local b = obj.track0
+
+if (bdm == nil) then
+	bdm = 0
+end
+
+if (not (figure == nil)) then
+	obj.load("figure", figure, color, 1)
+end
+
+rikky_module.image("w", "na_path_original")
+
+if (not (color == nil)) then
+	obj.effect("単色化", "color", color, "輝度を保持する", 0)
+end
+
+local maxx,maxy,minx,miny = 0,0,0,0
+
+for k,v in pairs(pathutl.paths) do
+	for _,v2 in pairs(v.paths) do
+		maxx = math.max(maxx, v2.x)
+		maxy = math.max(maxy, v2.y)
+		minx = math.min(minx, v2.x)
+		miny = math.min(miny, v2.y)
+	end
+end
+
+obj.setoption("drawtarget", "tempbuffer", (math.max(math.abs(minx), maxx) + b) * 2, (math.max(math.abs(miny), maxy) + b) * 2)
+
+if (polyalpha > 0) then
+for k,v in pairs(pathutl.paths) do
+	local i = 1
+	rikky_module.image("r", "na_path_original")
+	if (not (v.color2 == nil)) then
+		obj.effect("単色化", "color", v.color2, "輝度を保持する", 0)
+	end
+	for _,v2 in pairs(v.paths) do
+		if (i-2 > 0) then
+			local prev1 = v.paths[i-1]
+			local prev2 = v.paths[i-2]
+			
+			obj.drawpoly(prev2.x, prev2.y, 0, prev1.x, prev1.y, 0, v2.x, v2.y, 0, v2.x, v2.y, 0, 0,0, obj.w,0, obj.w,obj.h, 0,obj.h, polyalpha)
+		end
+		i = i + 1
+	end
+end
+end
+
+for k,v in pairs(pathutl.paths) do
+	local i = 1
+	rikky_module.image("r", "na_path_original")
+	if (not (v.color1 == nil)) then
+		obj.effect("単色化", "color", v.color1, "輝度を保持する", 0)
+	end
+	--print(#v.paths)
+	for _,v2 in pairs(v.paths) do
+		if (i-1 > 0) then
+			local prev = v.paths[i-1]
+			
+			obj.drawpoly(prev.x-b, prev.y-b, 0, v2.x-b, v2.y-b, 0, v2.x+b, v2.y+b, 0, prev.x+b, prev.y+b, 0)
+		end
+		i = i + 1
+	end
+end
+
+for _,points in pairs(pathutl.drawpoint) do
+	for k,v in pairs(pathutl.paths) do
+		local i = 1
+		
+		if (points.figure == "text") then
+			obj.setfont("MS UI Gothic", points.size, 0, points.color)
+			obj.load("text", i)
+		else
+			obj.load("figure", points.figure, points.color, points.size, points.border)
+		end
+		
+		for _,v2 in pairs(v.paths) do
+			if (points.figure == "text") then
+				obj.setfont("MS UI Gothic", points.size, 0, points.color)
+				obj.load("text", i)
+			end
+			obj.draw(v2.x, v2.y)
+			i = i + 1
+		end
+	end
+end
+
+for _,func in pairs(pathutl.effects) do
+	local index = 0
+	for k,v in pairs(pathutl.paths) do
+		for _,v2 in pairs(v.paths) do
+			func(index, v2, v)
+			index = index + 1
+		end
+	end
+end
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")
+
+obj.ox, obj.oy, obj.oz, obj.rx, obj.ry, obj.rz, obj.zoom, obj.alpha, obj.aspect, obj.cx, obj.cy, obj.cz = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz

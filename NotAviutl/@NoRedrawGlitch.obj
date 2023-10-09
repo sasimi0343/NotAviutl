@@ -1,0 +1,18 @@
+@Draw
+--track0:リセットしない,0,1,0,1
+--track1:ID,0,999,0,1
+if (obj.frame == 0 and obj.track0 == 0) then
+else
+obj.load("framebuffer")
+obj.copybuffer("obj", "cache:no_redraw_glitch" .. tostring(obj.track1))
+end
+@Up
+--track0:リセットしない,0,1,0,1
+--track1:ID,0,999,0,1
+if (obj.frame == 0 and obj.track0 == 0) then
+obj.copybuffer("tmp", "obj")
+else
+obj.copybuffer("tmp", "frm")
+end
+
+obj.copybuffer("cache:no_redraw_glitch" .. tostring(obj.track1), "tmp")

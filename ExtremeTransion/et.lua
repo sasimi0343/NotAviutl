@@ -72,6 +72,8 @@ local function easing_a(et, t, b, c, d, s, a, p)
 	end
 end
 
+gexit = gexit or 0
+
 function easing_b(par, st, ed, ratio)
 	local module_name = "curve_editor"
 	if not package.loaded[module_name] then
@@ -82,36 +84,51 @@ function easing_b(par, st, ed, ratio)
 	return curve_editor.getcurve(1, par, ratio, st, ed)
 end
 
-local function timeStarted(obj, delay, gld)
+local function timeStarted(obj, disappear, time, delay, gld)
 	if (gld == nil) then gld = 0 end
-	if (obj.frame >= obj.index * delay + gld) then
-		return true
+	if (disappear == 1) then
+		if (obj.frame >= (obj.totalframe - ((obj.num - obj.index - 1) * delay) - gld - time)) then
+			return true
+		end
+	else
+		if (obj.frame >= obj.index * delay + gld) then
+			return true
+		end
 	end
 	return false
 end
 
-local function timeFinished(obj, time, delay, gld)
+local function timeFinished(obj, disappear, time, delay, gld)
 	if (gld == nil) then gld = 0 end
 	if (time < 0) then
 		return false
 	end
-	if ((obj.frame+1) > (obj.index * delay) + time + gld) then
-		return true
+	if (disappear == 1) then
+		if (obj.frame > obj.totalframe - ((obj.num - obj.index - 1) * delay) - gld) then
+			return true
+		end
+	else
+		if ((obj.frame+1) > (obj.index * delay) + time + gld) then
+			return true
+		end
 	end
 	return false
 end
 
-local function timeIn(o,t,d,gd)
+local function timeIn(o,disappear,t,d,gd)
 	if (gd == nil) then gd = 0 end
-	return timeStarted(o,d,gd) and (not timeFinished(o,t,d,gd))
+	return timeStarted(o,disappear,t,d,gd) and (not timeFinished(o,disappear,t,d,gd))
 end
 
-local function timeCalc(o,t,d,gld)
+local function timeCalc(o,disappear,t,d,gld)
 	if (gld == nil) then gld = 0 end
-	if (timeFinished(o,t,d,gld)) then
+	if (timeFinished(o,disappear,t,d,gld)) then
 		return t
 	else
-		if (timeStarted(o,d,gld)) then
+		if (timeStarted(o,disappear,t,d,gld)) then
+			if (disappear == 1) then
+				return o.frame - (o.totalframe - ((o.num - o.index - 1) * d) - t + gld)
+			end
 			return o.frame - (o.index * d) - gld
 		else
 			return 0
@@ -125,24 +142,25 @@ end
 
 --es is Non-negative: Curve Editor
 --es is Negative: Easing_Track
-local function easing(es,o,t,d,from,to, gld)
+local function easing(es,o,disappear,t,d,from,to, gld)
 	if (gld == nil) then gld = 0 end
 	if (es < 0) then
 		local ea = math.abs(es)
-		return easing_a(ea,timeCalc(o,t,d,gld),from,to-from,t)
+		return easing_a(ea,timeCalc(o,disappear,t,d,gld),from,to-from,t)
 	else
-		return easing_b(es,from,to,(timeCalc(o,t,d,gld)/t))
+		return easing_b(es,from,to,(timeCalc(o,disappear,t,d,gld)/t))
 	end
 end
 
-local function Blink(obj, time, delay, gld, data)
+local function Blink(obj, disappear, time, delay, gld, data)
 	if (isValid(data)) then
-		if (timeIn(obj, time, delay, gld)) then
-			local t = timeCalc(obj, time, delay, gld)
+		if (timeIn(obj, disappear, time, delay, gld)) then
+			local t = timeCalc(obj, disappear, time, delay, gld)
 
 			local freq = 1
 			local tim = 1
 			local alpha = 0
+			local edgedetection = false
 	
 			if (isValid(data.freq)) then
 				freq = data.freq
@@ -153,31 +171,34 @@ local function Blink(obj, time, delay, gld, data)
 			if (isValid(data.tim)) then
 				tim = math.min(data.tim, freq)
 			end
+			if (isValid(data.edgedetection)) then
+				edgedetection = data.edgedetection
+			end
 
 			if (freq == 0) then
 				tim = math.max(tim, 1)
 				if (rand(0,1,obj.index,math.floor(t/tim)) == 1) then
-					obj.alpha = alpha
+					if (edgedetection) then obj.effect("エッジ抽出") else obj.alpha = alpha end
 				end
 			else
 				if (t%(freq*2) >= ((freq*2)-tim)) then
-					obj.alpha = alpha
+					if (edgedetection) then obj.effect("エッジ抽出") else obj.alpha = alpha end
 				end
 			end
 		end
-		--debug_print(tostring(timeCalc(obj, time, delay, gld)))
+		--debug_print(tostring(timeCalc(obj, disappear, time, delay, gld)))
 		if (isValid(data.dbg) and data.dbg == 1) then
 			obj.draw()
-			--debug_print(tostring(timeCalc(obj, time, delay)))
-			obj.load("テキスト", tostring(timeCalc(obj, time, delay, gld)))
+			--debug_print(tostring(timeCalc(obj, disappear, time, delay)))
+			obj.load("テキスト", tostring(timeCalc(obj, disappear, time, delay, gld)))
 		end
 	end
 end
 
-local function Raster(obj, time, delay, gld, data)
+local function Raster(obj, disappear, time, delay, gld, data)
 	if (isValid(data)) then
-		if (timeIn(obj, time, delay, gld)) then
-			local t = timeCalc(obj, time, delay, gld)
+		if (timeIn(obj, disappear, time, delay, gld)) then
+			local t = timeCalc(obj, disappear, time, delay, gld)
 
 			local width = 100
 			local height = 100
@@ -206,10 +227,10 @@ local function Raster(obj, time, delay, gld, data)
 	end
 end
 
-local function Move(obj, time, delay, gld, data)
+local function Move(obj, disappear, time, delay, gld, data)
 	if (isValid(data)) then
-		if (timeIn(obj, time, delay, gld)) then
-			--local t = timeCalc(obj, time, delay, gld)
+		if (timeIn(obj, disappear, time, delay, gld)) then
+			--local t = timeCalc(obj, disappear, time, delay, gld)
 
 			local sx = 0
 			local sy = 0
@@ -259,16 +280,16 @@ local function Move(obj, time, delay, gld, data)
 				end
 			end
 			
-			obj.cx = obj.cx + easing(eas, obj, time, delay, sx, ex, gld)
-			obj.cy = obj.cy + easing(eas, obj, time, delay, sy, ey, gld)
-			obj.cz = obj.cz + easing(eas, obj, time, delay, sz, ez, gld)
+			obj.cx = obj.cx + easing(eas, obj, disappear, time, delay, sx, ex, gld)
+			obj.cy = obj.cy + easing(eas, obj, disappear, time, delay, sy, ey, gld)
+			obj.cz = obj.cz + easing(eas, obj, disappear, time, delay, sz, ez, gld)
 		end
 	end
 end
 
-local function RandomMove90Deg(obj, time, delay, gld, data)
+local function RandomMove90Deg(obj, disappear, time, delay, gld, data)
 	if (isValid(data)) then
-		if (timeIn(obj, time, delay, gld)) then
+		if (timeIn(obj, disappear, time, delay, gld)) then
 			local range = 100
 			local eas = -1
 			local seed = 1
@@ -285,21 +306,59 @@ local function RandomMove90Deg(obj, time, delay, gld, data)
 
 			local dir = rand(0,3,seed * (obj.index+1),1)
 			if (dir == 0) then
-				obj.cx = obj.cx + easing(eas, obj, time, delay, range, 0, gld)
+				obj.cx = obj.cx + easing(eas, obj, disappear, time, delay, range, 0, gld)
 			elseif (dir == 1) then
-				obj.cx = obj.cx + easing(eas, obj, time, delay, -range, 0, gld)
+				obj.cx = obj.cx + easing(eas, obj, disappear, time, delay, -range, 0, gld)
 			elseif (dir == 2) then
-				obj.cy = obj.cy + easing(eas, obj, time, delay, range, 0, gld)
+				obj.cy = obj.cy + easing(eas, obj, disappear, time, delay, range, 0, gld)
 			elseif (dir == 3) then
-				obj.cy = obj.cy + easing(eas, obj, time, delay, -range, 0, gld)
+				obj.cy = obj.cy + easing(eas, obj, disappear, time, delay, -range, 0, gld)
 			end
 		end
 	end
 end
 
-local function RandomPos(obj, time, delay, gld, data)
+local function Mozaic(obj, disappear, time, delay, gld, data)
 	if (isValid(data)) then
-		if (timeIn(obj, time, delay, gld)) then
+		if (timeIn(obj, disappear, time, delay, gld)) then
+			local rangeX = 0
+			local rangeY = 0
+			local eas = -1
+			local dontinterpolate = 0
+			
+			if (isValid(data.rangeX)) then
+				rangeX = data.rangeX
+			end
+			if (isValid(data.rangeY)) then
+				rangeY = data.rangeY
+			end
+			if (isValid(data.eas)) then
+				eas = data.eas
+			end
+			if (isValid(data.dontinterpolate)) then
+				dontinterpolate = data.dontinterpolate
+			end
+			if (dontinterpolate) then dontinterpolate = 1 else dontinterpolate = 0 end
+			
+			local w,h = obj.w, obj.h
+			local x, y = 100, 100
+			if (disappear == 1) then
+				x = easing(eas, obj, disappear, time, delay, 100, rangeX)
+				y = easing(eas, obj, disappear, time, delay, 100, rangeY)
+			else
+				x = easing(eas, obj, disappear, time, delay, rangeX, 100)
+				y = easing(eas, obj, disappear, time, delay, rangeY, 100)
+			end
+			
+			obj.effect("リサイズ", "ドット数でサイズ指定", "0", "補間なし", dontinterpolate, "X", x, "Y", y)
+			obj.effect("リサイズ", "ドット数でサイズ指定", "1", "補間なし", dontinterpolate, "X", w, "Y", h)
+		end
+	end
+end
+
+local function RandomPos(obj, disappear, time, delay, gld, data)
+	if (isValid(data)) then
+		if (timeIn(obj, disappear, time, delay, gld)) then
 			
 			local range = 100
 			local seed = 1
@@ -335,7 +394,7 @@ local function RandomPos(obj, time, delay, gld, data)
 				dirX = 0
 			end
 
-			local rg = easing(eas, obj, time, delay, range, rangeChange, gld)
+			local rg = easing(eas, obj, disappear, time, delay, range, rangeChange, gld)
 
 			obj.cx = obj.cx + (dirX * rg)
 			obj.cy = obj.cy + (dirY * rg)
@@ -343,9 +402,9 @@ local function RandomPos(obj, time, delay, gld, data)
 	end
 end
 
-local function Zoom(obj, time, delay, gld, data)
+local function Zoom(obj, disappear, time, delay, gld, data)
 	if (isValid(data)) then
-		if (timeIn(obj, time, delay, gld)) then
+		if (timeIn(obj, disappear, time, delay, gld)) then
 			
 			local zoom = 100
 			local seed = 1
@@ -364,7 +423,7 @@ local function Zoom(obj, time, delay, gld, data)
 				eas = data.eas
 			end
 
-			local rg = easing(eas, obj, time, delay, zoom, zoomChange, gld)
+			local rg = easing(eas, obj, disappear, time, delay, zoom, zoomChange, gld)
 			
 			obj.zoom = obj.zoom * (rg/100)
 		end
@@ -373,10 +432,10 @@ end
 
 
 
-local function Rotate(obj, time, delay, gld, data)
+local function Rotate(obj, disappear, time, delay, gld, data)
 	if (isValid(data)) then
-		if (timeIn(obj, time, delay, gld)) then
-			--local t = timeCalc(obj, time, delay, gld)
+		if (timeIn(obj, disappear, time, delay, gld)) then
+			--local t = timeCalc(obj, disappear, time, delay, gld)
 
 			local sx = 0
 			local sy = 0
@@ -426,19 +485,19 @@ local function Rotate(obj, time, delay, gld, data)
 				end
 			end
 			
-			obj.rx = obj.rx + easing(eas, obj, time, delay, sx, ex, gld)
-			obj.ry = obj.ry + easing(eas, obj, time, delay, sy, ey, gld)
-			obj.rz = obj.rz + easing(eas, obj, time, delay, sz, ez, gld)
+			obj.rx = obj.rx + easing(eas, obj, disappear, time, delay, sx, ex, gld)
+			obj.ry = obj.ry + easing(eas, obj, disappear, time, delay, sy, ey, gld)
+			obj.rz = obj.rz + easing(eas, obj, disappear, time, delay, sz, ez, gld)
 		end
 	end
 end
 
 
 
-local function FanClipping(obj, time, delay, gld, data)
+local function FanClipping(obj, disappear, time, delay, gld, data)
 	if (isValid(data)) then
-		if (timeIn(obj, time, delay, gld)) then
-			--local t = timeCalc(obj, time, delay, gld)
+		if (timeIn(obj, disappear, time, delay, gld)) then
+			--local t = timeCalc(obj, disappear, time, delay, gld)
 
 			local sx = 0
 			local sy = 0
@@ -488,9 +547,9 @@ local function FanClipping(obj, time, delay, gld, data)
 				end
 			end
 			
-			local e_angle = easing(eas, obj, time, delay, sa, ea, gld)
-			local e_x = easing(eas, obj, time, delay, sx, ex, gld)
-			local e_y = easing(eas, obj, time, delay, sy, ey, gld)
+			local e_angle = easing(eas, obj, disappear, time, delay, sa, ea, gld)
+			local e_x = easing(eas, obj, disappear, time, delay, sx, ex, gld)
+			local e_y = easing(eas, obj, disappear, time, delay, sy, ey, gld)
 			
 			--関数化呼び出し
 			require("fan_clipping")
@@ -500,10 +559,10 @@ local function FanClipping(obj, time, delay, gld, data)
 	end
 end
 
-local function SquareClip(obj, time, delay, gld, data)
+local function SquareClip(obj, disappear, time, delay, gld, data)
 	if (isValid(data)) then
-		if (timeIn(obj, time, delay, gld)) then
-			local t = timeCalc(obj, time, delay, gld)/time
+		if (timeIn(obj, disappear, time, delay, gld)) then
+			local t = timeCalc(obj, disappear, time, delay, gld)/time
 
 			local st = 0
 			local ed = 0
@@ -586,7 +645,7 @@ local function SquareClip(obj, time, delay, gld, data)
 			end
 			
 			if (t < 0.5) then
-				local clip = easing(eas, obj, time, delay, st, ed - st, gld)
+				local clip = easing(eas, obj, disappear, time, delay, st, ed - st, gld)
 				
 				local clippp = math.abs(siz) * (clip/100)
 				
@@ -598,7 +657,7 @@ local function SquareClip(obj, time, delay, gld, data)
 					obj.draw(-(siz/2) * ((clip/200)+0.5))
 				end
 			else
-				local clip = easing(eas2, obj, time/2, delay, ed, st - ed, gld + (time/2))
+				local clip = easing(eas2, obj, disappear, time/2, delay, ed, st - ed, gld + (time/2))
 				
 				local clippp = math.abs(siz) * (clip/100)
 				
@@ -622,7 +681,7 @@ local function SquareClip(obj, time, delay, gld, data)
 			obj.ry = ry
 			obj.zoom = zoom
 			obj.alpha = alpha
-		elseif (not timeStarted(obj, delay, gld)) then
+		elseif (not timeStarted(obj, disappear, delay, gld)) then
 			obj.alpha = 0
 		end
 	end
@@ -637,5 +696,6 @@ return {
 	Zoom = Zoom,
 	Rotate = Rotate,
 	FanClipping = FanClipping,
-	SquareClip = SquareClip
+	SquareClip = SquareClip,
+	Mozaic = Mozaic
 }

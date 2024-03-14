@@ -26,6 +26,10 @@ patch.aul‚¨‚æ‚Ñrikky_module (var1‚¾‚¯‚Å‚¢‚¢‚Æv‚¤‚¯‚Ç—¼•û“ü‚ê‚Ä‚¨‚­‚ÆˆÀS) ‚ª•K—
 (’ˆÓ: uMove@ETv‚ÌStartÀ•W‚ª”½“]‚µ‚Ä‚¢‚Ü‚·B)
 (’ˆÓ: uFanClipping@ETv‚Ìg—p‚É‚Írikky‚³‚ñ‚ÌuîƒNƒŠƒbƒsƒ“ƒOv‚ÌƒXƒNƒŠƒvƒg‚©‚çu"fan_clipping.lua"v‚ğExtremeTransion‚ÌƒtƒHƒ‹ƒ_‚É“ü‚ê‚é•K—v‚ª‚ ‚è‚Ü‚·B)
 
+### ’Ç‹L (2024/03/14)
+ŠeƒAƒjƒ[ƒVƒ‡ƒ“Œø‰Ê‚ÉuExitv‚Ìƒ`ƒFƒbƒN‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B
+“oê‚©‚ç‘Şo‚É‚·‚é‚Æ‚«‚Éƒ`ƒFƒbƒNƒ{ƒbƒNƒX‚Éƒ`ƒFƒbƒN‚ğ“ü‚ê‚Ä‚­‚¾‚³‚¢B
+
 ## MoreShapes
 ‚³‚Ü‚´‚Ü‚È}Œ`‚âƒIƒuƒWƒFƒNƒg‚ğ’Ç‰Á‚·‚é‚½‚ß‚Éì‚è‚Ü‚µ‚½B
 ‚Ü‚½AMoreShapes3D‚Å‚ÍA3DƒIƒuƒWƒFƒNƒg‚Ì•`‰æ‚ª‚Å‚«‚é‚æ‚¤‚É‚µ‚Ä‚¢‚Ü‚·B

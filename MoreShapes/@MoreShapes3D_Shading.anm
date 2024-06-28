@@ -43,12 +43,33 @@ table.insert(world.lights, light)
 @[3DShading] MaterialSettings
 --track0:Smoothness,0,100,0,0.1
 --track1:Emitting,0,100,0,0.1
---dialog:Style,style=0;
+--dialog:Style,style=0;Static/chk,static=0;
+
+local avi3d = require("avi3d")
 
 if (style == nil) then
 	style = 0
 end
 
+if (static == nil) then
+	static = 0
+end
+
+local i = 1
 for k,v in pairs(geos) do
-	v.shading = { smooth = obj.track0, emitting = obj.track1, style = style }
+	local rendered = false
+	if ((not (v.shading == nil)) and v.shading.static == 1 and static == 1 ) then
+		rendered = v.shading.rendered
+	else
+		if (not (avi3d.geo_shading_cache == nil)) then
+			local index = 0
+			for _,v2 in pairs(v.surface) do
+				local pt = avi3d.pt(obj.layer, i, index)
+				geo_shading_cache[pt] = nil
+				index = index + 1
+			end
+		end
+	end
+	v.shading = { smooth = obj.track0, emitting = obj.track1, style = style, static = static, rendered = rendered }
+	i = i + 1
 end

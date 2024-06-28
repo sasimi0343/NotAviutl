@@ -1,0 +1,4 @@
+@[Value] Single Variable
+--param:1
+return varutl[tostring(obj.getpoint("param"))] or 0
+

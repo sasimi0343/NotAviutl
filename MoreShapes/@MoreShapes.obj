@@ -298,3 +298,256 @@ end
 
 obj.setoption("drawtarget", "framebuffer")
 obj.load("tempbuffer")
+
+
+@TriPoly
+--track0:Size,0,9999,100,0.1
+--track1:Polyx3,1,999,1,1
+--dialog:Color/col,color=0xffffff;
+
+if (rikky_module == nil) then require("rikky_module") end
+obj.load("figure", "三角形", color, obj.track0)
+
+local w,h = obj.w, obj.h
+
+rikky_module.image("w", "ms_tripoly")
+
+local maxw, maxh = math.sqrt((w ^ 2) * 2), math.sqrt((h ^ 2) * 2)
+
+obj.setoption("drawtarget", "tempbuffer", math.max(w, maxw), math.max(h, maxh))
+
+local ang = 120 / obj.track1
+
+for i=0,obj.track1 do
+
+rikky_module.image("r", "ms_tripoly")
+obj.draw(0, 0, 0, 1.0, 1.0, 0, 0, ang * i)
+
+end
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")
+
+@QuadPoly
+--track0:Size,0,9999,100,0.1
+--track1:Polyx4,1,999,1,1
+--dialog:Color/col,color=0xffffff;Sharp/chk,issharp=0;
+
+if (rikky_module == nil) then require("rikky_module") end
+obj.load("figure", "四角形", color, obj.track0)
+
+local w,h = obj.w, obj.h
+
+rikky_module.image("w", "ms_quadpoly")
+
+local maxw, maxh = math.sqrt((w ^ 2) * 2), math.sqrt((h ^ 2) * 2)
+
+if (obj.track1 == 1) then
+maxw = 0
+maxh = 0
+end
+
+obj.setoption("drawtarget", "tempbuffer", math.max(w, maxw), math.max(h, maxh))
+
+local ang = 90 / obj.track1
+
+for i=0,obj.track1 do
+
+rikky_module.image("r", "ms_quadpoly")
+obj.draw(0, 0, 0, 1.0, 1.0, 0, 0, ang * i)
+
+end
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")
+
+if (issharp == 1) then
+
+local s = obj.track0 / 2
+
+obj.effect("マスク", "サイズ", obj.track0, "X", -s, "Y", -s, "type", 1, "マスクの反転", 1)
+obj.effect("マスク", "サイズ", obj.track0, "X", s, "Y", -s, "type", 1, "マスクの反転", 1)
+obj.effect("マスク", "サイズ", obj.track0, "X", s, "Y", s, "type", 1, "マスクの反転", 1)
+obj.effect("マスク", "サイズ", obj.track0, "X", -s, "Y", s, "type", 1, "マスクの反転", 1)
+
+end
+
+@Octagon
+--track0:Width,0,9999,100,0.1
+--track1:Height,0,9999,100,0.1
+--track2:Bias%,0,100,50,0.1
+--dialog:Color/col,color=0xffffff;
+
+obj.load("figure", "四角形", color, 1)
+obj.effect("リサイズ", "X", obj.track0, "Y", obj.track1, "補間しない", 1, "ドット数でサイズ指定", 1)
+
+local bias = obj.track2 / 100
+local w, h = obj.w / 2, obj.h / 2
+
+obj.effect("斜めクリッピング", "中心X", w * -bias, "中心Y", h * bias, "角度", 45)
+obj.effect("斜めクリッピング", "中心X", w * bias, "中心Y", h * bias, "角度", -45)
+obj.effect("斜めクリッピング", "中心X", w * -bias, "中心Y", h * -bias, "角度", 135)
+obj.effect("斜めクリッピング", "中心X", w * bias, "中心Y", h * -bias, "角度", -135)
+
+@[RandomFigures]
+--track0:Size,0,9999,100,0.1
+--track1:Width,1,9999,3,1
+--track2:Height,1,9999,3,1
+--track3:Seed,1,9999,1,1
+--dialog:Color/col,color=0xffffff;EachObject/chk,eachobject=0;Figures,figures={1};Range,range=1000;
+--check0:RandomPosition
+
+if (rikky_module == nil) then require("rikky_module") end
+
+local figurelist = {
+	function()
+		obj.load("figure", "四角形", color, obj.track0)
+	end,
+	function()
+		obj.load("figure", "四角形", color, obj.track0, obj.track0 / 4)
+	end,
+	function()
+		obj.load("figure", "円", color, obj.track0)
+	end,
+	function()
+		obj.load("figure", "円", color, obj.track0, obj.track0 / 4)
+	end,
+	function()
+		obj.load("figure", "四角形", color, obj.track0 / 2)
+	end,
+	function()
+		obj.load("figure", "四角形", color, obj.track0, obj.track0 / 4)
+		obj.draw()
+		obj.load("figure", "四角形", color, obj.track0 / 3)
+	end,
+	function(index)
+		obj.load("figure", "四角形", color, obj.track0)
+		obj.draw(obj.track0 / 3 * -2)
+		obj.load("figure", "四角形", color, obj.track0)
+		obj.draw(obj.track0 / 3 * 2)
+		
+		obj.load("figure", "四角形", color, 0)
+	end,
+	function()
+		obj.load("figure", "四角形", color, obj.track0)
+		obj.draw(obj.track0 / 3 * -2, obj.track0 / 3 * -2)
+		obj.load("figure", "四角形", color, obj.track0)
+		obj.draw(obj.track0 / 3 * 2, obj.track0 / 3 * -2)
+		obj.load("figure", "四角形", color, obj.track0)
+		obj.draw(obj.track0 / 3 * -2, obj.track0 / 3 * 2)
+		obj.load("figure", "四角形", color, obj.track0)
+		obj.draw(obj.track0 / 3 * 2, obj.track0 / 3 * 2)
+		
+		obj.load("figure", "四角形", color, 0)
+	end,
+	function(index)
+		obj.load("figure", "円", color, obj.track0 * 2)
+		obj.draw(obj.track0 / 2, obj.track0 / 2)
+		obj.load("figure", "四角形", color, 0)
+	end,
+	function()
+		obj.load("figure", "四角形", color, obj.track0)
+		obj.effect("斜めクリッピング", "角度", 45, "幅", obj.track0 / 4)
+	end,
+	function()
+		obj.load("figure", "四角形", color, obj.track0)
+		obj.draw(obj.track0 / -3, obj.track0 / 3 * 2)
+		obj.load("figure", "四角形", color, obj.track0)
+		obj.draw(obj.track0 / 3, obj.track0 / -3 * 2)
+		
+		obj.load("figure", "四角形", color, 0)
+	end,
+}
+
+local num = obj.track1 * obj.track2
+local skipped = {}
+for x=1,obj.track1 do
+	for y=1,obj.track2 do
+		local index = (y-1) * obj.track1 + x
+		local fig = figures[math.floor(obj.rand(1, #figures, obj.track3, index * 5 + 1))]
+		if not (figurelist[fig] == nil) then
+			local ox,oy,oz,rz = ((x-0.5) - (obj.track1 / 2)) * obj.track0, ((y-0.5) - (obj.track2 / 2)) * obj.track0, 0, 0
+			
+			if (obj.check0) then
+				ox = obj.rand(-range, range, obj.track3, index * 5 + 2)
+				oy = obj.rand(-range, range, obj.track3, index * 5 + 3)
+				oz = obj.rand(-range, range, obj.track3, index * 5 + 4)
+			else
+				rz = math.floor(obj.rand(0, 3, obj.track3, index * 5 + 5)) * 90
+			end
+			
+			obj.setoption("drawtarget", "tempbuffer", obj.track0, obj.track0)
+			if not (figurelist[fig] == nil) then figurelist[fig](index) else obj.load("figure", "四角形", color, 0) end
+			obj.draw()
+			obj.setoption("drawtarget", "framebuffer")
+			obj.load("tempbuffer")
+			
+			
+			if (eachobject == 1) then
+				obj.ox = ox
+				obj.oy = oy
+				obj.oz = oz
+				obj.rz = rz
+				rikky_module.effect(index, num)
+				obj.draw()
+			else
+				if (not obj.check0) then
+					rikky_module.image("w", "ms_random_" .. index)
+				else
+					obj.draw(ox, oy, oz, 1.0, 1.0, 0, 0, rz)
+				end
+			end
+		else
+			skipped[index] = true
+		end
+
+	end
+end
+
+if ((not obj.check0) and (eachobject == 0)) then
+obj.setoption("drawtarget", "tempbuffer", obj.track0 * obj.track1, obj.track0 * obj.track2)
+for i=1,num do
+	if not (skipped[i]) then
+	local x = i%obj.track1+0.5
+	local y = math.floor((i-1)/obj.track1)+0.5
+	rikky_module.image("r", "ms_random_" .. i)
+	obj.draw((x - (obj.track1 / 2)) * obj.track0, (y - (obj.track2 / 2)) * obj.track0, 0, 1.0, 1.0, 0, 0, math.floor(obj.rand(0, 3, obj.track3, i * 5 + 5)) * 90)
+	end
+end
+end
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")
+
+
+@[Vertical|Horizontal] Line
+--track0:Start%,0,100,0,0.1
+--track1:End%,0,100,100,0.1
+--dialog:Lines,lines={{100, 100, 100}};Each Object/chk,eachobject=1;
+
+local eachobject = (eachobject == 1)
+
+for k,v in pairs(lines) do
+
+	local x = (-w/2)+0.5
+	local y = (-h/2)+0.5
+	local w = obj.track1
+	local h = obj.track1
+	
+	x = x + (v.x * obj.track0)
+	y = y + (v.y * obj.track0)
+	if (v.dir == "down") then
+		h = obj.track0
+	elseif (v.dir == "up") then
+		h = -obj.track0
+		y = y + 1
+	elseif (v.dir == "right") then
+		w = obj.track0
+	elseif (v.dir == "left") then
+		w = -obj.track0
+		x = x + 1
+	end
+	
+	obj.drawpoly(x,y,0, x+w,y,0, x+w,y+h,0, x,y+h,0)
+
+end

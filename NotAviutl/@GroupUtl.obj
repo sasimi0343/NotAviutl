@@ -112,18 +112,34 @@ print(tostring(obj.w) .. " x " .. tostring(obj.h))
 
 
 @[Group] InitializeGroup
-na_group = {}
-na_group.min_x = 0
-na_group.min_y = 0
-na_group.max_x = 0
-na_group.max_y = 0
-na_group.objs = {}
+--track0:ID,0,1000,0,1
+
+if (na_group == nil) then na_group = {} end
+
+local id = tostring(obj.track0)
+local group = {}
+
+na_group[id] = group
+group.min_x = 0
+group.min_y = 0
+group.max_x = 0
+group.max_y = 0
+group.objs = {}
+group.setup = false
 
 @[Group] ShowGroup
+--track0:ID,0,1000,0,1
+local id = tostring(obj.track0)
+local group = na_group[id]
 local gzoom = obj.zoom * (obj.getvalue("zoom")/100)
 local grz = obj.rz + obj.getvalue("rz")
 
-for k,v in pairs(na_group.objs) do
+if (group.setup) then
+	rikky_module.image("r", "na_groupobj_" .. id)
+	return
+end
+
+for k,v in pairs(group.objs) do
 	local x,y,z,zoom,alpha,rx,ry,rz,w,h = v.x,v.y,v.z,v.zoom,v.alpha,v.rx,v.ry,v.rz,v.w,v.h
 	
 	local length = math.sqrt(math.pow(w / 2, 2) + math.pow(h / 2, 2))
@@ -144,27 +160,32 @@ for k,v in pairs(na_group.objs) do
 	local imaxy = math.max(p1y, p2y, p3y, p4y)
 	local iminy = math.min(p1y, p2y, p3y, p4y)
 	
-	local maxx = x + (imaxx / gzoom)
-	local minx = x + (iminx / gzoom)
-	local maxy = y + (imaxy / gzoom)
-	local miny = y + (iminy / gzoom)
+	local maxx = x + (imaxx)
+	local minx = x + (iminx)
+	local maxy = y + (imaxy)
+	local miny = y + (iminy)
 	
-	if (maxx > na_group.max_x) then na_group.max_x = maxx end
-	if (minx < na_group.min_x) then na_group.min_x = minx end
-	if (maxy > na_group.max_y) then na_group.max_y = maxy end
-	if (miny < na_group.min_y) then na_group.min_y= miny end
+	if (maxx > group.max_x) then group.max_x = maxx end
+	if (minx < group.min_x) then group.min_x = minx end
+	if (maxy > group.max_y) then group.max_y = maxy end
+	if (miny < group.min_y) then group.min_y= miny end
 end
 
-local w = math.max(na_group.max_x, -na_group.min_x) * 2
-local h = math.max(na_group.max_y, -na_group.min_y) * 2
+local w = math.max(group.max_x, -group.min_x) * 2
+local h = math.max(group.max_y, -group.min_y) * 2
 
 obj.setoption("drawtarget","tempbuffer", w, h)
 
-for k,v in pairs(na_group.objs) do
+for k,v in pairs(group.objs) do
 	local x,y,z,zoom,alpha,rx,ry,rz,w,h = v.x,v.y,v.z,v.zoom,v.alpha,v.rx,v.ry,v.rz,v.w,v.h
-	rikky_module.image("r", "na_groupobj_" .. v.image)
+	rikky_module.image("r", "na_groupobj_" .. id .. "_" .. v.image)
 	obj.draw(x,y,z,zoom,alpha,rx,ry,rz)
 end
 
 obj.setoption("drawtarget","framebuffer")
 obj.load("tempbuffer")
+
+rikky_module.image("w", "na_groupobj_" .. id)
+
+group.setup = true
+

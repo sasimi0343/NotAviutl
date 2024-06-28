@@ -88,3 +88,85 @@ rikky_module.image("r+", "na_motion_original")
 	
 local t = motion_trail[index].kf[tostring(obj.frame)]
 obj.draw(0, 0, 0, t.zoom, t.alpha, 0, 0, 0)
+
+
+@[Motion] Blur
+--track0:Alpha,0,100,100,0.1
+--track1:Length,1,100,10,1
+--dialog:Color/col,color=nil;Opaque/chk,isopaque=0;
+--check0:Buffer
+
+require("rikky_module")
+
+local ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz = obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz
+
+if (motion_blur == nil) then
+	motion_blur = {}
+end
+
+local index = tostring(obj.layer) .. "_" .. tostring(obj.index)
+
+local t = motion_blur[index]
+
+local x,y = obj.getvalue("x") + obj.ox - obj.cx, obj.getvalue("y") + obj.oy - obj.cy
+
+if (t == nil or obj.frame == 1) then
+	t = {
+		x = x,
+		y = y,
+		z = obj.getvalue("z") + obj.oz - obj.cz,
+		zoom = obj.zoom * (obj.getvalue("zoom")/100),
+	}
+end
+
+rikky_module.image("w", "na_motion_blur")
+
+local dx,dy = x - t.x, y - t.y
+local theta = -math.deg(math.atan2(dx, dy))
+local dist = math.sqrt((dx ^ 2) + (dy ^ 2)) / 2
+
+obj.effect("方向ブラー", "角度", theta, "範囲", dist)
+
+if (isopaque == 1) then
+
+local pfunction = function(objr, objg, objb, obja, argr, argg, argb, arga, x, y)
+	local r, g, b, a = objr, objg, objb, obja
+	if (a > 0) then
+		a = 255
+	else
+		a = 0
+	end
+	if (not (color == nil)) then
+		r, g, b = RGB(color)
+	end
+	return r, g, b, a
+end
+
+rikky_module.pixelfunction(pfunction)
+
+end
+
+if (obj.check0) then
+	obj.setoption("drawtarget", "tempbuffer", obj.w, obj.h)
+end
+
+if (not (color == nil)) then obj.effect("単色化", "color", color, "輝度を保持", 0) end
+obj.draw(-dx/2, -dy/2)
+
+rikky_module.image("r", "na_motion_blur")
+obj.draw()
+
+if (obj.check0) then
+	obj.setoption("drawtarget", "framebuffer")
+	obj.load("tempbuffer")
+	
+obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz
+end
+
+	t = {
+		x = obj.getvalue("x") + obj.ox - obj.cx,
+		y = obj.getvalue("y") + obj.oy - obj.cy,
+		z = obj.getvalue("z") + obj.oz - obj.cz,
+		zoom = obj.zoom * (obj.getvalue("zoom")/100),
+	}
+motion_blur[index] = t

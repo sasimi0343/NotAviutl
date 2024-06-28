@@ -1,5 +1,6 @@
 @[3DEnvironment]
 --track0:TextureComp,0,100,0,0.1
+--track1:AmbientLight,0,100,0,0.1
 --dialog:DontCompOnExport/chk,dontcomponexport=1;Shadows/chk,shadow=0;
 --check0:PostProcLights,0
 world = {}
@@ -10,6 +11,7 @@ world.objs = {}
 world.lights = {}
 world.surface_all = {}
 world.shadow = (shadow == 1)
+world.ambient = obj.track1
 
 @[3DRender]
 if (not (world == nil)) then
@@ -28,6 +30,7 @@ end
 for k,v in pairs(world.objs) do
 	for _,v2 in pairs(v.geometory) do
 		obj.load("figure", "éläpå`", 0xffffff, 1)
+		obj.setoption("antialias", 0)
 		rikky_module.image("r", "ms_tex_" .. v.texture)
 		obj.ox = v2.ox
 		obj.oy = v2.oy

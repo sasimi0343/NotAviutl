@@ -356,3 +356,184 @@ ry = 0,
 rz = 0
 }
 geos = {geo}
+
+
+
+@[3DShape]Stairs
+--track0:Width,0,9999,100,0.1
+--track1:Height,0,9999,50,0.1
+--track2:Depth,0,9999,80,0.1
+--track3:Level,0,9999,5,1
+
+--if (sur == nil) then sur = {} end
+
+local w = obj.track0 / 2
+local h = obj.track1 / 2
+local d = obj.track2 / 2
+
+sur = {}
+
+for i=0,obj.track3 do
+
+local zof = obj.track2 * i
+local hof = obj.track1 * i
+
+local p1 = { x = -w, y = -h - hof, z = -d + zof}
+local p2 = { x = w, y = -h - hof, z = -d + zof}
+local p3 = { x = w, y = h, z = -d + zof}
+local p4 = { x = -w, y = h, z = -d + zof}
+
+local p5 = { x = -w, y = -h - hof, z = d + zof}
+local p6 = { x = w, y = -h - hof, z = d + zof}
+local p7 = { x = w, y = h, z = d + zof}
+local p8 = { x = -w, y = h, z = d + zof}
+
+local s1 = {p1, p2, p3, p4, 75}
+local s2 = {p1, p2, p6, p5, 100}
+local s3 = {p5, p6, p7, p8, 75}
+local s4 = {p5, p1, p4, p8, 50}
+local s5 = {p8, p7, p3, p4, 25}
+local s6 = {p2, p6, p7, p3, 50}
+
+table.insert(sur, s1)
+table.insert(sur, s2)
+table.insert(sur, s3)
+table.insert(sur, s4)
+table.insert(sur, s5)
+table.insert(sur, s6)
+
+end
+
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0
+
+}
+
+geos = {geo}
+
+@[3DShapes] Formant Visualizer
+--track0:Scale,0,999,100,0.1
+--track1:Speed,0,999,10,0.1
+--track2:Space,0,999,100,0.1
+--track3:IsAudioBuffer,0,1,0,1
+--file:
+
+fv = fv or {}
+if (obj.frame == 0) then
+	fv = {}
+end
+
+if (obj.track3 == 1) then
+	file = "audiobuffer"
+end
+
+local buf,buf2 = {}, {}
+obj.getaudio(buf,file,"spectrum",512)
+obj.getaudio(buf2,"audiobuffer","spectrum",100)
+
+local volume = 0
+for k,v in pairs(buf2) do
+	volume = volume + v
+end
+
+volume = volume / #buf2
+
+local f1,f2 = 0, 0
+local f1_hz,f2_hz = 0, 0
+
+local sum = 0
+local formants = {}
+
+for k,v in pairs(buf) do
+	sum = sum + v
+end
+
+sum = sum / #buf
+
+i = 0
+local delay = 0
+
+for k,v in pairs(buf) do
+	i = i + 1
+	if (v > sum and delay == 0) then
+		table.insert(formants, {vol = buf[i], hz = i})
+		delay = 100
+	elseif (delay > 0) then
+		delay = delay - 1
+	end
+end
+
+if (#formants >= 2) then
+
+f1 = formants[1].vol
+f2 = formants[2].vol
+f1_hz = (formants[1].hz / #buf) * 48 - 8
+f2_hz = (formants[2].hz / #buf) * 24 - 6
+
+volume = volume / 300
+
+f1_hz = ((f1_hz / 12) - 0.5) * obj.track2
+f2_hz = -((f2_hz / 12) - 0.5) * obj.track2
+
+local w = obj.track0 * volume
+local d = obj.track1
+
+local p1 = { x = -w, y = -w, z = -d}
+local p2 = { x = w, y = -w, z = -d}
+local p3 = { x = w, y = w, z = -d}
+local p4 = { x = -w, y = w, z = -d}
+
+local p5 = { x = -w, y = -w, z = 1000}
+local p6 = { x = w, y = -w, z = 1000}
+local p7 = { x = w, y = w, z = 1000}
+local p8 = { x = -w, y = w, z = 1000}
+
+local s1 = {p1, p2, p3, p4, 75}
+local s2 = {p1, p2, p6, p5, 100}
+local s3 = {p5, p6, p7, p8, 75}
+local s4 = {p5, p1, p4, p8, 50}
+local s5 = {p8, p7, p3, p4, 25}
+local s6 = {p2, p6, p7, p3, 50}
+
+sur = {s1, s2, s3, s4, s5, s6}
+geo = {
+
+surface = sur,
+shading = {},
+ox = obj.track0 * f1_hz,
+oy = obj.track0 * f2_hz,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0
+
+}
+
+geos = {geo}
+
+else
+
+geos = {}
+
+end
+
+i = 0
+for k,v in pairs(fv) do
+	i = i + 1
+	v.oz = v.oz + obj.track1
+	table.insert(geos, v)
+	if (v.oz >= 3000) then
+		table.remove(fv, i)
+		i = i - 1
+	end
+end
+
+if (#formants >= 2) then table.insert(fv, geo) end

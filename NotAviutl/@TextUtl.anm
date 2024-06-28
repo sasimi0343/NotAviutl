@@ -5,140 +5,26 @@
 obj.ox = obj.ox + (obj.ox * (obj.track0 / 100))
 obj.oy = obj.oy + (obj.oy * (obj.track1 / 100))
 
-@[Text] ControlPad
---track0:StartChar,0,9999,1,1
---track1:EndChar,0,9999,1,1
---track2:Size,1,9999,100,1
---check0:View,1
---dialog:Group/chk,paired=1;Gradient,grad="";SizeSettings,sizes="";
+@[Text] Convert
+--dialog:[Global]Delay,gdelay=0;[Global]Time,gtime=0;[Global]Global Delay,ggd=0;[ET]Easing,geasing=-1;Range,range=-1;Start,start=1;
 
 require("rikky_module")
+local et = require("et_lib")
+local verytext = rikky_module.getinfo("text")
 
-local dia = {"Size (-1 = Disabled)", "0", -1, 1000, "Color1*color", "0xffffff", 0, 0, "Color2*color", "0x000000", 0, 0}
-local gradient_size, gradient_color1, gradient_color2 = rikky_module.parameter(grad, 2, dia)
 
-dia = {"Width A", "1920", 0, obj.screen_w*2, "Height A", "1080", 0, obj.screen_h, "Width B", "1920", 0, obj.screen_w*2, "Height B", "1080", 0, obj.screen_h}
-local width_1, height_1, width_2, height_2 = rikky_module.parameter(sizes, 3, dia)
-
-local ox,oy,oz,alpha,zoom,aspect,rx,ry,rz,cx,cy,cz = obj.ox,obj.oy,obj.oz,obj.alpha,obj.zoom,obj.aspect,obj.rx,obj.ry,obj.rz,obj.cx,obj.cy,obj.cz
-
-local num = obj.num-1
-if (num <= obj.track1) then num = obj.track0-1 end
-local sti = 0
-if (sti >= obj.track0) then sti = obj.track1+1 end
-
-if (obj.index == sti) then group1_pos = {} end
-if (obj.index == obj.track0) then group2_pos = {} end
-local debuginfo = {}
-
-if (obj.index >= obj.track0 and obj.index <= obj.track1) then
-	if (obj.check0) then
-		table.insert(group2_pos, {x = obj.ox - (obj.w/2), y = obj.oy - (obj.h/2), mx = obj.ox + (obj.w/2), my = obj.oy + (obj.h/2)})
-		
-		if (obj.index == obj.track1) then
-			local max, may, mix, miy = 0, 0, 0, 0
-			for k,v in pairs(group2_pos) do
-				max = math.max(v.mx, max)
-				may = math.max(v.my, may)
-				mix = math.min(v.x, mix)
-				miy = math.min(v.y, miy)
-			end
-			
-			table.insert(debuginfo, "String2 Width: " .. tostring(max - mix) .. ", Height: " .. tostring(may - miy))
-		end
-	end
-	
-	obj.setoption("drawtarget", "tempbuffer", width_2, height_2)
-	obj.copybuffer("cache:na_char_2_2", "obj")
-	if (not (obj.index == obj.track0)) then
-		rikky_module.image("r", "na_char_2_1")
-		obj.draw()
-	end
-	obj.copybuffer("obj", "cache:na_char_2_2")
-	
-	obj.aspect = aspect
-	obj.draw(ox - cx, oy - cy, oz - cz, alpha, zoom, rx, ry, rz)
-	
-	rikky_module.image("w", "na_char_2_1", "tempbuffer")
-	
-	obj.setoption("drawtarget", "framebuffer")
-	if (obj.index == obj.track1) then
-		rikky_module.image("r", "na_char_2_1")
-		obj.ox = 0
-		obj.oy = 0
-		obj.oz = 0
-		obj.alpha = 1
-		obj.aspect = 0
-		obj.zoom = 1
-		obj.rx = 0
-		obj.ry = 0
-		obj.rz = 0
-		obj.cx = 0
-		obj.cy = 0
-		obj.cz = 0
-		rikky_module.image("c", "na_char_2_1")
-	else
-		obj.alpha = 0
-	end
-	
-else
-	if (obj.check0) then
-		table.insert(group1_pos, {x = obj.ox - (obj.w/2), y = obj.oy - (obj.h/2), mx = obj.ox + (obj.w/2), my = obj.oy + (obj.h/2)})
-		
-		if (obj.index == num) then
-			local max, may, mix, miy = 0, 0, 0, 0
-			for k,v in pairs(group1_pos) do
-				max = math.max(v.mx, max)
-				may = math.max(v.my, may)
-				mix = math.min(v.x, mix)
-				miy = math.min(v.y, miy)
-			end
-			
-			table.insert(debuginfo, "String1 Width: " .. tostring(max - mix) .. ", Height: " .. tostring(may - miy))
-		end
-	end
-	
-	obj.setoption("drawtarget", "tempbuffer", width_1, height_1)
-	obj.copybuffer("cache:na_char_1_2", "obj")
-	if (not (obj.index == sti)) then
-		rikky_module.image("r", "na_char_1_1")
-		obj.draw()
-	end
-	obj.copybuffer("obj", "cache:na_char_1_2")
-	
-	obj.aspect = aspect
-	obj.draw(ox, oy, oz, alpha, zoom, rx, ry, rz)
-	
-	rikky_module.image("w", "na_char_1_1", "tempbuffer")
-	
-	obj.setoption("drawtarget", "framebuffer")
-	if (obj.index == num) then
-		rikky_module.image("r", "na_char_1_1")
-		obj.ox = 0
-		obj.oy = 0
-		obj.oz = 0
-		obj.alpha = 1
-		obj.aspect = 0
-		obj.zoom = 1
-		obj.rx = 0
-		obj.ry = 0
-		obj.rz = 0
-		rikky_module.image("c", "na_char_1_1")
-	else
-		obj.alpha = 0
-	end
+if (gtime > 0) then
+	start = et.easing(geasing, obj, gtime, gdelay, start, #verytext + 1, ggd)
 end
 
-if (obj.index == obj.num - 1) then
-	if (obj.check0) then
-		obj.load("figure", "îwåi", 0xffffff, 100)
-		obj.draw(-obj.x, -obj.y, -obj.z, 1.0, 0.3, 0, 0, 0)
-		obj.load("MS UI Gothic", 100, 0, 0xffffff, 0xffffff)
-		local i = 1
-		for k,v in pairs(debuginfo) do
-			obj.load("text", v)
-			obj.draw(-obj.x - 200, -obj.y + (obj.index * 50) - (obj.screen_h/2), -obj.z, 1.0, 1.0, 0, 0, 0)
-			i = i + 1
-		end
-	end
+if (range == -1) then
+	range = #verytext
 end
+
+local prefix = string.sub(verytext, 1, start)
+local converttext = string.sub(verytext, start + 1, start + range - 1)
+local postfix = string.sub(verytext, start + range)
+
+local converttext_converted = rikky_module.convert(rikky_module.convert(converttext, "unicode"), "shift-jis")
+
+rikky_module.settext(prefix .. converttext_converted .. postfix)

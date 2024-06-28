@@ -32,7 +32,7 @@ oy = 0,
 oz = 0,
 rx = 0,
 ry = 0,
-rz = 0
+rz = 0,
 
 }
 
@@ -128,7 +128,7 @@ geos = {geo}
 --track2:Z,-999,999,1,0.01
 
 for _,v2 in pairs(geos) do
-	local subsur = {}
+	--local subsur = {}
 	for k,v in pairs(v2.surface) do
 		local p1 = v[1]
 		local p2 = v[2]
@@ -140,9 +140,14 @@ for _,v2 in pairs(geos) do
 		p3 = { x = p3.x * obj.track0, y = p3.y * obj.track1, z = p3.z * obj.track2 }
 		p4 = { x = p4.x * obj.track0, y = p4.y * obj.track1, z = p4.z * obj.track2 }
 		
-		table.insert(subsur, {p1, p2, p3, p4, v[5]})
+		v[1] = p1
+		v[2] = p2
+		v[3] = p3
+		v[4] = p4
+		
+		--table.insert(subsur, {p1, p2, p3, p4, v[5]})
 	end
-	v2.surface = subsur
+	--v2.surface = subsur
 end
 
 @[3D]Rotate
@@ -397,6 +402,22 @@ end
 
 end
 
+@[3DLine]LineCircle
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Z,-9999,9999,0,0.1
+--track3:Frequency,1,9999,1,1
+--dialog:Count,count=100;
+
+if (not (linepoints == nil)) then
+
+for i=1,count do
+local rad = math.rad(i * (180 / obj.track3))
+	table.insert(linepoints, {obj.track0 * math.cos(rad), obj.track1 * math.sin(rad), (i / count) * obj.track2})
+end
+
+end
+
 @[3DLine]Function
 --track0:Quality,1,9999,50,1
 --track1:XRange-,-9999,0,-600,1
@@ -529,14 +550,19 @@ end
 
 local avi3d = require("avi3d")
 
-if (not (world == nil)) then
+if ((not (world == nil)) and (lights == 1)) then
 	if (not (world.texcomp == 0 or (world.dcoe and obj.getinfo("saving")))) then obj.effect("リサイズ", "拡大率", (100-world.texcomp)) end
 	
 	if (world.ppl) then
+		local i = 1
 		for k,v in pairs(geos) do
+			v.alpha = obj.getvalue("alpha")
 			v.ox = v.ox + obj.x
 			v.oy = v.oy + obj.y
 			v.oz = v.oz + obj.z
+			v.index = i
+			v.layer = obj.layer
+			i = i + 1
 		end
 		local ob = {geometory = geos, texture = #world.objs}
 		table.insert(world.objs, ob)
@@ -555,6 +581,7 @@ for k,v in pairs(geos) do
 	obj.rx = v.rx
 	obj.ry = v.ry
 	obj.rz = v.rz
+	v.alpha = obj.getvalue("alpha")
 	if (v.isdn) then
 		require("dimensionize")
 		obj.effect()
@@ -588,7 +615,27 @@ for k,v in pairs(geos) do
 avi3d.Saibunka(obj, v.surface, obj.track1 + divY, obj.track0 + divX, obj.track2 + divZ)
 end
 
+@[3DModeling] Random
+--track0:X,0,9999,1,0.1
+--track1:Y,0,9999,1,0.1
+--track2:Z,0,9999,1,0.1
+--dialog:Seed,seed=0;Individual/chk,individual=0;
 
+for k,v in pairs(geos) do
+local i = 0
+for _,v2 in pairs(v.surface) do
+local sed = seed
+if (individual == 1) then sed = seed + i
+v2[1] = {x = v2[1].x + rand(-obj.track0, obj.track0, seed, 1), y = v2[1].y + rand(-obj.track1, obj.track1, seed, 2), z = v2[1].z + rand(-obj.track2, obj.track2, seed, 3)}
+
+v2[2] = {x = v2[2].x + rand(-obj.track0, obj.track0, seed, 4), y = v2[2].y + rand(-obj.track1, obj.track1, seed, 5), z = v2[2].z + rand(-obj.track2, obj.track2, seed, 6)}
+
+v2[3] = {x = v2[3].x + rand(-obj.track0, obj.track0, seed, 7), y = v2[3].y + rand(-obj.track1, obj.track1, seed, 8), z = v2[3].z + rand(-obj.track2, obj.track2, seed, 9)}
+
+v2[4] = {x = v2[4].x + rand(-obj.track0, obj.track0, seed, 10), y = v2[4].y + rand(-obj.track1, obj.track1, seed, 11), z = v2[4].z + rand(-obj.track2, obj.track2, seed, 12)}
+end
+i = i + 1
+end
 
 @[3DSprite] Sprite
 local w2,h2 = obj.w/2, obj.h/2
@@ -598,5 +645,86 @@ local p2 = {x = w2, y = -h2, z = 0}
 local p3 = {x = w2, y = h2, z = 0}
 local p4 = {x = w2, y = h2, z = 0}
 
+
+if (not (world.texcomp == 0 or (world.dcoe and obj.getinfo("saving")))) then obj.effect("リサイズ", "拡大率", (100-world.texcomp)) end
 local avi3d = require("avi3d")
-avi3d.LightToTexture(world.lights, {p1, p2, p3, p4, 100})
+avi3d.LightToTexture(world.lights, {p1, p2, p3, p4, 100}, world)
+
+
+if (not (world.texcomp == 0 or (world.dcoe and obj.getinfo("saving")))) then obj.effect("リサイズ", "拡大率", 100/((100-world.texcomp)/100)) end
+
+@[3DShape] Dimentionize
+--track0:Depth,0,9999,100,0.1
+--track1:Precision,0,500,100,0.1
+--dialog:Color/col,color=nil;BackgroundColor/col,backcolor=nil;
+
+require("rikky_module")
+local rpaths, num = rikky_module.linedetection(obj.track1, backcolor, true)
+
+if (rpaths == false) then return end
+
+local ofx,ofy = 0,0
+
+local d = obj.track0
+local p1,p2,p3,p4 = {x = -obj.w/2, y = -obj.h/2, z = 0}, {x = obj.w/2, y = -obj.h/2, z = 0}, {x = obj.w/2, y = obj.h/2, z = 0}, {x = -obj.w/2, y = obj.h/2, z = 0}
+local p5,p6,p7,p8 = {x = -obj.w/2, y = -obj.h/2, z = d}, {x = obj.w/2, y = -obj.h/2, z = d}, {x = obj.w/2, y = obj.h/2, z = d}, {x = -obj.w/2, y = obj.h/2, z = d}
+local uv1 = {{x = 0, y = 0}, {x = obj.w, y = 0}, {x = obj.w, y = obj.h}, {x = 0, y = obj.h}}
+
+if (not (color == nil)) then
+	if (obj.w > obj.h) then
+		ofx = 1
+	else
+		ofy = 1
+	end
+	local w,h = obj.w/2 + (ofx*2), obj.h/2 + (ofy*2)
+	local ow,oh = obj.w/2, obj.h/2
+	obj.setoption("antialias", 0)
+	obj.setoption("drawtarget", "tempbuffer", obj.w + (ofx*4), obj.h + (ofy*4))
+	obj.draw(-ofx, -ofy)
+	obj.load("figure", "四角形", color, 1)
+	obj.setoption("antialias", 0)
+	obj.drawpoly(
+		(-w * ofy) + (ow * (1-ofy)), (-h * ofx) + (oh * (1-ofx)), 0,
+		w, (-h * ofx) + (oh * (1-ofx)), 0,
+		w, h, 0,
+		(-w * ofy) + (ow * (1-ofy)), h, 0)
+	obj.setoption("drawtarget", "framebuffer")
+	obj.load("tempbuffer")
+end
+
+local s1 = {p1, p2, p3, p4, 100, uv1}
+local s2 = {p5, p6, p7, p8, 100, uv1}
+
+sur = {s1, s2}
+
+local w,h = obj.w, obj.h
+local ow,oh = w-1, h-1
+
+for k,v in pairs(rpaths) do
+	local p9,p10,p11,p12 = {x = v.x0, y = v.y0, z = 0}, {x = v.x1, y = v.y1, z = 0}, {x = v.x1, y = v.y1, z = d}, {x = v.x0, y = v.y0, z = d}
+	local ix0,iy0,ix1,iy1 = v.x0-(obj.w/2),v.y0-(obj.h/2),v.x1-(obj.w/2),v.y1-(obj.w/2)
+	local uv = {{x = ix0, y = iy0}, {x = ix1, y = iy0}, {x = ix1, y = iy1}, {x = ix0, y = iy1}}
+	if (not (color == nil)) then
+		uv = {{x = ow, y = oh}, {x = w, y = oh}, {x = w, y = h}, {x = ow, y = h}}
+		--uv = uv1
+	end
+	local s = {p9, p10, p11, p12, 100, uv}
+
+	table.insert(sur, s)
+end
+
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0,
+
+}
+
+geos = {geo}
+

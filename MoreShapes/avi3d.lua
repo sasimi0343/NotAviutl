@@ -5,9 +5,16 @@ if (rikky_module == nil) then
 	require("rikky_module")
 end
 
+geo_shading_cache = geo_shading_cache or {}
+
+function pt(layer, index, index2)
+	return layer .. "_" .. index .. "_" .. index2
+end
+
 function Draw(obj, tbl, lights, lightsinfo, geo, world)
 	rikky_module.image("w", "avi3d_image")
 	--obj.copybuffer("cache:avi3d_image", "obj")
+	local index = 0
 	for k,v in pairs(tbl) do
 		--obj.load("figure", "ŽlŠpŒ`", 0xffffff, 1)
 		--obj.copybuffer("obj", "cache:avi3d_image")
@@ -16,7 +23,17 @@ function Draw(obj, tbl, lights, lightsinfo, geo, world)
 		if (not (lightsinfo == nil)) then
 			if (not (geo.shading == nil) and (not (geo.shading.style == nil)) and (not (geo.shading.style == 0))) then
 				v[5] = 100
-				LightToTexture(lightsinfo, v, world, v)
+				local point = pt(geo.layer, geo.index, index)
+				if (geo.shading.static == 1 and geo_shading_cache[point]) then
+					rikky_module.image("r", "avi3d_lightcache_" .. point)
+				else
+					LightToTexture(lightsinfo, v, world, v)
+				end
+				if (geo.shading.static == 1 and (not geo_shading_cache[point])) then
+					rikky_module.image("w", "avi3d_lightcache_" .. point)
+					geo.shading.rendered = true
+					geo_shading_cache[point] = true
+				end
 			else
 				v[5] = 0
 				for _,light in pairs(lightsinfo) do
@@ -62,8 +79,9 @@ function Draw(obj, tbl, lights, lightsinfo, geo, world)
 			uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y, uv3.x, uv3.y)
 		else
 		obj.drawpoly(p1.x, p1.y, p1.z, p2.x, p2.y, p2.z, p3.x, p3.y, p3.z, p4.x, p4.y, p4.z,
-		uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y, uv3.x, uv3.y)
+		uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y, uv3.x, uv3.y, geo.alpha)
 		end
+		index = index + 1
 	end
 	
 end
@@ -317,6 +335,15 @@ function Lighting(obj, surface, light, geo)
 	return surface
 end
 
+function PointRotate(p, rx, ry, rz)
+return {gct.Rot_rpy(PointToArray(p), math.rad(rz), math.rad(ry), math.rad(rx))}
+end
+
+function GlobalPoint(p, geo)
+local p1 = PointRotate(p, geo.rx, geo.ry, geo.rz)
+return {p1[1] + geo.ox, p1[2] + geo.oy, p1[3] + geo.oz}
+end
+
 function LightPixel(hx, hy, hz, lights, world, surface)
 	hx,hy,hz = gct.Rot_rpy({hx, hy, hz}, math.rad(obj.rz), math.rad(obj.ry), math.rad(obj.rx))
 	
@@ -350,7 +377,7 @@ function Distance(posA, posB)
 	local xA,yA,zA = posA[1],posA[2],posA[3]
 	local xB,yB,zB = posB[1],posB[2],posB[3]
 	
-	local sx,sy,sz = math.abs(xA - xB),math.abs(yA - yB),math.abs(zA - zB)
+	local sx,sy,sz = xA - xB,yA - yB,zA - zB
 	--local d_xy = ((sx * sx) + (sy * sy))
 	--local d_yz = ((sy * sy) + (sz * sz))
 	local d_zx = ((sz * sz) + (sx * sx))
@@ -416,6 +443,43 @@ function InBox(pos8, pos)
 		return true
 	end
 	
+	local xd3Max = pos5.x - pos6.x
+	local yd3Max = pos6.y + ((pos5.y - pos6.y) * ((x - pos6.x) / xd3Max))
+	local zd3Max = pos6.z + ((pos5.z - pos6.z) * ((x - pos6.x) / xd3Max))
+	
+	local xd4Max = pos7.x - pos8.x
+	local yd4Max = pos8.y + ((pos7.y - pos8.y) * ((x - pos8.x) / xd4Max))
+	local zd4Max = pos8.z + ((pos7.z - pos8.z) * ((x - pos8.x) / xd4Max))
+	
+	if (
+	((y >= yd3Max and y <= yd4Max) or (y >= yd4Max and y <= yd3Max)) and
+	((z >= zd3Max and z <= zd4Max) or (z >= zd4Max and y <= zd3Max))
+	) then
+		return true
+	end
+	
+	local ydd1Max = yd1Max
+	local ydd2Max = yd3Max
+	local ydd1Min = yd2Max
+	local ydd2Min = yd4Max
+	
+	local zdd1Max = zd1Max
+	local zdd2Max = zd3Max
+	local zdd1Min = zd2Max
+	local zdd2Min = zd4Max
+	
+	local ydddMax = ydd2Max + ((ydd1Max - ydd2Max) * ((z - zdd2Max) / (zdd1Max - zdd2Max)))
+	local zdddMax = zdd2Max + ((zdd1Max - zdd2Max) * ((y - ydd2Max) / (ydd1Max - ydd2Max)))
+	local ydddMin = ydd2Min + ((ydd1Min - ydd2Min) * ((z - zdd2Min) / (zdd1Min - zdd2Min)))
+	local zdddMin = zdd2Min + ((zdd1Min - zdd2Min) * ((y - ydd2Min) / (ydd1Min - ydd2Min)))
+	
+	if (
+	((y >= ydddMin and y <= ydddMax) or (y >= ydddMax and y <= ydddMin)) and
+	((z >= zdddMin and z <= zdddMax) or (z >= zdddMax and y <= zdddMin))
+	) then
+		return true
+	end
+	
 	return false
 end
 
@@ -445,49 +509,77 @@ function NotNormalized(a,b,c)
 	return N
 end
 
+function ScalePoint(p, scale)
+	return {p[1]*scale, p[2]*scale, p[3]*scale}
+end
+
+function SubPoint(p1, p2)
+	return {p1[1]-p2[1],p1[2]-p2[2],p1[3]-p2[3]}
+end
+function AddPoint(p1, p2)
+	return {p1[1]+p2[1],p1[2]+p2[2],p1[3]+p2[3]}
+end
+
 function ShadowPixel(hx,hy,hz, dx, dy, dz, light, world, surface)
 	local shadow = 0
 	--local lights = world.lights
 	local surs = world.surface_all
 	
-	local sx,sy,sz = math.abs(dx - light.x),math.abs(dy - light.y),math.abs(dz - light.z)
-	--local d_xy = ((sx * sx) + (sy * sy))
-	--local d_yz = ((sy * sy) + (sz * sz))
+	local sx,sy,sz = dx - light.x,dy - light.y,dz - light.z --l, m, n
 	local d_zx = ((sz * sz) + (sx * sx))
 	local distance = math.sqrt(d_zx + (sy * sy))
 	if (light.range < distance) then
 		return 0
 	end
-	for _,geo in pairs(world.objs) do
-		for _,geo in pairs(geo.geometory) do
+	for _,geos in pairs(world.objs) do
+		for _,geo in pairs(geos.geometory) do
 			for k,v in pairs(geo.surface) do
 				if (not (v == surface)) then
 					
-					local nA = gct.Vector.Norm_surface(PointToArray(v[1]), PointToArray(v[2]), PointToArray(v[3]))
-					local nB = gct.Vector.Norm_surface(PointToArray(v[2]), PointToArray(v[3]), PointToArray(v[4]))
+					local p1,p2,p3,p4 = GlobalPoint(v[1], geo),GlobalPoint(v[2], geo),GlobalPoint(v[3], geo),GlobalPoint(v[4], geo)
 					
-					--local dA = Distance({0, 0, 0}, NotNormalized(PointToArray(v[1]), PointToArray(v[2]), PointToArray(v[3])))
-					--local dB = Distance({0, 0, 0}, NotNormalized(PointToArray(v[2]), PointToArray(v[3]), PointToArray(v[4])))
+					local S1 = gct.Vector.Norm_surface(p1, p2, p3)
+					local S2 = gct.Vector.Norm_surface(p3, p4, p1)
 					
-					local iA = gct.Vector.Pos_plane_intersection_segment(PointToArray(light), {hx, hy, hz}, nA, distance)
-					local iB = gct.Vector.Pos_plane_intersection_segment(PointToArray(light), {hx, hy, hz}, nB, distance)
+					local d1 = - ((S1[1] * p1[1]) + (S1[2] * p1[2]) + (S1[3] * p1[3]))
+					local d2 = - ((S2[1] * p1[1]) + (S2[2] * p1[2]) + (S2[3] * p1[3]))
 					
-					if (not ((iA == false) and (iB == false))) then
-						--gct.Draw_line3D(PointToArray(light), {hx, hy, hz}, 5, 0xff0000, 1)
-						--if (not (iA == false)) then print(PointToString(iA)) end
-						--if (not (iB == false)) then print(PointToString(iB)) end
-						return 1
+					local t1 = ((S1[1] * dx) + (S1[2] * dy) + (S1[3] * dz) + d1) / ((S1[1] * sx) + (S1[2] * sy) + (S1[3] * sz))
+					local t2 = ((S1[1] * dx) + (S1[2] * dy) + (S1[3] * dz) + d2) / ((S1[1] * sx) + (S1[2] * sy) + (S1[3] * sz))
+					
+					local intersection1 = {(sx * t1) + dx, (sy * t1) + dy, (sz * t1) + dz}
+					local intersection2 = {(sx * t2) + dx, (sy * t2) + dy, (sz * t2) + dz}
+					
+					local CP_d = Distance(intersection1, p1)
+					local CP2_d = Distance(intersection2, p1)
+					if (CP_d < distance or CP2_d < distance) then
+						local CP = SubPoint(intersection1, p1)
+						local CP2 = SubPoint(intersection2, p1)
+						
+						
+						if (((CP[1] * sx) >= 0 or (CP[2] * sy) >= 0 or (CP[3] * sz) >= 0) or ((CP2[1] * sx) >= 0 or (CP2[2] * sy) >= 0 or (CP2[3] * sz) >= 0)) then
+							local CA,CB = SubPoint(p2, p1), SubPoint(p3, p1)
+							local CD = SubPoint(p4, p1)
+							
+							local st1 = ((CP[1] * CA[2]) - (CP[2] * CA[1])) / (CB[1] - (CA[1] * CB[2]))
+							local st2 = ((CP2[1] * CB[2]) - (CP2[2] * CB[1])) / (CD[1] - (CB[1] * CD[2]))
+							
+							local s1 = (CP[2] - (st1 * CB[2])) / CA[2]
+							local s2 = (CP2[2] - (st2 * CD[2])) / CB[2]
+							if (s1 >= 0 and st1 >= 0 and (s1 + st1) <= 1) then
+								--gct.Draw_line3D({light.x - obj.ox, light.y - obj.oy, light.z - obj.oz}, SubPoint(intersection1, {obj.ox, obj.oy, obj.oz}), 0.5, 0xff0000)
+								--gct.Draw_line3D(SubPoint(intersection1, {obj.ox, obj.oy, obj.oz}), {dx - obj.ox, dy - obj.oy, dz - obj.oz}, 0.5, 0x0000ff)
+								return s1 + st1
+							end
+							
+							if (s2 >= 0 and st2 >= 0 and (s2 + st2) <= 1) then
+								return s2 + st2
+							end
+						end
 					end
-				
+					
+					
 				end
-				
-				--for i=1,4 do
-				--	local point = v[i]
-				--	
-				--	local nA = gct.Vector.Norm_surface(PointToArray())
-				--end
-				--shadow = 1
-				--return 1
 			end
 		end
 	end
@@ -598,6 +690,10 @@ function LightToTexture(lights, surface, world, csur)
 		
 		inte = LightPixel(realpos.x, realpos.y, realpos.z, lights, world, csur)
 		
+		if (world.ambient > 0) then
+			inte = math.min(inte + (world.ambient / 100), 1)
+		end
+		
 		return math.max(math.min(r * inte, 255), 0), math.max(math.min(g * inte, 255), 0), math.max(math.min(b * inte, 255), 0), a
 	end
 	
@@ -609,5 +705,7 @@ return {
 	Saibunka = Saibunka,
 	SetPosition = SetPosition,
 	Lighting = Lighting,
-	LightToTexture = LightToTexture
+	LightToTexture = LightToTexture,
+	geo_shading_cache = geo_shading_cache,
+	pt = pt,
 }

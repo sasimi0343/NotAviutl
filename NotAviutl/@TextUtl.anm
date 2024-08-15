@@ -28,3 +28,4 @@ local postfix = string.sub(verytext, start + range)
 local converttext_converted = rikky_module.convert(rikky_module.convert(converttext, "unicode"), "shift-jis")
 
 rikky_module.settext(prefix .. converttext_converted .. postfix)
+

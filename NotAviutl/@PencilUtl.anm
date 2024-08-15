@@ -27,6 +27,7 @@ if (drawing) then
 	
 	obj.draw()
 	
+	local clicked = rikky_module.key("LB")[1]
 	mx, my = rikky_module.mouse()
 	local clockk = os.clock()
 	
@@ -183,6 +184,192 @@ else
 		obj.draw(da[1], da[2])
 		obj.load("figure", "‰~", 0x0000ff, size)
 		if (not (da2 == nil)) then obj.draw(da2[1], da2[2]) end]]
+		
+		obj.copybuffer("cache:na_pen_draw", "obj")
+		
+	end
+end
+
+prevdrawing = drawing
+
+
+@NewPen
+--track0:Speed,0,999,1,0.1
+--dialog:DataPath,datapath="";DrawMode/chk,dm=0;Interpolate/chk,interpolate=0;
+
+if (rikky_module == nil) then require("rikky_module") end
+if (prevclicked == nil) then prevclicked = false end
+
+rikky_module.file(1)
+
+local drawing = (dm == 1)
+
+if (drawing) then
+	obj.setoption("drawtarget","tempbuffer", obj.screen_w, obj.screen_h)
+	
+	obj.load("framebuffer")
+	obj.ox = -obj.x
+	obj.oy = -obj.y
+	
+	if (not (prevdrawing == true)) then
+		print("Draw Data initialized!")
+		drawdata = {}
+	else
+		obj.copybuffer("obj", "cache:na_pen_draw")
+	end
+	
+	obj.draw()
+	
+	local clicked = rikky_module.key("LB")[1]
+	mx, my = rikky_module.mouse()
+	local clockk = os.clock()
+	
+	obj.load("figure", "‰~", 0xffffff, 10)
+	obj.draw(mx, my)
+	
+	obj.setoption("drawtarget","framebuffer")
+	obj.load("tempbuffer")
+	obj.ox = -obj.x
+	obj.oy = -obj.y
+	
+	if ((not (mx == nil)) and (not (my == nil)) and (not (clockk == nil)) and (prevclicked or clicked)) then table.insert(drawdata, {mx, my, clockk, clicked}) end
+	obj.copybuffer("cache:na_pen_draw", "obj")
+	
+	prevclicked = clicked
+	
+else
+	if (not (drawdata == nil) and (prevdrawing)) then
+		local str = "{"
+		for k,v in pairs(drawdata) do
+			str = str .. tostring(v[1]) .. ","
+			str = str .. tostring(v[2]) .. ","
+			str = str .. tostring(v[3]) .. ","
+			str = str .. tostring(v[4]) .. ","
+		end
+		str = str .. "}"
+		local pa = rikky_module.getinfo("aup")
+		
+		if (pa == "") then
+			pa = rikky_module.getinfo("path")
+		else
+			local nam = rikky_module.getinfo("aup", 1)
+			pa = string.sub(pa, 1, -#nam-5)
+		end
+		local filepath = pa .. "pen.nap2"
+		print("Saving to " .. filepath)
+		
+		io.output(filepath)
+		io.write(str)
+		io.close()
+		rikky_module.setdialogparam("datapath", filepath)
+		drawdata = nil
+	end
+	if (drawdata == nil and (not (datapath == ""))) then
+		local fh = io.open(datapath)
+		if (not (fh == nil)) then
+			local str = fh:read("*a")
+			fh:close()
+			
+			local itizi = rikky_module.string2table(str)
+			local data2 = {}
+			for i=0,math.floor(#itizi/4) do
+				table.insert(data2, {itizi[i*4+1], itizi[i*4+2], itizi[i*4+3], itizi[i*4+4]})
+			end
+			drawdata = data2
+		end
+	end
+	
+	if (not (drawdata == nil)) then
+		
+		obj.setoption("drawtarget","tempbuffer", obj.screen_w, obj.screen_h)
+		
+		if (not (obj.frame == 0)) then
+			obj.load("framebuffer")
+			obj.ox = -obj.x
+			obj.oy = -obj.y
+			obj.copybuffer("obj", "cache:na_pen_draw")
+			obj.draw()
+		end
+		
+		
+		
+		local globaltime = obj.time * obj.track0
+		
+		local index = 0
+		local i = 1
+		local ft = drawdata[1][3]
+		for k,v in pairs(drawdata) do
+			if ((not (v[3] == nil)) and (v[3]-ft) <= globaltime) then
+				index = i
+			end
+			i = i + 1
+		end
+		
+		local da = drawdata[index]
+		local da2 = drawdata[index+1]
+		
+		if (not (da == nil)) then
+			local mx = da[1]
+			local my = da[2]
+			if (not (da2 == nil) and (not (da2[3] == nil)) and (interpolate == 1)) then
+				local totaltime = da2[3] - da[3]
+				local bt = da[3]-ft
+				local time = globaltime - bt
+				
+				local timenormalized = time / totaltime
+				local ipcount = 200
+				
+				for i=0,ipcount do
+					local ipn = (i/ipcount)*timenormalized
+					
+					local dx = da2[1] - mx
+					local dy = da2[2] - my
+					
+					mx = da[1] + (dx * ipn)
+					my = da[2] + (dy * ipn)
+					
+					obj.load("figure", "‰~", 0xffffff, 10)
+					obj.draw(mx, my)
+				end
+				
+			end
+			
+			for l=1,10 do
+			
+			
+			local da0 = drawdata[index-l]
+			local da1 = drawdata[index-l+1]
+			
+			if (not (da0 == nil) and (interpolate == 1)) then
+					mx = da0[1]
+					my = da0[2]
+					
+					local timenormalized = 1
+					local ipcount = 200
+					
+					
+					for i=0,ipcount do
+						local ipn = (i/ipcount)*timenormalized
+						
+						local dx = da1[1] - mx
+						local dy = da1[2] - my
+						
+						mx = da0[1] + (dx * ipn)
+						my = da0[2] + (dy * ipn)
+						
+						obj.load("figure", "‰~", color, size)
+						obj.draw(mx, my)
+					end
+				end
+			
+			end
+		else
+			obj.load("figure", "‰~", color, size)
+			obj.draw(mx, my)
+		end
+		
+		obj.setoption("drawtarget","framebuffer")
+		obj.load("tempbuffer")
 		
 		obj.copybuffer("cache:na_pen_draw", "obj")
 		

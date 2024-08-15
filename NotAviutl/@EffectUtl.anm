@@ -1075,6 +1075,12 @@ rikky_module.pixelfunction(pfunction_a)
 
 obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz
 
+@[Effect] CustomDisplacement
+--track0:deltaX,-9999,9999,0,0.1
+--track1:deltaY,-9999,9999,0,0.1
+--track2:X,-9999,9999,0,0.1
+--track3:Y,-9999,9999,0,0.1
+
 @[Effect] 5000兆円
 --track0:Hue,-720,720,0,0.1
 local ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz = obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz
@@ -1089,6 +1095,30 @@ obj.effect("縁取り", "サイズ", 2, "ぼかし", 50, "color", 0xffffff)
 
 rikky_module.image("w", "na_effect_5000chou")
 
+
+obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz
+
+@[Effect] ColorNoise
+--track0:Rate,0,200,100,0.1
+--track1:ChangeSpeed,0,999,0,0.1
+--track2:Threshold,0,100,0,0.1
+--track3:Hue,-9999,9999,0,0.1
+--dialog:X Speed,chx=0;Y Speed,chy=0;Frequency X,freqx=1;Frequency Y,freqy=1;Noise Type,type=0;Seed,seed=0;
+
+if (rikky_module == nil) then require("rikky_module") end
+
+local ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz = obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz
+
+obj.effect("ノイズ", "周期X", freqx, "周期Y", freqy, "seed", seed, "mode", 1, "強さ", obj.track0, "変化速度", obj.track1, "速度X", chx, "速度Y", chy, "type", type, "しきい値", obj.track2)
+
+local pfunction_a = function(r, g, b, a, ar, ag, ab, aa, x, y)
+	local brightness = (r + g + b)/3
+	r,g,b = RGB(HSV(((brightness/255) * 360) + obj.track3, 100, 100))
+	
+	return r,g,b,a
+end
+
+rikky_module.pixelfunction(pfunction_a)
 
 obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz
 

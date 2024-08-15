@@ -1,0 +1,28 @@
+@[Prefab] AddToPrefab
+--track0:ID,0,9999,0,1
+
+if (rikky_module.reloadbuffer()) then
+	local cache = {
+		ox = obj.ox - obj.cx + obj.getvalue("x"),
+		oy = obj.oy - obj.cy + obj.getvalue("y"),
+		oz = obj.oz - obj.cz + obj.getvalue("z"),
+		rx = obj.rx + obj.getvalue("rx"),
+		ry = obj.ry + obj.getvalue("ry"),
+		rz = (obj.rz + obj.getvalue("rz")) / 2,
+		zoom = obj.zoom * (obj.getvalue("zoom")/100),
+		alpha = obj.alpha * obj.getvalue("alpha"),
+		aspect = obj.aspect * obj.getvalue("aspect"),
+		layer = obj.layer,
+		index = obj.index,
+		cx = obj.cx,
+		cy = obj.cy,
+		cz = obj.cz,
+	}
+	rikky_module.image("w", "na_prefab_cache_" .. tostring(obj.layer) .. "_" .. tostring(obj.index))
+	table.insert(prefabs_cache, cache)
+	return
+end
+
+table.insert(prefabs[tostring(obj.track0)].layers, obj.layer)
+
+obj.alpha = 0

@@ -1,0 +1,83 @@
+@[Audio] Initialize
+--track0:BPM,0,9999,120,0.1
+--track1:Zoom,0.1,9999,100,0.1
+--track2:Time,0,9999,0,0.01
+--track3:XOffset,-9999,9999,0,0.1
+--dialog:Measure,measure=4/4;
+
+audio_visual = {}
+audio_visual.bpm = obj.track0
+audio_visual.zoom = obj.track1
+audio_visual.measure = measure
+audio_visual.time = obj.track2
+audio_visual.xoffset = obj.track3
+audio_visual.objs = {}
+
+audio_visual.time2pos = function(time)
+	return time * audio_visual.zoom
+end
+
+@[Audio] MIDI Visualizer
+--file:
+
+require("rikky_module")
+
+if (audio_visual == nil) then return end
+
+local midi = {}
+local success = rikky_module.midiconverterEx(midi, file)
+if not success then
+	return
+end
+
+midi:SetOffsetTime(audio_visual.time)
+
+
+local min = midi:GetMinNoteNumber()
+local range = midi:GetMaxNoteNumber() - midi:GetMinNoteNumber()
+local lapse = midi:Time2Step(obj.time)
+midi:SetDownrange(lapse)
+midi:SetUprange(midi:GetMidiLength()-lapse)
+midi:SetTyperange(2)
+
+local notes = midi:GetNowNote()
+for k,v in pairs(notes) do
+	for _,v2 in pairs(v) do
+		v2[2] = midi:Step2Time(v2[2])
+		v2[3] = midi:Step2Time(v2[3])
+	end
+end
+
+local obje = {
+	type = "midi",
+	range = range,
+	notes = notes,
+	min = min
+}
+
+table.insert(audio_visual.objs, obje)
+
+@[Audio] Composer
+
+require("rikky_module")
+
+if (audio_visual == nil) then return end
+
+for k,v in pairs(audio_visual.objs) do
+	if (v.type == "midi") then
+		obj.load("figure", "éläpå`", 0xffffff, 1)
+		for _,v2 in pairs(v.notes) do
+			for _,v3 in pairs(v2) do
+				local y1pos = ((((v3[1] - v.min + 1) / (v.range+1)) - 0.5)) * -obj.screen_h
+				local y2pos = y1pos + (obj.screen_h/(v.range+1))
+				local x1pos = audio_visual.time2pos(v3[2] + audio_visual.time - obj.time)
+				local x2pos = audio_visual.time2pos(v3[3] + audio_visual.time - obj.time)
+				
+				obj.drawpoly(x1pos, y1pos, 0, x2pos, y1pos, 0, x2pos, y2pos, 0, x1pos, y2pos, 0)
+			end
+		end
+	end
+end
+
+obj.load("figure", "éläpå`", 0xff0000, 1)
+obj.drawpoly(-1, -obj.screen_h, 0, 1, -obj.screen_h, 0, 1, obj.screen_h, 0, -1, obj.screen_h, 0)

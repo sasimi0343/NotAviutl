@@ -1,0 +1,78 @@
+@[Prefab] Initialize
+--track0:ID,0,9999,0,1
+
+if (prefabs == nil) then
+	prefabs = {}
+end
+
+if (rikky_module == nil) then
+	require("rikky_module")
+end
+
+if (rikky_module.reloadbuffer()) then
+	return
+end
+
+if (obj.getoption("section_num") < 3) then
+	return
+end
+
+local prefab = {
+layers = {obj.layer+1},
+id = obj.track0,
+startframe = rikky_module.getinfo("frame")-obj.frame,
+section1 = math.floor(obj.getvalue("time", 0, 1) * obj.framerate),
+section2 = math.floor(obj.getvalue("time", 0, 2) * obj.framerate),
+totalframe = obj.totalframe,
+load = function (self, frame)
+	prefabs_cache = {}
+	--print(frame + self.startframe)
+	rikky_module.reloadbuffer(frame + self.startframe, "absolute", false, self.layers, true)
+	for k,v in pairs(prefabs_cache) do
+		rikky_module.image("r", "na_prefab_cache_" .. v.layer .. "_" .. v.index)
+		
+		local z_x = 100
+		local z_y = 100
+		if (v.aspect > 0) then
+			z_x = (1-v.aspect)*100
+			obj.effect("リサイズ", "X", z_x, "Y", z_y)
+		else
+			z_y = (1+v.aspect)*100
+			obj.effect("リサイズ", "X", z_x, "Y", z_y)
+		end
+		
+		obj.cx = v.cx
+		obj.cy = v.cy
+		obj.cz = v.cz
+		
+		obj.draw(v.ox + v.cx, v.oy + v.cy, v.oz + v.cz, v.zoom, v.alpha, v.rx, v.ry, v.rz)
+	end
+end,
+calculateframe = function (self, frame, totalframe)
+	if (frame < self.section1) then
+		return frame
+	elseif (frame >= totalframe-(self.totalframe-self.section2)) then
+		return (frame - (totalframe-(self.totalframe-self.section2))) + self.section2
+	else
+		return ((frame - self.section1)%(self.section2-self.section1))+self.section1
+	end
+end
+}
+
+prefabs[tostring(obj.track0)] = prefab
+
+@[Prefab] SinglePrefab
+--track0:ID,0,9999,0,1
+--check0:Blend
+
+local prefab = prefabs[tostring(obj.track0)]
+
+if (prefab == nil) then
+	return
+end
+
+
+obj.load("figure", "四角形", 0xffffff, 1)
+require("rikky_module")
+
+prefab:load(prefab:calculateframe(obj.frame, obj.totalframe))

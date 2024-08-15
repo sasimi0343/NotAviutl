@@ -1,2 +1,2 @@
-使用にはrikky_module(version1 & 2)が必要です。
+使用にはrikky_module(version1)が必要です。
 Aviutlは本体1.10、拡張編集0.92で動かしてください。

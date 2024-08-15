@@ -81,3 +81,40 @@ require("rikky_module")
 
 local id = obj.track0 .. "_" .. (obj.index * imgeach)
 rikky_module.image("r+", "na_store_" .. id)
+
+@[Utility] RotateAndBuffering
+--track0:Angle,-9999,9999,0,0.1
+--check0:RotateBack
+
+require("rikky_module")
+
+	local rz = obj.track0
+	local length = math.sqrt(math.pow(obj.w / 2, 2) + math.pow(obj.h / 2, 2))
+	local baseangle = math.atan2(obj.h/2, obj.w/2) --math.asin((h / 2) / length)
+	local baseangle_anti = (math.pi - baseangle)
+	
+	local p1x = math.cos(math.rad(-rz) + baseangle) * length
+	local p1y = math.sin(math.rad(-rz) + baseangle) * length
+	local p2x = math.cos(math.rad(-rz) - baseangle) * length
+	local p2y = math.sin(math.rad(-rz) - baseangle) * length
+	local p3x = math.cos(math.rad(-rz) + baseangle_anti) * length
+	local p3y = math.sin(math.rad(-rz) + baseangle_anti) * length
+	local p4x = math.cos(math.rad(-rz) - baseangle_anti) * length
+	local p4y = math.sin(math.rad(-rz) - baseangle_anti) * length
+	
+	local maxx = math.max(p1x, p2x, p3x, p4x)
+	local minx = math.min(p1x, p2x, p3x, p4x)
+	local maxy = math.max(p1y, p2y, p3y, p4y)
+	local miny = math.min(p1y, p2y, p3y, p4y)
+	
+obj.setoption("drawtarget", "tempbuffer", math.abs(maxx - minx), math.abs(maxy - miny))
+
+obj.draw(0, 0, 0, 1, 1, 0, 0, obj.track0)
+
+obj.setoption("drawtarget", "framebuffer")
+
+obj.load("tempbuffer")
+
+if (obj.check0) then
+obj.rz = -obj.track0
+end

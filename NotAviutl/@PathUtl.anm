@@ -598,7 +598,9 @@ if (constrot == 0) then obj.rz = obj.rz + tan end
 
 require("rikky_module")
 
-if ((drawdata == nil or (not (penpath_prevfile == file))) and (not (file == ""))) then
+if (penpath_prevfile == nil) then penpath_prevfile = {} end
+
+if ((drawdata == nil or (not (penpath_prevfile[file] == nil))) and (not (file == ""))) then
 	local fh = io.open(file)
 	if (not (fh == nil)) then
 		local str = fh:read("*a")
@@ -610,6 +612,7 @@ if ((drawdata == nil or (not (penpath_prevfile == file))) and (not (file == ""))
 			table.insert(data2, {itizi[i*3+1], itizi[i*3+2], itizi[i*3+3]})
 		end
 		drawdata = data2
+		penpath_prevfile[file] = drawdata
 	end
 end
 
@@ -627,7 +630,58 @@ if (not (drawdata == nil)) then
 	end
 end
 
-penpath_prevfile = file
+@[NewPen->Path]
+--track0:Speed,0,9999,0,0.1
+--file:
+
+require("rikky_module")
+
+if (penpath_prevfile == nil) then penpath_prevfile = {} end
+
+if ((drawdata == nil and (penpath_prevfile[file] == nil)) and (not (file == ""))) then
+	local fh = io.open(file)
+	if (not (fh == nil)) then
+		local str = fh:read("*a")
+		fh:close()
+		
+		local itizi = rikky_module.string2table(str)
+		local data2 = {}
+		for i=0,math.floor(#itizi/4) do
+			table.insert(data2, {itizi[i*4+1], itizi[i*4+2], itizi[i*4+3], itizi[i*4+4]})
+		end
+		drawdata = data2
+		penpath_prevfile[file] = drawdata
+	end
+end
+
+if ((drawdata == nil) and (not (penpath_prevfile[file] == nil))) then
+	drawdata = penpath_prevfile[file]
+end
+
+if (not (drawdata == nil)) then
+	if (obj.track0 == 0) then
+		local pat = nil
+		local newline = true
+		for k,v in pairs(drawdata) do
+			if (newline) then
+				pat = {paths = {}, color1 = nil, color2 = nil}
+				table.insert(pathutl.paths, pat)
+				newline = false
+			end
+			if (v[1] == nil) then
+				
+			else
+				table.insert(pat.paths, {x = v[1], y = v[2]})
+				if (not v[4]) then
+					newline = true
+				end
+			end
+		end
+		--table.insert(pathutl.paths, pat)
+	end
+end
+
+drawdata = nil
 
 @[Path] DrawPoints
 --track0:Size,0,9999,10,1

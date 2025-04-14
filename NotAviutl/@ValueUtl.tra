@@ -2,3 +2,8 @@
 --param:1
 return varutl[tostring(obj.getpoint("param"))] or 0
 
+@[Value] Single Variable (Additional)
+--param:1
+local index,ratio = math.modf(obj.getpoint("index"))
+local st = obj.getpoint(index)
+return (varutl[tostring(obj.getpoint("param"))] or 0) + st

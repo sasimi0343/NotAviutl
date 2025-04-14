@@ -469,6 +469,8 @@ if (rikky_module == nil) then require("rikky_module") end
 
 local ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz = obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz
 
+--[[
+
 rikky_module.image("w", "na_effect_keisya")
 local h,w = obj.h,obj.w
 local radX = math.rad(obj.track0)
@@ -541,7 +543,46 @@ end
 if (not (obj.track1%180 == 0)) then
 	obj.load("tempbuffer")
 	rikky_module.pixelfunction(pfunctionY)
-end
+end]]
+
+--Œy—Ê‰»”Å
+
+local h,w = obj.h,obj.w
+local radX = math.rad(obj.track0)
+local radY = math.rad(obj.track1)
+local tanX = math.tan(radX)
+local tanY = math.tan(radY)
+
+local imgdata = {}
+
+local kaisiX_max = math.ceil(h * tanX)
+
+local sizeW = obj.w + math.abs(tanX * obj.h)
+
+obj.setoption("drawtarget", "tempbuffer", sizeW, obj.h)
+local p1x = kaisiX_max / 2
+obj.drawpoly(
+(-w/2)+p1x, -h/2, 0,
+(w/2)+p1x, -h/2, 0,
+(w/2)-p1x, h/2, 0,
+(-w/2)-p1x, h/2, 0
+)
+obj.load("tempbuffer")
+rikky_module.image("w", "na_effect_keisya")
+
+local sizeH = obj.h + math.abs(tanY * obj.w)
+local kaisiY_max = math.ceil(w * tanY)
+w = obj.w
+obj.setoption("drawtarget", "tempbuffer", sizeW, sizeH)
+rikky_module.image("r", "na_effect_keisya")
+local p1y = kaisiY_max / 2
+obj.drawpoly(
+-w/2, (-h/2)-p1y, 0,
+w/2, (-h/2)+p1y, 0,
+w/2, (h/2)+p1y, 0,
+-w/2, (h/2)-p1y, 0
+)
+obj.load("tempbuffer")
 
 obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz
 

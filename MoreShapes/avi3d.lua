@@ -27,7 +27,7 @@ function Draw(obj, tbl, lights, lightsinfo, geo, world)
 				if (geo.shading.static == 1 and geo_shading_cache[point]) then
 					rikky_module.image("r", "avi3d_lightcache_" .. point)
 				else
-					LightToTexture(lightsinfo, v, world, v)
+					LightToTexture(lightsinfo, v, world, v, geo)
 				end
 				if (geo.shading.static == 1 and (not geo_shading_cache[point])) then
 					rikky_module.image("w", "avi3d_lightcache_" .. point)
@@ -637,7 +637,7 @@ function SubtractPosition(posB, posA)
 	return x,y,z
 end
 
-function LightToTexture(lights, surface, world, csur)
+function LightToTexture(lights, surface, world, csur, geo)
 	--local w,h = obj.w, obj.h
 	rikky_module.image("w", "avi3d_lighting_a")
 	local _, w, h = rikky_module.image("i", "avi3d_lighting_a")
@@ -648,11 +648,25 @@ function LightToTexture(lights, surface, world, csur)
 		h = obj.h
 	end
 	
+	local p1,p2,p3,p4 = surface[1],surface[2],surface[3],surface[4]
+	if (geo == nil) then
+		
+	else
+		--p1 = ArrayToPoint(GlobalPoint(surface[1], geo))
+		--p2 = ArrayToPoint(GlobalPoint(surface[2], geo))
+		--p3 = ArrayToPoint(GlobalPoint(surface[3], geo))
+		--p4 = ArrayToPoint(GlobalPoint(surface[4], geo))
+	end
 	
-	local p1 = surface[1]
-	local p2 = surface[2]
-	local p3 = surface[3]
-	local p4 = surface[4]
+	if ((not (geo == nil)) and (geo.shading.style == 3)) then
+		for k,v in pairs(lights) do
+			local mb1 = gct.Vector.Pos_p_on_poly({v.x, v.y, v.z}, p1, p2, p3)
+			local mb2 = gct.Vector.Pos_p_on_poly({v.x, v.y, v.z}, p2, p3, p4)
+			
+			
+		end
+		return
+	end
 	
 	local Y1x, Y1y, Y1z = SubtractPosition(p4, p1)
 	local Y2x, Y2y, Y2z = SubtractPosition(p3, p2)
@@ -700,6 +714,36 @@ function LightToTexture(lights, surface, world, csur)
 	rikky_module.pixelfunction(pfunctionX)
 end
 
+function CopyPoint(point)
+	return {x = point.x, y = point.y, z = point.z}
+end
+
+function CopyPoint2D(point)
+	return {x = point.x, y = point.y}
+end
+
+function CopyGeometry(geo)
+	local sur = {}
+	for k,v in pairs(geo.surface) do
+		local su = {CopyPoint(v[1]), CopyPoint(v[2]), CopyPoint(v[3]), CopyPoint(v[4]), v[5]}
+		if (not (v[6] == nil)) then
+			su[6] = {CopyPoint2D(v[6][1]), CopyPoint2D(v[6][2]), CopyPoint2D(v[6][3]), CopyPoint2D(v[6][4])}
+		end
+		table.insert(sur, su)
+	end
+	local ng = {
+		surface = sur,
+		shading = {},
+		ox = geo.ox,
+		oy = geo.oy,
+		oz = geo.oz,
+		rx = geo.rx,
+		ry = geo.ry,
+		rz = geo.rz
+	}
+	return ng
+end
+
 return {
 	Draw = Draw,
 	Saibunka = Saibunka,
@@ -707,5 +751,7 @@ return {
 	Lighting = Lighting,
 	LightToTexture = LightToTexture,
 	geo_shading_cache = geo_shading_cache,
+	PointRotate = PointRotate,
+	CopyGeometry = CopyGeometry,
 	pt = pt,
 }

@@ -1,0 +1,13 @@
+@[Value] Add Value
+--track0:Value,-9999,9999,0,0.1
+--track1:ID,0,9999,0,1
+
+if (varutl == nil) then
+	varutl = {}
+end
+
+if (lag < 1) then
+	lag = 1
+end
+
+varutl[tostring(obj.track1)] = varutl[tostring(obj.track1)] + obj.track0

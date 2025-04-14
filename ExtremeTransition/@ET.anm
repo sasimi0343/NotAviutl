@@ -78,7 +78,24 @@ et.Move(obj, gexit, gt, gd, ggd, {
     ey = ey,
     ez = ez,
     eas = eas,
-    revmode = revmode
+    revmode = revmode,
+    origin = false
+})
+
+@Move (Origin)
+--dialog:[Global]Exit/chk,gexit=0;[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Start X,sx=0;Start Y,sy=0;Start Z,sz=0;End X,ex=0;End Y,ey=0;End Z,ez=0;Reverse Mode,revmode=0;
+
+local et = require("et")
+et.Move(obj, gexit, gt, gd, ggd, {
+    sx = sx,
+    sy = sy,
+    sz = sz,
+    ex = ex,
+    ey = ey,
+    ez = ez,
+    eas = eas,
+    revmode = revmode,
+    origin = true
 })
 
 @RandomMove90Deg
@@ -167,6 +184,32 @@ et.SquareClip(obj, gexit, gt, gd, ggd, {
 	color = color,
 })
 
+@FlatShadow
+--track0:Length,0,9999,20,0.1
+--track1:StartAngle,-9999,9999,0,0.1
+--track2:EndAngle,-9999,9999,0,0.1
+--dialog:[Global]Exit/chk,gexit=0;[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Color/col,color=0xffffff;CenterTo/chk,dontadjust=0;
+
+local et = require("et")
+et.FlatShadow(obj, gexit, gt, gd, ggd, {
+	length = obj.track0,
+	angle1 = obj.track1,
+	angle2 = obj.track2,
+	dontadjust = dontadjust == 1,
+	eas = eas,
+	color = color,
+})
+
+
+@ValueChange
+--track0:ID,0,9999,0,1
+--track1:StartValue,-99999,99999,0,0.1
+--track2:EndValue,-99999,99999,0,0.1
+--dialog:[Global]Exit/chk,gexit=0;[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Color/col,color=0xffffff;CenterTo/chk,dontadjust=0;
+
+local et = require("et")
+varutl[tostring(obj.track0)] = et.easing(eas, obj, gexit, gt, gd, obj.track1, obj.track2, ggd)
+
 @[Transion] RandomTransion
 --dialog:[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easings,eas={-1};Easings2,eas2={-1};Seed,seed=0;Transions,transion={1};Appear/chk,appear=1;Disappear/chk,disappear=0;
 
@@ -188,147 +231,147 @@ local easing2 = eas2[obj.rand(1, #eas2, seed, obj.index * 10 + 4)]
 
 local transions = {
 	function ()
-	local xy = 0
-	local sx = obj.w * multiple
-	local sy = obj.h * multiple
-	if (obj.w < obj.h) then
-		xy = 1
-		sx = 0
-	else
-		sy = 0
-	end
-	
-	if (disappear == 1) then et.Move(obj, 1, gt, gd, ggd, {
-		sx = 0,
-		sy = 0,
-		sz = 0,
-		ex = -sx,
-		ey = -sy,
-		ez = 0,
-		eas = easing2,
-		revmode = 0
-	}) end
-	if (appear == 1) then et.Move(obj, 0, gt, gd, ggd, {
-		sx = sx,
-		sy = sy,
-		sz = 0,
-		ex = 0,
-		ey = 0,
-		ez = 0,
-		eas = easing,
-		revmode = 0
-	}) end 
+		local xy = 0
+		local sx = obj.w * multiple
+		local sy = obj.h * multiple
+		if (obj.w < obj.h) then
+			xy = 1
+			sx = 0
+		else
+			sy = 0
+		end
+		
+		if (disappear == 1) then et.Move(obj, 1, gt, gd, ggd, {
+			sx = 0,
+			sy = 0,
+			sz = 0,
+			ex = -sx,
+			ey = -sy,
+			ez = 0,
+			eas = easing2,
+			revmode = 0
+		}) end
+		if (appear == 1) then et.Move(obj, 0, gt, gd, ggd, {
+			sx = sx,
+			sy = sy,
+			sz = 0,
+			ex = 0,
+			ey = 0,
+			ez = 0,
+			eas = easing,
+			revmode = 0
+		}) end 
 	end,
 	function()
-	if (disappear == 1) then et.Zoom(obj, 1, gt, gd, ggd, {
-		zoom = 100,
-		eas = easing2,
-		zoomchange = 0
-	})
-	et.Rotate(obj, 1, gt, gd, ggd, {
-		sx = 0,
-		sy = 0,
-		sz = 0,
-		ex = 0,
-		ey = 0,
-		ez = -90 * multiple,
-		eas = easing2,
-		revmode = 0
-	}) end
-	if (appear == 1) then et.Zoom(obj, 0, gt, gd, ggd, {
-		zoom = 0,
-		eas = easing,
-		zoomchange = 100
-	})
-	et.Rotate(obj, 0, gt, gd, ggd, {
-		sx = 0,
-		sy = 0,
-		sz = 90 * multiple,
-		ex = 0,
-		ey = 0,
-		ez = 0,
-		eas = easing,
-		revmode = 0
-	}) end
+		if (disappear == 1) then et.Zoom(obj, 1, gt, gd, ggd, {
+			zoom = 100,
+			eas = easing2,
+			zoomchange = 0
+		})
+		et.Rotate(obj, 1, gt, gd, ggd, {
+			sx = 0,
+			sy = 0,
+			sz = 0,
+			ex = 0,
+			ey = 0,
+			ez = -90 * multiple,
+			eas = easing2,
+			revmode = 0
+		}) end
+		if (appear == 1) then et.Zoom(obj, 0, gt, gd, ggd, {
+			zoom = 0,
+			eas = easing,
+			zoomchange = 100
+		})
+		et.Rotate(obj, 0, gt, gd, ggd, {
+			sx = 0,
+			sy = 0,
+			sz = 90 * multiple,
+			ex = 0,
+			ey = 0,
+			ez = 0,
+			eas = easing,
+			revmode = 0
+		}) end
 	end,
 	function()
-	if (disappear == 1) then et.Blink(obj, 1, gt, gd, ggd, {
-		freq = 1,
-		tim = 1,
-		alpha = 0,
-	})
-	et.Rotate(obj, 1, gt, gd, ggd, {
-		sx = 0,
-		sy = 0,
-		sz = 0,
-		ex = 0,
-		ey = 0,
-		ez = -90 * multiple,
-		eas = easing2,
-		revmode = 0
-	}) end
-	if (appear == 1) then et.Blink(obj, 0, gt, gd, ggd, {
-		freq = 1,
-		tim = 1,
-		alpha = 0,
-	})
-	et.Rotate(obj, 0, gt, gd, ggd, {
-		sx = 0,
-		sy = 0,
-		sz = 90 * multiple,
-		ex = 0,
-		ey = 0,
-		ez = 0,
-		eas = easing,
-		revmode = 0
-	}) end
+		if (disappear == 1) then et.Blink(obj, 1, gt, gd, ggd, {
+			freq = 1,
+			tim = 1,
+			alpha = 0,
+		})
+		et.Rotate(obj, 1, gt, gd, ggd, {
+			sx = 0,
+			sy = 0,
+			sz = 0,
+			ex = 0,
+			ey = 0,
+			ez = -90 * multiple,
+			eas = easing2,
+			revmode = 0
+		}) end
+		if (appear == 1) then et.Blink(obj, 0, gt, gd, ggd, {
+			freq = 1,
+			tim = 1,
+			alpha = 0,
+		})
+		et.Rotate(obj, 0, gt, gd, ggd, {
+			sx = 0,
+			sy = 0,
+			sz = 90 * multiple,
+			ex = 0,
+			ey = 0,
+			ez = 0,
+			eas = easing,
+			revmode = 0
+		}) end
 	end,
 	function()
-	local xy = 0
-	local rangeX, rangeY = 100, 100
-	local sx = obj.w * multiple
-	local sy = obj.h * multiple
-	if (obj.w < obj.h) then
-		xy = 1
-		sx = 0
-		rangeY = 0
-	else
-		sy = 0
-		rangeX = 0
-	end
-	
-	if (disappear == 1) then et.Move(obj, 1, gt, gd, ggd, {
-		sx = 0,
-		sy = 0,
-		sz = 0,
-		ex = sx,
-		ey = sy,
-		ez = 0,
-		eas = easing2,
-		revmode = 0
-	})
-	et.Mozaic(obj, 1, gt, gd, ggd, {
-		rangeX = rangeX,
-		rangeY = rangeY,
-		dontinterpolate = true,
-		eas = easing2
-	}) end
-	if (appear == 1) then et.Move(obj, 0, gt, gd, ggd, {
-		sx = sx,
-		sy = sy,
-		sz = 0,
-		ex = 0,
-		ey = 0,
-		ez = 0,
-		eas = easing,
-		revmode = 0
-	})
-	et.Mozaic(obj, 0, gt, gd, ggd, {
-		rangeX = rangeX,
-		rangeY = rangeY,
-		dontinterpolate = true,
-		eas = -1
-	}) end
+		local xy = 0
+		local rangeX, rangeY = 100, 100
+		local sx = obj.w * multiple
+		local sy = obj.h * multiple
+		if (obj.w < obj.h) then
+			xy = 1
+			sx = 0
+			rangeY = 0
+		else
+			sy = 0
+			rangeX = 0
+		end
+		
+		if (disappear == 1) then et.Move(obj, 1, gt, gd, ggd, {
+			sx = 0,
+			sy = 0,
+			sz = 0,
+			ex = sx,
+			ey = sy,
+			ez = 0,
+			eas = easing2,
+			revmode = 0
+		})
+		et.Mozaic(obj, 1, gt, gd, ggd, {
+			rangeX = rangeX,
+			rangeY = rangeY,
+			dontinterpolate = true,
+			eas = easing2
+		}) end
+		if (appear == 1) then et.Move(obj, 0, gt, gd, ggd, {
+			sx = sx,
+			sy = sy,
+			sz = 0,
+			ex = 0,
+			ey = 0,
+			ez = 0,
+			eas = easing,
+			revmode = 0
+		})
+		et.Mozaic(obj, 0, gt, gd, ggd, {
+			rangeX = rangeX,
+			rangeY = rangeY,
+			dontinterpolate = true,
+			eas = -1
+		}) end
 	end
 }
 

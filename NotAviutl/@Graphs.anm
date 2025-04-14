@@ -1,0 +1,209 @@
+@[Graph] New Graph
+--track0:Fontsize,0,9999,50,0.1
+--dialog:Font,font="MS UI Gothic";
+na_graph = {elements = {}, dataList = {}, font = font, fontsize = obj.track0, grids = {}, expressions = {}}
+function na_graph.DrawGrid()
+	
+end
+
+@[Graph] Add Element
+--dialog:Element Name,elemName="Element";Color/col,color=0x661111;TextColor/col,textcol=0xffffff;
+if (na_graph == nil) then return end
+table.insert(na_graph.elements, {name = elemName, color = color, textcolor = textcol})
+
+@[Graph] Add DataStack
+--dialog:Data,data={};
+if (na_graph == nil) then return end
+table.insert(na_graph.dataList, data)
+
+@[Graph] Add Expression
+--dialog:Expression,expression="return 0";Color/col,color=0xaa1111;Name,name="Expression";
+if (na_graph == nil) then return end
+table.insert(na_graph.expressions, {expression = expression, color = color, name = name})
+
+@[Graph][Design] Grid
+--track0:Xspace,0,9999,100,0.1
+--track1:Yspace,0,9999,100,0.1
+--track2:Width,0,9999,1,0.1
+--dialog:Color/col,color=0xffffff;
+if (na_graph == nil) then return end
+local grid = {x = obj.track0, y = obj.track1, width = obj.track2, color = color}
+table.insert(na_graph.grid, grid)
+
+@[Graph][Draw] Mathmatics Graph
+--track0:Width,0,9999,400,0.1
+--track1:Height,0,9999,400,0.1
+
+if (na_graph == nil) then return end
+if (rikky_module == nil) then require("rikky_module") end
+
+@[Graph][Draw] Ribbon Graph
+--track0:Width,0,9999,400,0.1
+--track1:RibbonWidth,0,9999,100,0.1
+--track2:LineWidth,0,9999,4,0.1
+--track3:BorderWidth,0,9999,4,0.1
+
+if (na_graph == nil) then return end
+if (rikky_module == nil) then require("rikky_module") end
+
+local sumofdata = {}
+
+for k,v in pairs(na_graph.dataList) do
+	local sum = 0
+	for _,d in pairs(v) do
+		sum = sum + d
+	end
+	
+	table.insert(sumofdata, sum)
+end
+
+local drawelemname = true
+local ifcy = 0
+for k,v in pairs(na_graph.dataList) do
+	local i = 1
+	obj.setoption("drawtarget", "tempbuffer", obj.track0, obj.track1)
+	local notfit = {}
+	local istherenotfit = false
+	local currentwidth = 0
+	for _,d in pairs(v) do
+		local elem = na_graph.elements[i]
+		obj.load("figure", "ŽlŠpŒ`", elem.color, 1)
+		local sum = sumofdata[k]
+		local w = (d / sum) * obj.track0
+		local left = -obj.track0/2
+		local h = obj.track1/2
+		obj.drawpoly(
+		left + currentwidth, -h, 0,
+		left + currentwidth + w, -h, 0,
+		left + currentwidth + w, h, 0,
+		left + currentwidth, h, 0
+		)
+		
+		if (i > 1) then
+			obj.load("figure", "ŽlŠpŒ`", elem.textcolor, 1)
+			obj.drawpoly(
+			left + currentwidth - (obj.track3/2), -h, 0,
+			left + currentwidth + (obj.track3/2), -h, 0,
+			left + currentwidth + (obj.track3/2), h, 0,
+			left + currentwidth - (obj.track3/2), h, 0
+			)
+		end
+		
+		obj.setfont(na_graph.font, na_graph.fontsize, 0, elem.textcolor)
+		if (drawelemname) then
+			obj.load("text", elem.name .. "(" .. d .. ")")
+		else
+			obj.load("text", d)
+		end
+		if (obj.w > w) then
+			notfit[tostring(i)] = left + currentwidth + (w / 2)
+			istherenotfit = true
+		else
+			obj.draw(left + currentwidth + (w/2))
+		end
+		
+		currentwidth = currentwidth + w
+		i = i + 1
+	end
+	i = 1
+	if (istherenotfit) then
+		obj.setoption("drawtarget", "framebuffer")
+		obj.load("tempbuffer")
+		rikky_module.image("w", "na_graph_1")
+		obj.setoption("drawtarget", "tempbuffer", obj.track0, obj.track1 + 100 + na_graph.fontsize)
+		rikky_module.image("r", "na_graph_1")
+		obj.draw(0, (100 + na_graph.fontsize) / 2)
+		currentwidth = 0
+		local anotherwidth = 0
+		local stackprev = false
+		for _,d in pairs(v) do
+			local sum = sumofdata[k]
+			local w = (d / sum) * obj.track0
+			local left = -obj.track0/2
+			if (not (notfit[tostring(i)] == nil)) then
+				local elem = na_graph.elements[i]
+				local cellX = notfit[tostring(i)]
+				if (drawelemname) then
+					obj.load("text", elem.name .. "(" .. d .. ")")
+				else
+					obj.load("text", d)
+				end
+				local y = 0
+				local x = math.max((obj.w - obj.track0)/2, math.min(left + currentwidth + (w/2), (obj.track0 - obj.w)/2))
+				if ((x + ((obj.track0 - obj.w) / 2) < anotherwidth) and (not stackprev)) then
+					obj.draw(x, 0)
+					anotherwidth = x + ((obj.track0 + obj.w) / 2)
+					stackprev = true
+				else
+					obj.draw(x, -obj.track1)
+					y = -obj.track1
+					anotherwidth = anotherwidth + obj.w
+					stackprev = false
+				end
+				obj.load("figure", "ŽlŠpŒ`", elem.textcolor, 1)
+				obj.drawpoly(
+				x - (obj.track2/2), y + (na_graph.fontsize/2), 0,
+				x + (obj.track2/2), y + (na_graph.fontsize/2), 0,
+				cellX + (obj.track2/2), (100 + na_graph.fontsize - obj.track1) / 2, 0,
+				cellX - (obj.track2/2), (100 + na_graph.fontsize - obj.track1) / 2, 0
+				)
+			end
+			currentwidth = currentwidth + w
+			i = i + 1
+		end
+		--ifcy = (100) / 2
+	end
+	
+	obj.setoption("drawtarget", "framebuffer")
+	obj.load("tempbuffer")
+	obj.cy = ifcy
+	obj.draw()
+	
+	drawelemname = false
+end
+
+@[Graph][Expression->Path]
+--track0:Quality,0.1,9999,1,0.1
+--track1:XRange-,-9999,0,-600,1
+--track2:XRange+,0,9999,600,1
+--track3:ID,0,9999,0,1
+--dialog:ScaleX,scalex=1;ScaleY,scaley=1;
+if (na_graph == nil) then return end
+if (pathutl_savedpath == nil) then
+	pathutl_savedpath = {}
+end
+local paths = {}
+
+local range = obj.track2 - obj.track1
+local start = obj.track1 / obj.track0
+
+for k,v in pairs(na_graph.expressions) do
+	local path = {}
+	
+	local did = false
+	local func_tion = load(
+	function()
+		if (did) then return nil end
+		did = true
+		return v.expression
+	end, "3DLineFunction")
+	
+	
+	for i=0,(range/obj.track0) do
+		x = (i * obj.track0) + obj.track1
+		local y = func_tion()
+		
+		local point = {x = x * scalex, y = -y * scaley}
+		if (point.y > obj.screen_h * 4) then
+			point.y = obj.screen_h * 4
+		elseif (point.y < -obj.screen_h * 4) then
+			point.y = -obj.screen_h * 4
+		end
+		--print(point.x .. ", " .. point.y)
+		
+		table.insert(path, point)
+	end
+	
+	table.insert(paths, {paths = path, color1 = v.color, color2 = 0xffffff})
+end
+pathutl_savedpath[tostring(obj.track3)] = paths

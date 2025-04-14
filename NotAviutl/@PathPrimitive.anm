@@ -1,0 +1,27 @@
+@[Path][Primitive] Polygons
+--track0:Polygons,2,9999,4,0.1
+--track1:Size,0,9999,100,0.1
+--check0:ClosePath
+
+local poly,ratio = math.modf(obj.track0)
+local size = obj.track1
+
+if (pathutl == nil) then return end
+
+local upath = {paths = {}, color1 = nil, color2 = nil}
+for i=0,poly do
+	local rad = (i / poly) * (math.pi * 2)
+	local x,y = math.cos(rad) * size, math.sin(rad) * size
+	
+	if (ratio > 0) then
+		local rad2 = (i / (poly+1)) * (math.pi * 2)
+		local radA = ((rad2 - rad) * ratio) + rad
+		x,y = math.cos(radA) * size, math.sin(radA) * size
+	end
+	
+	table.insert(upath.paths, {x = x, y = y})
+end
+
+if (obj.check0) then table.insert(upath.paths, upath.paths[1]) end
+
+table.insert(pathutl.paths, upath)

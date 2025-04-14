@@ -240,6 +240,7 @@ local function Move(obj, disappear, time, delay, gld, data)
 			local ez = 0
 			local eas = -1
 			local revmode = 0
+			local origin = false
 
 			if (isValid(data.sx)) then
 				sx = data.sx
@@ -265,6 +266,9 @@ local function Move(obj, disappear, time, delay, gld, data)
 			if (isValid(data.revmode)) then
 				revmode = data.revmode
 			end
+			if (isValid(data.origin)) then
+				origin = data.origin
+			end
 			
 			if (revmode == 1) then
 				if (obj.index%2 == 1) then
@@ -280,9 +284,15 @@ local function Move(obj, disappear, time, delay, gld, data)
 				end
 			end
 			
-			obj.cx = obj.cx + easing(eas, obj, disappear, time, delay, sx, ex, gld)
-			obj.cy = obj.cy + easing(eas, obj, disappear, time, delay, sy, ey, gld)
-			obj.cz = obj.cz + easing(eas, obj, disappear, time, delay, sz, ez, gld)
+			if (origin) then
+				obj.ox = obj.ox + easing(eas, obj, disappear, time, delay, sx, ex, gld)
+				obj.oy = obj.oy + easing(eas, obj, disappear, time, delay, sy, ey, gld)
+				obj.oz = obj.oz + easing(eas, obj, disappear, time, delay, sz, ez, gld)
+			else
+				obj.cx = obj.cx + easing(eas, obj, disappear, time, delay, sx, ex, gld)
+				obj.cy = obj.cy + easing(eas, obj, disappear, time, delay, sy, ey, gld)
+				obj.cz = obj.cz + easing(eas, obj, disappear, time, delay, sz, ez, gld)
+			end
 		end
 	end
 end
@@ -352,6 +362,50 @@ local function Mozaic(obj, disappear, time, delay, gld, data)
 			
 			obj.effect("リサイズ", "ドット数でサイズ指定", "0", "補間なし", dontinterpolate, "X", x, "Y", y)
 			obj.effect("リサイズ", "ドット数でサイズ指定", "1", "補間なし", dontinterpolate, "X", w, "Y", h)
+		end
+	end
+end
+
+local function FlatShadow(obj, disappear, time, delay, gld, data)
+	if (isValid(data)) then
+		if (timeIn(obj, disappear, time, delay, gld)) then
+			local length = 0
+			local angle1 = 0
+			local angle2 = 0
+			local color = 0
+			local eas = -1
+			local dontadjust = 0
+			
+			if (isValid(data.length)) then
+				length = data.length
+			end
+			if (isValid(data.angle1)) then
+				angle1 = data.angle1
+			end
+			if (isValid(data.angle2)) then
+				angle2 = data.angle2
+			end
+			if (isValid(data.color)) then
+				color = data.color
+			end
+			if (isValid(data.eas)) then
+				eas = data.eas
+			end
+			if (isValid(data.dontadjust)) then
+				dontadjust = data.dontadjust
+			end
+			if (dontadjust) then dontadjust = 1 else dontadjust = 0 end
+			
+			local l,theta = 0, 0
+			if (disappear == 1) then
+				l = easing(eas, obj, disappear, time, delay, 0, length)
+				theta = easing(eas, obj, disappear, time, delay, angle1, angle2)
+			else
+				l = easing(eas, obj, disappear, time, delay, length, 0)
+				theta = easing(eas, obj, disappear, time, delay, angle1, angle2)
+			end
+			
+			obj.effect("アニメーション効果", "track0", l, "track1", theta, "name", "[Effect] FlatShadow2@EffectUtl", "param", "color=" .. color .. ";center=" .. dontadjust .. ";")
 		end
 	end
 end
@@ -697,5 +751,7 @@ return {
 	Rotate = Rotate,
 	FanClipping = FanClipping,
 	SquareClip = SquareClip,
-	Mozaic = Mozaic
+	Mozaic = Mozaic,
+	FlatShadow = FlatShadow,
+	easing = easing,
 }

@@ -1,0 +1,402 @@
+
+@[MathShape] Expression
+--track0:Size,0,9999,100,0.1
+--dialog:Expression,exp={{123,"x","+","4"},"/",{5}};StrFont,strfont="";NumFont,numfont="";Color/col,color=0xffffff;
+
+if (rikky_module == nil) then require("rikky_module") end
+
+if (strfont == "") then
+	strfont = "Gabriola"
+end
+if (numfont == "") then
+	numfont = "游明朝" --数値だけではなく大文字にも使用
+end
+
+local function printTable(tab, indent)
+	if (indent == nil) then indent = 0 end
+	if (type(tab) == "table") then
+		local kansei = "{\n"
+		for k,v in pairs(tab) do
+			kansei = kansei .. string.rep("	", indent) .. k .. " = " .. printTable(v, indent + 1) .. "\n"
+		end
+		kansei = kansei .. string.rep("	", indent) .. "}"
+		
+		return kansei
+	end
+	
+	if (type(tab) == "string") then return tab end
+	
+	return tostring(tab)
+end
+
+--[[
+テーブルタイプ
+0: 多項式
+1: 分数
+2: 指数
+3: 根号 (1: n乗根、nilなら2)
+4: 上付き文字
+5: 下付き文字
+6: 積分 (1: 下, 2: 上, nilなら不定積分)
+]]
+
+function checkExp(exp1)
+	if (type(exp1) == "table") then
+		local itemlist = {items = {}, type = 0} --多項式
+		local item = {contents = {}, minus = false, bisignal = false} --項
+		local prev = nil
+		local skip = false
+		for k=1,#exp1 do
+			if (skip) then
+				skip = false
+			else
+				local v = exp1[k]
+				if (v == "-") then
+					if (#item.contents > 0) then table.insert(itemlist.items, item) end
+					item = {contents = {}, minus = true, bisignal = false}
+				elseif (v == "+") then
+					table.insert(itemlist.items, item)
+					item = {contents = {}, minus = false, bisignal = false}
+				elseif (v == "+-") then
+					if (#item.contents > 0) then table.insert(itemlist.items, item) end
+					item = {contents = {}, minus = false, bisignal = true}
+				elseif (v == "-+") then
+					if (#item.contents > 0) then table.insert(itemlist.items, item) end
+					item = {contents = {}, minus = true, bisignal = true}
+				elseif (v == "/") then
+					if (prev == nil or exp1[k+1] == nil) then
+					else
+						local cont = {type = 1, lower = checkExp(exp1[k+1]), upper = prev}
+						prev = cont
+						table.remove(item.contents, #item.contents)
+						table.insert(item.contents, cont)
+						skip = true
+					end
+				elseif (v == "^") then
+					if (exp1[k+1] == nil) then
+					else
+						local cont = {type = 2, index = checkExp(exp1[k+1])}
+						prev = cont
+						table.insert(item.contents, cont)
+						skip = true
+					end
+				elseif (v == "root") then
+					if (exp1[k+1] == nil) then
+					else
+						local tbl = exp1[k+1]
+						if (#tbl > 1) then
+							local power = tbl[1]
+							if (power == nil) then power = 2 end
+							table.remove(tbl, 1)
+							local cont = {type = 3, content = checkExp(tbl), power = power}
+							prev = cont
+							table.insert(item.contents, cont)
+							skip = true
+						end
+					end
+				elseif (v == "up") then
+					if (exp1[k+1] == nil) then
+					else
+						local cont = {type = 4, char = checkExp(exp1[k+1])}
+						prev = cont
+						table.insert(item.contents, cont)
+						skip = true
+					end
+				elseif (v == "down") then
+					if (exp1[k+1] == nil) then
+					else
+						local cont = {type = 5, char = checkExp(exp1[k+1])}
+						prev = cont
+						table.insert(item.contents, cont)
+						skip = true
+					end
+				elseif (v == "integral") then
+					if (exp1[k+1] == nil) then
+					else
+						local tbl = exp1[k+1]
+						if (#tbl > 2) then
+							local from,to = tbl[1], tbl[2]
+							table.remove(tbl, 1)
+							table.remove(tbl, 1)
+							local cont = {type = 6, content = checkExp(tbl), from = from, to = to}
+							prev = cont
+							table.insert(item.contents, cont)
+							skip = true
+						end
+					end
+				else
+					prev = checkExp(v)
+					table.insert(item.contents, prev)
+				end
+			end
+		end
+		table.insert(itemlist.items, item)
+		return itemlist
+	end
+	return exp1
+end
+
+local imagestacks = {}
+
+function ds_push(w, h)
+	if (#imagestacks <= 0) then
+	else
+		obj.setoption("drawtarget", "framebuffer")
+		obj.load("tempbuffer")
+		rikky_module.image("w", "na_math_cache_" .. tostring(#imagestacks))
+	end
+	obj.setoption("drawtarget", "tempbuffer", w, h)
+	obj.setoption("draw_state", false)
+	table.insert(imagestacks, {obj.w, obj.h})
+end
+
+function ds_shift()
+	if (#imagestacks <= 0) then return end
+	obj.setoption("drawtarget", "framebuffer")
+	obj.load("tempbuffer")
+	rikky_module.image("w", "na_math_tempcache")
+	if (#imagestacks <= 1) then
+		obj.setoption("drawtarget", "tempbuffer", imagestacks[#imagestacks][1], imagestacks[#imagestacks][2])
+		table.remove(imagestacks, #imagestacks)
+	else
+		obj.setoption("drawtarget", "tempbuffer", imagestacks[#imagestacks][1], imagestacks[#imagestacks][2])
+		rikky_module.image("r", "na_math_cache_" .. tostring(#imagestacks-1))
+		obj.draw()
+		rikky_module.image("r", "na_math_tempcache")
+		table.remove(imagestacks, #imagestacks)
+	end
+end
+
+function draw(units, parentnum, prevheight)
+	if (parentnum == nil) then parentnum = 0 end
+	if (prevheight == nil) then prevheight = 0 end
+	if (type(units) == "number") then
+		obj.setfont(numfont, math.floor(obj.track0*0.9), 0, color)
+		obj.load("text", units)
+		--obj.setoption("drawtarget", "tempbuffer", obj.w, obj.h)
+		--obj.draw()
+	elseif (type(units) == "string") then
+		local tex = units
+		local isupper = false
+		if (string.sub(tex, 1, 1) == "#") then
+			tex = string.sub(tex, 2)
+			obj.setfont(numfont, obj.track0, 0, color)
+			isupper = true
+		else
+			obj.setfont(strfont, obj.track0, 0, color)
+		end
+		obj.load("text", tex)
+		if (not isupper) then obj.effect("クリッピング", "上", 40 * (obj.track0 / 100), "下", 30 * (obj.track0 / 100)) end
+		--obj.setoption("drawtarget", "tempbuffer", obj.w, obj.h)
+		--obj.draw()
+	else
+		local type = units.type
+		if (type == 0) then
+			
+			local index = 0
+			local maxwidth, maxheight = 0, 0
+			local itemindex = 0
+			local sizes = {}
+			local prvh = 0
+			for k,v in pairs(units.items) do
+				if (itemindex == 0 and (v.bisignal or v.minus)) then
+					maxwidth = maxwidth + obj.track0
+				end
+				for _,v2 in pairs(v.contents) do
+					draw(v2, parentnum + 1, prvh)
+					maxwidth = maxwidth + obj.w
+					maxheight = math.max(maxheight, obj.h)
+					rikky_module.image("w", "na_math_tempcache_" .. parentnum .. "_" .. tostring(index))
+					index = index + 1
+					sizes[index] = {w = obj.w, h = obj.h}
+					prvh = obj.h
+				end
+				maxwidth = maxwidth + obj.track0
+				itemindex = itemindex + 1
+			end
+			maxwidth = maxwidth - obj.track0
+			local currentwidth = 0
+			index = 0
+			itemindex = 1
+			ds_push(maxwidth, maxheight)
+			for k,v in pairs(units.items) do
+				if (itemindex == 1 and (v.bisignal or v.minus)) then
+					local loc = currentwidth - (maxwidth / 2) + (obj.track0 / 4)
+					obj.setfont(numfont, obj.track0, 0, color)
+					ds_push(obj.track0, obj.track0)
+					if (v.bisignal) then
+						if (v.minus) then
+							obj.load("text", "-")
+							obj.effect("リサイズ", "X", 200, "Y", 100)
+							obj.draw(0, -obj.track0 * 0.4)
+							obj.load("text", "+")
+							obj.draw(0, obj.track0 * 0.4)
+						else
+							obj.load("text", "+")
+							obj.draw(0, -obj.track0 * 0.4)
+							obj.load("text", "-")
+							obj.effect("リサイズ", "X", 200, "Y", 100)
+							obj.draw(0, obj.track0 * 0.4)
+						end
+					else
+						if (v.minus) then
+							obj.load("text", "-")
+							obj.effect("リサイズ", "X", 200, "Y", 100)
+						else
+							obj.load("text", "+")
+						end
+						obj.draw()
+					end
+					ds_shift()
+					obj.draw(loc + (obj.track0 / 3), (maxheight / 2) - (obj.track0 / 1.8))
+					currentwidth = currentwidth + obj.track0
+				end
+				for _,v2 in pairs(v.contents) do
+					local w,h = sizes[index+1].w, sizes[index+1].h
+					rikky_module.image("r", "na_math_tempcache_" .. parentnum .. "_" .. tostring(index))
+					obj.draw(currentwidth - (maxwidth / 2) + (w / 2), (maxheight / 2) - (h / 2))
+					currentwidth = currentwidth + w
+					index = index + 1
+				end
+				if (itemindex+1 <= #units.items) then
+					local v = units.items[itemindex+1]
+					local loc = currentwidth - (maxwidth / 2) + (obj.track0 / 4)
+					ds_push(obj.track0, obj.track0)
+					obj.setfont(numfont, obj.track0, 0, color)
+					if (v.bisignal) then
+						if (v.minus) then
+							obj.load("text", "-")
+							obj.effect("リサイズ", "X", 200, "Y", 100)
+							obj.draw(0, -obj.track0 * 0.2)
+							obj.load("text", "+")
+							obj.draw(0, obj.track0 * 0.2)
+						else
+							obj.load("text", "+")
+							obj.draw(0, -obj.track0 * 0.2)
+							obj.load("text", "-")
+							obj.effect("リサイズ", "X", 200, "Y", 100)
+							obj.draw(0, obj.track0 * 0.2)
+						end
+					else
+						if (v.minus) then
+							obj.load("text", "-")
+							obj.effect("リサイズ", "X", 200, "Y", 100)
+						else
+							obj.load("text", "+")
+						end
+						obj.draw()
+					end
+					ds_shift()
+					obj.draw(loc + (obj.track0 / 3), (maxheight / 2) - (obj.track0 / 1.8))
+					currentwidth = currentwidth + obj.track0
+					
+				end
+				itemindex = itemindex + 1
+			end
+			ds_shift()
+		elseif (type == 1) then
+			draw(units.lower, parentnum + 1)
+			local w1,h1 = obj.w,obj.h + (obj.track0 / 5)
+			rikky_module.image("w", "na_math_tempcache_" .. parentnum .. "_1")
+			draw(units.upper, parentnum + 1)
+			local w2,h2 = obj.w,obj.h + (obj.track0 / 5)
+			rikky_module.image("w", "na_math_tempcache_" .. parentnum .. "_2")
+			local width = math.max(w1, w2)
+			local height = h1 + h2
+			ds_push(width, height)
+			rikky_module.image("r", "na_math_tempcache_" .. parentnum .. "_1")
+			obj.draw(0, h2 / 2)
+			rikky_module.image("r", "na_math_tempcache_" .. parentnum .. "_2")
+			obj.draw(0, -h1 / 2)
+			
+			obj.load("figure", "四角形", color, 1)
+			obj.effect("リサイズ", "X", width, "Y", 4, "ドット数でサイズ指定", 1, "補間しない", 1)
+			obj.draw(0, (h2 - h1) / 2)
+			
+			ds_shift()
+		elseif (type == 2) then
+			draw(units.index, parentnum + 1)
+			local height = obj.h
+			local width = obj.w * 0.5
+			ds_push(width, prevheight + (obj.h * 0.5))
+			
+			obj.draw(0, (obj.h / 4)-(prevheight/2), 0, 0.5)
+			
+			ds_shift()
+		elseif (type == 3) then
+			draw(units.content, parentnum + 1)
+			local height = obj.h + (obj.track0/4)
+			local width = obj.w + (obj.h/2) + (obj.track0 / 4)
+			local ofs = (obj.h / 2) - (obj.track0/3)
+			ds_push(width, height)
+			
+			obj.draw(obj.track0/2 - (obj.track0 / 8))
+			
+			obj.setfont(numfont, obj.track0, 0, color)
+			obj.load("text", "√")
+			local root_left = 28 * (obj.track0 / 100)
+			local root_right = 58 * (obj.track0 / 100)
+			local root_edgeleft = -(width/2)
+			obj.drawpoly(
+			root_edgeleft, -obj.h/2 + ofs, 0,
+			root_edgeleft + root_left, -obj.h/2 + ofs, 0,
+			root_edgeleft + root_left, obj.h/2 + ofs, 0,
+			root_edgeleft, obj.h/2 + ofs, 0,
+			0, 0,
+			root_left, 0,
+			root_left, obj.h,
+			0, obj.h
+			)
+			obj.load("figure", "四角形", color, 1)
+			local root_b1 = (85-60) * (obj.track0 / 100)
+			local root_b2 = (103-60) * (obj.track0 / 100)
+			local root_t1 = -(height/2)
+			local root_t2 = (6 * obj.track0 / 100)-(height/2)
+			local root_size = height / 4
+			local barwidth = (obj.track0 / 2)
+			local barheight = 4 * (obj.track0 / 100)
+			local root_width = (root_b1 - root_t1) / 2
+			obj.drawpoly(
+			root_edgeleft + root_left, root_b1 + ofs, 0,
+			root_edgeleft + root_left + root_width, root_t1, 0,
+			root_edgeleft + root_left + root_width, root_t2, 0,
+			root_edgeleft + root_left, root_b2 + ofs, 0)
+			
+			--obj.draw(obj.track0/2-(width/2))
+			
+			obj.load("figure", "四角形", color, 1)
+			obj.drawpoly(
+			root_edgeleft + root_left + root_width, root_t1, 0,
+			width / 2, root_t1, 0,
+			width / 2, root_t2, 0,
+			root_edgeleft + root_left + root_width, root_t2, 0)
+			
+			ds_shift()
+		elseif (type == 4) then
+			draw(units.char, parentnum + 1)
+			local height = obj.h
+			local width = obj.w * 0.7
+			ds_push(width, prevheight + (obj.h / 5))
+			
+			obj.draw(0, (obj.h / 2.8)-(prevheight/2), 0, 0.7)
+			
+			ds_shift()
+		elseif (type == 5) then
+			draw(units.char, parentnum + 1)
+			local height = obj.h
+			local width = obj.w * 0.7
+			ds_push(width, prevheight + (obj.h / 5))
+			
+			obj.draw(0, -(obj.h / 2.8)+(prevheight/2), 0, 0.7)
+			
+			ds_shift()
+		end
+	end
+end
+
+
+
+local units = checkExp(exp)
+--print(printTable(units))
+
+draw(units)

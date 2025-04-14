@@ -12,9 +12,19 @@ audio_visual.measure = measure
 audio_visual.time = obj.track2
 audio_visual.xoffset = obj.track3
 audio_visual.objs = {}
+audio_visual.barsettings = {color1 = 0xff0000}
+audio_visual.objsettings = {color1 = 0xffffff, color2 = 0xffffff}
 
 audio_visual.time2pos = function(time)
 	return time * audio_visual.zoom
+end
+audio_visual.timecolor = function(color1, color2, time)
+	local r1,g1,b1 = RGB(color1)
+	local r2,g2,b2 = RGB(color2)
+	local r = math.floor(r1 + ((r2 - r1) * time))
+	local g = math.floor(g1 + ((g2 - g1) * time))
+	local b = math.floor(b1 + ((b2 - b1) * time))
+	return RGB(r, g, b)
 end
 
 @[Audio] MIDI Visualizer
@@ -57,27 +67,49 @@ local obje = {
 
 table.insert(audio_visual.objs, obje)
 
+@[Audio] BarSettings
+--dialog:Color/col,color1=0xffffff;
+audio_visual.barsettings = {color1 = color1}
+
+@[Audio] NoteSettings
+--dialog:Color(Normal)/col,color1=0xffffff;Color(Ring)/col,color2=0xffffff;
+audio_visual.objsettings = {color1 = color1, color2 = color2}
+
 @[Audio] Composer
 
 require("rikky_module")
 
 if (audio_visual == nil) then return end
 
+local elapsedTime = audio_visual.time + (obj.time * (audio_visual.bpm / 120))
+
+obj.setoption("drawtarget", "tempbuffer", obj.screen_w, obj.screen_h)
+
 for k,v in pairs(audio_visual.objs) do
 	if (v.type == "midi") then
-		obj.load("figure", "éläpå`", 0xffffff, 1)
+		obj.load("figure", "éläpå`", audio_visual.objsettings.color1, 1)
 		for _,v2 in pairs(v.notes) do
 			for _,v3 in pairs(v2) do
 				local y1pos = ((((v3[1] - v.min + 1) / (v.range+1)) - 0.5)) * -obj.screen_h
 				local y2pos = y1pos + (obj.screen_h/(v.range+1))
-				local x1pos = audio_visual.time2pos(v3[2] + audio_visual.time - obj.time)
-				local x2pos = audio_visual.time2pos(v3[3] + audio_visual.time - obj.time)
+				local x1pos = audio_visual.time2pos(v3[2] - elapsedTime)
+				local x2pos = audio_visual.time2pos(v3[3] - elapsedTime)
 				
-				obj.drawpoly(x1pos, y1pos, 0, x2pos, y1pos, 0, x2pos, y2pos, 0, x1pos, y2pos, 0)
+				if ((v3[2] < elapsedTime) and (elapsedTime < v3[3])) then
+					obj.load("figure", "éläpå`", audio_visual.timecolor(audio_visual.objsettings.color2, audio_visual.objsettings.color1, ((elapsedTime - v3[2]) / (v3[3] - v3[2]))), 1)
+					obj.drawpoly(x1pos, y1pos, 0, x2pos, y1pos, 0, x2pos, y2pos, 0, x1pos, y2pos, 0)
+					obj.load("figure", "éläpå`", audio_visual.objsettings.color1, 1)
+				else
+					obj.drawpoly(x1pos, y1pos, 0, x2pos, y1pos, 0, x2pos, y2pos, 0, x1pos, y2pos, 0)
+				end
+				
 			end
 		end
 	end
 end
 
-obj.load("figure", "éläpå`", 0xff0000, 1)
+obj.load("figure", "éläpå`", audio_visual.barsettings.color1, 1)
 obj.drawpoly(-1, -obj.screen_h, 0, 1, -obj.screen_h, 0, 1, obj.screen_h, 0, -1, obj.screen_h, 0)
+
+obj.setoption("drawtarget", "framebuffer")
+obj.load("tempbuffer")

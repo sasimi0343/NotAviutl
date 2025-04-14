@@ -1,0 +1,121 @@
+@[Objects] Select Individual Object (4)
+--track0:Index,0,9999,0,1
+--track1:Index,-1,9999,-1,1
+--track2:Index,-1,9999,-1,1
+--track3:Index,-1,9999,-1,1
+--check0:Addition
+
+if (not obj.check0) then
+na_obj_selection = {}
+end
+
+na_obj_selection[tostring(obj.track0)] = 1
+
+if (obj.track1 > 0) then na_obj_selection[tostring(obj.track1)] = 1 end
+if (obj.track2 > 0) then na_obj_selection[tostring(obj.track2)] = 1 end
+if (obj.track3 > 0) then na_obj_selection[tostring(obj.track3)] = 1 end
+
+@[Objects] Select Individual Object (However)
+--dialog:Indices,index={};
+--check0:Addition
+
+if (not obj.check0) then
+na_obj_selection = {}
+end
+
+for k,v in pairs(index) do
+	na_obj_selection[tostring(v)] = 1
+end
+
+@[Objects] Select Individual Object (Range)
+--track0:Radius,0,9999,100,0.1
+--track1:X,-9999,9999,0,0.1
+--track2:Y,-9999,9999,0,0.1
+--track3:Z,-9999,9999,0,0.1
+--dialog:ConstantRate/chk,constrate=0;
+--check0:Addition
+
+if (not obj.check0) then
+na_obj_selection = {}
+end
+
+local xyz = math.pow(obj.ox - obj.track1, 2) + math.pow(obj.oy - obj.track2, 2) + math.pow(obj.oz - obj.track3, 2)
+
+if (xyz < math.pow(obj.track0, 2)) then
+if (constrate == 1) then
+na_obj_selection[tostring(obj.index)] = 1
+else
+na_obj_selection[tostring(obj.index)] = 1-(math.pow(xyz / math.pow(obj.track0, 2), 0.1))
+end
+end
+
+@[Objects] Select Step
+--track0:Step,1,9999,2,1
+--track1:Offset,-9999,9999,0,1
+--track2:Sequence,1,9999,1,1
+--check0:Addition
+
+if (not obj.check0) then
+na_obj_selection = {}
+end
+
+if (((obj.index - obj.track1)%(obj.track0 + obj.track2 - 1)) <= obj.track2-1) then
+	na_obj_selection[tostring(obj.index)] = 1
+end
+
+@[Objects][Basic] Move
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Z,-9999,9999,0,0.1
+
+if (na_obj_selection[tostring(obj.index)] == nil) then
+	return
+end
+
+local rate = na_obj_selection[tostring(obj.index)]
+
+obj.ox = obj.ox + (rate * obj.track0)
+obj.oy = obj.oy + (rate * obj.track1)
+obj.oz = obj.oz + (rate * obj.track2)
+
+
+@[Objects][Basic] Rotate
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Z,-9999,9999,0,0.1
+
+if (na_obj_selection[tostring(obj.index)] == nil) then
+	return
+end
+
+local rate = na_obj_selection[tostring(obj.index)]
+
+obj.rx = obj.rx + (rate * obj.track0)
+obj.ry = obj.ry + (rate * obj.track1)
+obj.rz = obj.rz + (rate * obj.track2)
+
+
+@[Objects][Basic] Zoom
+--track0:X,0,9999,100,0.1
+--track1:Y,0,9999,100,0.1
+--track2:Šg‘å—¦,0,9999,100,0.1
+
+if (na_obj_selection[tostring(obj.index)] == nil) then
+	return
+end
+
+local rate = na_obj_selection[tostring(obj.index)]
+
+obj.effect("Šg‘å—¦", "X", ((rate * ((obj.track0 / 100) - 1)) + 1) * 100, "Y", ((rate * ((obj.track1 / 100) - 1)) + 1) * 100, "Šg‘å—¦", ((rate * ((obj.track2 / 100) - 1)) + 1) * 100)
+
+
+@[Objects][Basic] Alpha
+--track0:“§–¾“x,0,100,0,0.1
+
+if (na_obj_selection[tostring(obj.index)] == nil) then
+	return
+end
+
+local rate = na_obj_selection[tostring(obj.index)]
+
+obj.alpha = (1-(rate * obj.track0 / 100)) * obj.alpha

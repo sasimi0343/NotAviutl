@@ -47,6 +47,117 @@ end
 
 end
 
+@[3DStructure] Check / Save
+--check0:Write
+--file:
+
+if (world == nil) then return end
+
+local avi3d = require("avi3d")
+require("rikky_module")
+
+for k,v in pairs(world.objs) do
+	for _,v2 in pairs(v.geometory) do
+		for _,v3 in pairs(v2.surface) do
+			table.insert(world.surface_all, v3)
+		end
+	end
+end
+
+if (not obj.check0) then
+	for k,v in pairs(world.objs) do
+		for _,v2 in pairs(v.geometory) do
+			obj.load("figure", "四角形", 0xffffff, 1)
+			obj.setoption("antialias", 0)
+			rikky_module.image("r", "ms_tex_" .. v.texture)
+			obj.ox = v2.ox
+			obj.oy = v2.oy
+			obj.oz = v2.oz
+			obj.rx = v2.rx
+			obj.ry = v2.ry
+			obj.rz = v2.rz
+			rikky_module.image("w", "ms_image_1")
+			avi3d.Draw(obj, v2.surface, true, nil, v2, world)
+			rikky_module.image("r", "ms_image_1")
+		end
+	end
+else
+	local kansei = ""
+	for k,v in pairs(world.objs) do
+		for _,v2 in pairs(v.geometory) do
+			kansei = kansei .. "setCurrentGeometory("
+			.. v2.ox .. ", " .. v2.oy .. ", " .. v2.oz .. ", "
+			.. v2.rx .. ", " .. v2.ry .. ", " .. v2.rz .. ", " .. v2.alpha .. ")\n"
+			for _,v3 in pairs(v2.surface) do
+				kansei = kansei .. "addSurface("
+				.. "Point(" .. v3[1].x .. ", " .. v3[1].y .. ", " .. v3[1].z .. "),"
+				.. "Point(" .. v3[2].x .. ", " .. v3[2].y .. ", " .. v3[2].z .. "),"
+				.. "Point(" .. v3[3].x .. ", " .. v3[3].y .. ", " .. v3[3].z .. "),"
+				.. "Point(" .. v3[4].x .. ", " .. v3[4].y .. ", " .. v3[4].z .. "),"
+				.. v3[5] .. ")\n"
+			end
+			kansei = kansei .. "\n"
+		end
+	end
+	
+	print(kansei)
+end
+
+@[3DStructure] Load
+--track0:Arg1,-9999,9999,0,0.1
+--track1:Arg2,-9999,9999,0,0.1
+--track2:Arg3,-9999,9999,0,0.1
+--track3:Arg4,-9999,9999,0,0.1
+--file:
+
+local fh, err = io.open(file)
+if (not (err == nil)) then
+	return
+end
+
+local str = fh:read("*a")
+fh:close()
+
+local did = false
+
+local code = load(function()
+if (did) then return nil end
+did = true
+return str
+end, "3DStructure")
+
+geos = {}
+
+local function runCode()
+	local geo = nil
+	local function setCurrentGeometory(ox, oy, oz, rx, ry, rz, alpha)
+		if (not (geo == nil)) then
+			table.insert(geos, geo)
+		end
+		geo = {
+			surface = {},
+			shading = {},
+			ox = ox,
+			oy = oy,
+			oz = oz,
+			rx = rx,
+			ry = ry,
+			rz = rz,
+			alpha = alpha,
+		}
+	end
+	local function Point(x, y, z)
+		return {x = x, y = y, z = z}
+	end
+	local function addSurface(p1, p2, p3, p4, brightness)
+		table.insert(geo.surface, {p1, p2, p3, p4, brightness})
+	end
+	
+	code()
+end
+
+runCode()
+
 @[3D]Arrow_Type2
 --track0:サイズ,0,2000,100,1
 --track1:太さ,0,100,25,0.1

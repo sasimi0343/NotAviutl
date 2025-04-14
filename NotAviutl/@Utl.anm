@@ -7,7 +7,6 @@ return
 
 @[Utility] MakeGroup
 --track0:ID,0,1000,0,1
-
 local id = tostring(obj.track0)
 if (na_group == nil) then return end
 local group = na_group[id]
@@ -87,6 +86,7 @@ rikky_module.image("r+", "na_store_" .. id)
 --check0:RotateBack
 
 require("rikky_module")
+local ox,oy,oz,rx,ry,orz,zoom,alpha,aspect,cx,cy,cz = obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz
 
 	local rz = obj.track0
 	local length = math.sqrt(math.pow(obj.w / 2, 2) + math.pow(obj.h / 2, 2))
@@ -115,6 +115,23 @@ obj.setoption("drawtarget", "framebuffer")
 
 obj.load("tempbuffer")
 
+obj.ox,obj.oy,obj.oz,obj.rx,obj.ry,obj.rz,obj.zoom,obj.alpha,obj.aspect,obj.cx,obj.cy,obj.cz = ox,oy,oz,rx,ry,orz,zoom,alpha,aspect,cx,cy,cz
+
 if (obj.check0) then
 obj.rz = -obj.track0
 end
+
+@[Utility] Clipping%
+--track0:上,0,100,0,0.01
+--track1:下,0,100,0,0.01
+--track2:左,0,100,0,0.01
+--track3:右,0,100,0,0.01
+
+local top,left,right,bottom = (obj.track0 / 100),(obj.track2 / 100),(obj.track3 / 100),(obj.track1 / 100)
+
+obj.effect("クリッピング", "上", top * obj.h, "下", bottom * obj.h, "左", left * obj.w, "右", right * obj.w)
+
+@[Utility] LuaLoad
+--file:
+
+dofile(file)

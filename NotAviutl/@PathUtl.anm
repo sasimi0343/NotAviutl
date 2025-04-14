@@ -171,6 +171,22 @@ end
 @[Path] BeginPath
 --track0:X,-9999,9999,0,0.1
 --track1:Y,-9999,9999,0,0.1
+--check0:AddFirstPath,1
+
+--[[
+サルでもわかるPathの構造
+	pathutl {
+		paths {
+			upath {
+				paths {x y}
+				color1
+				color2
+			}
+		}
+		effects {}
+		drawpoint {}
+	}
+]]
 
 pathutl = {paths = {}, effects = {}, drawpoint = {}}
 function pathutl.AddPoint(path1, index, x, y)
@@ -180,9 +196,12 @@ table.insert(path1.paths, index, {x = x, y = y})
 end
 local upath = {paths = {}, color1 = nil, color2 = nil}
 
---upath.paths[1] = {x = obj.track0, y = obj.track1}
-
+if (obj.check0) then
+upath.paths[1] = {x = obj.track0, y = obj.track1}
 table.insert(pathutl.paths, upath)
+end
+
+--table.insert(pathutl.paths, upath)
 
 @[Path] AddPaths
 --track0:Count,1,16,4,1
@@ -292,6 +311,116 @@ for i=0,obj.track3 do
 	table.insert(upath.paths, {x = x + offset[1], y = y + offset[2]})
 end
 
+@[Path] AddPaths (Relative)
+--track0:Count,1,16,4,1
+--dialog:Pos,pos={};Rotate/chk,rotate=0;
+
+obj.setanchor("pos", obj.track0, "line")
+
+for l=1,#pathutl.paths do
+	
+	local upath = pathutl.paths[l]
+	local originX, originY = 0, 0
+	if (#upath.paths > 0) then
+		originX = upath.paths[#upath.paths].x
+		originY = upath.paths[#upath.paths].y
+	end
+	
+	for i=0,obj.track0-1 do
+		local x,y = pos[i*2+1], pos[i*2+2]
+		if (rotate == 1 and #upath.paths > 1) then
+			local dist = math.sqrt(math.pow(x, 2) + math.pow(y, 2))
+			local rad1 = math.atan2(y, x)
+			local rad2 = math.atan2(upath.paths[#upath.paths].y - upath.paths[#upath.paths-1].y, upath.paths[#upath.paths].x - upath.paths[#upath.paths-1].x)
+			
+			local rad = rad1 + rad2
+			y = math.sin(rad) * dist + originY
+			x = math.cos(rad) * dist + originX
+		else
+			x = originX + x
+			y = originY + y
+		end
+		table.insert(upath.paths, {x = x, y = y})
+	end
+end
+
+@[Path] AddBezierPath (2D)
+--track0:X,-9999,9999,100,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:x1,-9999,9999,50,0.1
+--track3:y1,-9999,9999,50,0.1
+--dialog:Perfection%,perf=100;
+
+local upath
+
+if (#pathutl.paths > 0) then
+	
+	upath = pathutl.paths[#pathutl.paths]
+	
+else
+	upath = {paths = {}, color1 = nil, color2 = nil}
+	table.insert(pathutl.paths, upath)
+end
+
+local ox,oy = 0,0
+
+if (#upath.paths > 0) then
+	ox = upath.paths[#upath.paths].x
+	oy = upath.paths[#upath.paths].y
+end
+
+local distance = math.sqrt(math.pow(obj.track0 - ox, 2) + math.pow(obj.track1 - oy, 2))
+local count = math.floor((perf/100) * distance)
+
+for i=0,count do
+	local t = i/count
+	local x = ((ox - (obj.track2 * 2) + obj.track0) * math.pow(t, 2)) + (((-2 * ox) + (2 * obj.track2)) * t) + ox
+	local y = ((oy - (obj.track3 * 2) + obj.track1) * math.pow(t, 2)) + (((-2 * oy) + (2 * obj.track3)) * t) + oy
+	
+	table.insert(upath.paths, {x = x, y = y})
+end
+
+@[Path] Primitive_LinePattern
+--track0:Row,1,9999,5,1
+--track1:Offset%,-9999,9999,0,0.1
+--track2:Width,0,9999,400,0.1
+--track3:LineLength,1,9999,200,0.1
+--dialog:Vertical/chk,vertical=0;Reverse/chk,reverse=0;ColumnSpace,columnspace=0;RowSpace,rowspace=50;RowOffset,rowoffset=10;DrawOutofRange/chk,drawoor=0;
+
+for i=1,obj.track0 do
+	
+	local lwp = obj.track3 + columnspace
+	local co = math.ceil(obj.track2/lwp)+1
+	local y = ((i-1) - ((obj.track0-1)/2)) * rowspace
+	for l=0,co do
+		local upath = {paths = {}, color1 = nil, color2 = nil}
+		local x1 = (lwp * ((l-math.ceil(co/2)) - (((obj.track1 + (rowoffset * i))%100)/100)))
+		local x2 = x1 + obj.track3
+		
+		if (drawoor == 0) then
+			x1 = math.min(math.max(x1, -obj.track2/2), obj.track2/2)
+			x2 = math.min(math.max(x2, -obj.track2/2), obj.track2/2)
+		end
+		
+		if (not (x1 - x2 == 0)) then
+			if (reverse == 1) then
+				local x3 = x1
+				x1 = x2
+				x2 = x3
+			end
+			
+			if (vertical == 1) then
+				table.insert(upath.paths, {x = y, y = x1})
+				table.insert(upath.paths, {x = y, y = x2})
+			else
+				table.insert(upath.paths, {x = x1, y = y})
+				table.insert(upath.paths, {x = x2, y = y})
+			end
+			table.insert(pathutl.paths, upath)
+		end
+	end
+end
+
 @[Path] Colors
 --track0:Hue,0,360,5,0.1
 --track1:Sat,0,100,10,0.1
@@ -330,10 +459,74 @@ for k,val in pairs(pathutl.paths) do
 	i = i + 1
 end
 
+@[Path] Colors (Gradient)
+--track0:Hue,0,360,5,0.1
+--track1:Sat,0,100,10,0.1
+--track2:Vue,0,100,10,0.1
+--dialog:Base Color/col,color=0xffffff;Base Color2/col,color2=0xffffff;Seed,seed=1;Color1/chk,setcol1=1;Color2/chk,setcol2=0;WholeScale/chk,wholescale=0;
+
+local i = 0
+for k,val in pairs(pathutl.paths) do
+	local h,s,v = HSV(color)
+	local h2,s2,v2 = HSV(color2)
+	h = h + obj.rand(-obj.track0 / 2, obj.track0 / 2, seed, i * 6 + 1)
+	h2 = h2 + obj.rand(-obj.track0 / 2, obj.track0 / 2, seed, i * 6 + 4)
+	if (h >= 360) then
+		h = h - 360
+	elseif (h < 0) then
+		h = h + 360
+	end
+	if (h2 >= 360) then
+		h2 = h2 - 360
+	elseif (h2 < 0) then
+		h2 = h2 + 360
+	end
+	
+	s = s + obj.rand(-obj.track1 / 2, obj.track1 / 2, seed, i * 6 + 2)
+	s2 = s2 + obj.rand(-obj.track1 / 2, obj.track1 / 2, seed, i * 6 + 5)
+	if (s >= 100) then
+		s = 100
+	elseif (s <= 0) then
+		s = 0
+	end
+	if (s2 >= 100) then
+		s2 = 100
+	elseif (s2 <= 0) then
+		s2 = 0
+	end
+	
+	v = v + obj.rand(-obj.track2 / 2, obj.track2 / 2, seed, i * 6 + 3)
+	v2 = v2 + obj.rand(-obj.track2 / 2, obj.track2 / 2, seed, i * 6 + 6)
+	if (v >= 100) then
+		v = 100
+	elseif (v <= 0) then
+		v = 0
+	end
+	if (v2 >= 100) then
+		v2 = 100
+	elseif (v2 <= 0) then
+		v2 = 0
+	end
+	
+	local col = HSV(h,s,v)
+	local col2 = HSV(h2,s2,v2)
+	
+	if (setcol1 == 1) then val.color1 = col end
+	if (setcol2 == 1) then val.color2 = col end
+	
+	val.gradient = {gradend = col2, wholescale = (wholescale == 1)}
+	
+	i = i + 1
+end
+
 @[Path] Point Move
 --track0:X,-9999,9999,0,0.1
 --track1:Y,-9999,9999,0,0.1
---dialog:Selection,selection={};
+--dialog:Selection,selection=nil;
+
+if (selection == nil) then
+	selection = pathutl_selection
+end
 
 local index = 0
 for k,v in pairs(pathutl.paths) do
@@ -353,6 +546,67 @@ for k,v in pairs(pathutl.paths) do
 		index = index + 1
 	end
 end
+
+@[Path] Scale
+--track0:X,-9999,9999,1,0.1
+--track1:Y,-9999,9999,1,0.1
+--track2:OriginX,-9999,9999,0,0.1
+--track3:OriginY,-9999,9999,0,0.1
+--dialog:Selection/chk,selection=0;
+
+local function getCenter(paths)
+	local ol,orr,ot,ob = 0,0,0,0
+	for k,v in pairs(paths) do
+		ol = math.min(v.x, ol)
+		orr = math.max(v.x, orr)
+		ot = math.min(v.y, ot)
+		ob = math.max(v.y, ob)
+	end
+	return ((ol+orr)/2) + obj.track2,((ot+ob)/2) + obj.track3
+end
+
+for k,v in pairs(pathutl.paths) do
+	local ox,oy = getCenter(v.paths)
+	for _,v2 in pairs(v.paths) do
+		local rx,ry = ((v2.x - ox) * obj.track0) + ox, ((v2.y - oy) * obj.track1) + oy
+		v2.x = rx
+		v2.y = ry
+	end
+end
+
+@[Path] Rotate
+--track0:Angle,-9999,9999,0,0.1
+--track1:OriginX,-9999,9999,0,0.1
+--track2:OriginY,-9999,9999,0,0.1
+--dialog:Selection/chk,selection=0;
+
+local function getCenter(paths)
+	local ol,orr,ot,ob = 0,0,0,0
+	for k,v in pairs(paths) do
+		ol = math.min(v.x, ol)
+		orr = math.max(v.x, orr)
+		ot = math.min(v.y, ot)
+		ob = math.max(v.y, ob)
+	end
+	return ((ol+orr)/2) + obj.track1,((ot+ob)/2) + obj.track2
+end
+
+local rad = math.rad(obj.track0)
+
+for k,v in pairs(pathutl.paths) do
+	local ox,oy = getCenter(v.paths)
+	for _,v2 in pairs(v.paths) do
+		local dx,dy = v2.x - ox, v2.y - oy
+		local radius = math.sqrt(math.pow(dx, 2) + math.pow(dy, 2))
+		local radA = math.atan2(dy, dx)
+		local radd = radA + rad
+		
+		local rx,ry = math.cos(radd) * radius, math.sin(radd) * radius
+		v2.x = rx
+		v2.y = ry
+	end
+end
+
 
 @[Path] SelectPoints (Index)
 --track0:Index,0,9999,0,1
@@ -523,6 +777,176 @@ if (pathutl_savedpath == nil) then
 end
 
 pathutl_savedpath[tostring(obj.track0)] = pathutl.paths
+
+@[Path] LoadPathInfo
+--track0:ID,0,9999,0,1
+if (pathutl_savedpath == nil or pathutl == nil) then
+	return
+end
+
+pathutl.paths = pathutl_savedpath[tostring(obj.track0)]
+
+@[Path] MorphPath
+--track0:SourceID,0,9999,0,1
+--track1:DestID,0,9999,0,1
+--track2:Rate,0,100,0,0.1
+--track3:Seed,-9999,9999,0,1
+--dialog:DisappearProcess,dispr=0;Param1,param1=0;
+
+if (pathutl_savedpath == nil or pathutl == nil) then
+	return
+end
+
+--[[
+削除/出現メソッド
+0. 頂点は前の頂点に移動して消える、パスそのものは最初の頂点に集まって消える
+1. 頂点は前の頂点に移動して消える、パスそのものは中心に集まって消える
+2. 頂点は前の頂点に移動して消える、パスそのものは前の頂点へ圧縮していくように消える
+3. 頂点は前の頂点に移動して消える、パスそのものはどこかへ消える
+]]
+
+local pathsA = pathutl_savedpath[tostring(obj.track0)]
+local pathsB = pathutl_savedpath[tostring(obj.track1)]
+
+local rate = obj.track2/100
+
+if (rate == 0) then
+	pathutl.paths = pathsA
+	return
+elseif (rate == 1) then
+	pathutl.paths = pathsB
+	return
+end
+
+local del_point = 0
+local del_path = 0
+if (dispr == 1) then del_path = 1 end
+if (dispr == 2) then del_path = 2 end
+if (dispr == 3) then del_path = 3 end
+
+local count_path = math.max(#pathsA, #pathsB)
+local paths = {}
+
+local function getCenter(paths)
+	local ol,orr,ot,ob = 0,0,0,0
+	for k,v in pairs(paths) do
+		ol = math.min(v.x, ol)
+		orr = math.max(v.x, orr)
+		ot = math.min(v.y, ot)
+		ob = math.max(v.y, ob)
+	end
+	return (ol+orr)/2,(ot+ob)/2
+end
+
+local function morphPath(pathA, rate, index)
+	local path = {paths = {}, color1 = pathA.color1, color2 = pathA.color2}
+	if (del_path == 1) then
+		local ox,oy = getCenter(pathA.paths)
+		for k,v in pairs(pathA.paths) do
+			table.insert(path.paths, {
+				x = ((v.x - ox) * rate) + ox,
+				y = ((v.y - oy) * rate) + oy,
+			})
+		end
+	elseif (del_path == 2) then
+		local first = pathA.paths[1]
+		local ox,oy = first.x, first.y
+		for k,v in pairs(pathA.paths) do
+			if (not (first == v)) then
+				local point = {
+					x = ((v.x - ox) * rate) + ox,
+					y = ((v.y - oy) * rate) + oy,
+				}
+				table.insert(path.paths, point)
+				
+				ox,oy = point.x, point.y
+			else
+				table.insert(path.paths, v)
+			end
+		end
+	elseif (del_path == 3) then
+		local first = pathA.paths[1]
+		local angle = rand(-360, 360, obj.track3, index)
+		local sx,sy = math.cos(math.rad(angle)) * param1 * (1-rate), math.sin(math.rad(angle)) * param1 * (1-rate)
+		local ox,oy = first.x + sx, first.y + sy
+		for k,v in pairs(pathA.paths) do
+			if (not (first == v)) then
+				local point = {
+					x = ((v.x - ox) * rate) + ox,
+					y = ((v.y - oy) * rate) + oy,
+				}
+				table.insert(path.paths, point)
+				
+				ox,oy = point.x, point.y
+			else
+				local point = {
+					x = v.x + sx,
+					y = v.y + sy,
+				}
+				table.insert(path.paths, point)
+			end
+		end
+	else
+		local first = pathA.paths[1]
+		local ox,oy = first.x, first.y
+		for k,v in pairs(pathA.paths) do
+			table.insert(path.paths, {
+				x = ((v.x - ox) * rate) + ox,
+				y = ((v.y - oy) * rate) + oy,
+			})
+		end
+	end
+	return path
+end
+
+for i=1,count_path do
+	local pathA = pathsA[i]
+	local pathB = pathsB[i]
+	if (pathA == nil and pathB == nil) then
+	elseif (pathA == nil) then
+		table.insert(paths, morphPath(pathB, rate, i))
+	elseif (pathB == nil) then
+		table.insert(paths, morphPath(pathA, 1-rate, i))
+	else
+		local path = {paths = {}, color1 = pathB.color1, color2 = pathB.color2}
+		local count_point = math.max(#pathA.paths, #pathB.paths)
+		local prev = nil
+		for l=1,count_point do
+			local pA = pathA.paths[l]
+			local pB = pathB.paths[l]
+			local point = {x = 0, y = 0}
+			if (pA == nil and pB == nil) then
+			elseif (pA == nil) then
+				point.x = (pB.x - prev.x) * rate + prev.x
+				point.y = (pB.y - prev.y) * rate + prev.y
+			elseif (pB == nil) then
+				point.x = (prev.x - pA.x) * rate + pA.x
+				point.y = (prev.y - pA.y) * rate + pA.y
+			else
+				point.x = (pB.x - pA.x) * rate + pA.x
+				point.y = (pB.y - pA.y) * rate + pA.y
+			end
+			
+			prev = point
+			table.insert(path.paths, point)
+		end
+		table.insert(paths, path)
+	end
+end
+
+pathutl.paths = paths
+
+@[Path] ObjectTracker
+--track0:TargetID,0,9999,0,1
+--track1:X,-9999,9999,0,0.1
+--track2:Y,-9999,9999,0,0.1
+
+if (pathutl_savedpath == nil) then
+	pathutl_savedpath = {}
+end
+
+local upath = {paths = {{x = obj.track1 + obj.ox - obj.cx + obj.getvalue("x"), y = obj.track2 + obj.oy - obj.cy + obj.getvalue("y")}}, color1 = nil, color2 = nil}
+pathutl_savedpath[tostring(obj.track0)] = {upath}
 
 @[Path] TrackObjects
 --track0:ID,0,9999,0,1
@@ -697,6 +1121,16 @@ table.insert(pathutl.drawpoint, {
 	alpha = obj.track2
 })
 
+@[Path] ClosePath
+
+if (#pathutl.paths == 0) then
+	return
+end
+
+for k,v in pairs(pathutl.paths) do
+	table.insert(v.paths, v.paths[1])
+end
+
 @[Path] DrawPath
 --track0:Border,0,9999,3,0.1
 --dialog:Color Override/col,color=nil;Figure/fig,figure=nil;PolyAlpha,polyalpha=0.0;BorderDrawMethod,bdm=0;
@@ -741,22 +1175,154 @@ obj.setoption("drawtarget", "tempbuffer", (math.max(math.abs(minx), maxx) + b) *
 if (polyalpha > 0) then
 for k,v in pairs(pathutl.paths) do
 	local i = 1
+	obj.setoption("antialias", 0)
 	rikky_module.image("r", "na_path_original")
 	if (not (v.color2 == nil)) then
 		obj.effect("単色化", "color", v.color2, "輝度を保持する", 0)
 	end
 	local dx,dy = 0, 0
+	local sumA,sumB = 0,0
+	i = 1
+	local prevDeg = 0
 	for _,v2 in pairs(v.paths) do
 		dx = dx + v2.x
 		dy = dy + v2.y
+		
+		if (i-2 > 0) then
+			local prev1 = v.paths[i-1]
+			local prev2 = v.paths[i-2]
+			local tan1 = math.deg(math.atan2(prev1.y-prev2.y, prev1.x-prev2.x))
+			local tan2 = math.deg(math.atan2(v2.y-prev1.y, v2.x-prev1.x))
+			local deg = 180 - math.abs(tan2 - tan1)
+			
+			sumA = sumA + deg
+			sumB = sumB + (360 - deg)
+		end
+		i = i + 1
 	end
+	local invert = sumA > sumB
 	dx = dx / #v.paths
 	dy = dy / #v.paths
+	i = 1
+	local soppo = {}
+	local flips = {}
+	local flipped = false
+	local anglesums = {}
+	local degs = {}
 	for _,v2 in pairs(v.paths) do
-		if (i-1 > 0) then
+		if (i-2 > 0) then
 			local prev1 = v.paths[i-1]
+			local prev2 = v.paths[i-2]
+			local tan1 = math.deg(math.atan2(prev1.y-prev2.y, prev1.x-prev2.x))
+			local tan2 = math.deg(math.atan2(v2.y-prev1.y, v2.x-prev1.x))
+			local deg = 180 - math.abs(tan2 - tan1)
 			
+			--if (math.abs(tan2) >= 90) then
+				--flipped = not flipped
+			--end
+			if (i-3 > 0) then
+				local first = v.paths[1]
+				local second = v.paths[2]
+				local tan3 = math.deg(math.atan2(first.y-v2.y, first.x-v2.x))
+				local degfirst = 180 - math.abs(tan3 - tan2)
+				local tan4 = math.deg(math.atan2(second.y-first.y, second.x-first.x))
+				local degsecond = 180 - math.abs(tan4 - tan3)
+				--頂点を一つ増やすと変わるのはdegfirst、deg、degsecond
+				--この中の誰かが嘘をついていた場合...
+				
+				local sum1 = (anglesums[i-1] + math.abs(degfirst) + math.abs(deg) + math.abs(degsecond))
+				local sum2 = (anglesums[i-1] + (360 - math.abs(degfirst)) + math.abs(deg) + math.abs(degsecond))
+				local sum3 = (anglesums[i-1] + math.abs(degfirst) + math.abs(deg) + (360 - math.abs(degsecond)))
+				local sum4 = (anglesums[i-1] + math.abs(degfirst) + (360 - math.abs(deg)) + math.abs(degsecond))
+				local sumP = (i-2) * 180
+				--print("" .. tostring(i-1) .. ", (" .. tostring(sum4 - sumP) .. ", " .. tostring(sum1 - sumP) .. ")")
+				--if (sum1 == sumP) then
+				--elseif (sum2 == sumP) then
+				--elseif (sum3 == sumP) then
+				--elseif (sum4 == (i-2) * 180) then
+				local d1,d2,d3,d4 = math.abs(sum1 - sumP),math.abs(sum2 - sumP),math.abs(sum3 - sumP),math.abs(sum4 - sumP)
+				
+				if (d4 < d1 and d4 < d3 and d4 < d2) then
+					deg = 360 - math.abs(deg)
+					--print("betrayed: " .. tostring(i) .. ", (" .. tostring(sum4 - sumP) .. ", " .. tostring(sum1 - sumP) .. ")")
+				end
+				anglesums[i] = anglesums[i-1] + math.abs(deg)
+			else
+				anglesums[i] = math.abs(deg)
+			end
+			
+			if (v2.x == prev1.x) then
+				soppo[i] = ((dx < v2.x) and (flipped)) or ((dx > v2.x) and (not flipped))
+				if (i > 2) then soppo[i] = soppo[i-1] end
+			else
+				flipped = math.abs(tan2) >= 90
+				local tanA = (v2.y-prev1.y)/(v2.x-prev1.x) -- y - prev1.y = tan1 * (x - prev1.x)
+				
+				soppo[i] = ((dy > (tanA * (dx - prev1.x)) + prev1.y) and (flipped)) or ((dy < (tanA * (dx - prev1.x)) + prev1.y) and (not flipped))
+			end
+			
+			flips[i] = flipped
+			degs[i] = deg
 			obj.drawpoly(dx, dy, 0, prev1.x, prev1.y, 0, v2.x, v2.y, 0, v2.x, v2.y, 0, 0,0, obj.w,0, obj.w,obj.h, 0,obj.h, polyalpha)
+		elseif (i-1 > 0) then
+			local prev1 = v.paths[i-1]
+			obj.drawpoly(dx, dy, 0, prev1.x, prev1.y, 0, v2.x, v2.y, 0, v2.x, v2.y, 0, 0,0, obj.w,0, obj.w,obj.h, 0,obj.h, polyalpha)
+		end
+		i = i + 1
+	end
+	i = 1
+	local soppostreak_point = nil
+	for _,v2 in pairs(v.paths) do
+		if (i-2 > 0) then
+			local prev1 = v.paths[i-1]
+			local prev2 = v.paths[i-2]
+			
+			local p1,p2,p3,p4 = false,false,false,false
+			
+			local tan1 = math.deg(math.atan2(prev1.y-prev2.y, prev1.x-prev2.x))
+			local tan2 = math.deg(math.atan2(v2.y-prev1.y, v2.x-prev1.x))
+			local deg = degs[i]
+			local degnext = 0
+			
+			if (i+1 <= #v.paths) then
+				local nex = v.paths[i+1]
+				local tan0 = math.deg(math.atan2(nex.y-v2.y, nex.x-v2.x))
+				degnext = degs[i+1]
+				
+				p2 = (deg > 180) or (degnext > 180)
+				p3 = (degnext > 180)
+			else
+				p2 = false
+			end
+			
+			p1 = soppo[i]
+			
+			if ((soppostreak_point == nil) and (degnext > 180)) then
+				soppostreak_point = prev1
+			end
+			
+			if (not (soppostreak_point == nil)) then
+				obj.setoption("blend", "alpha_sub")
+				obj.drawpoly(soppostreak_point.x, soppostreak_point.y, 0, prev1.x, prev1.y, 0, v2.x, v2.y, 0, v2.x, v2.y, 0, 0,0, obj.w,0, obj.w,obj.h, 0,obj.h, polyalpha)
+				obj.setoption("blend", 0)
+				if (not p3) then
+					soppostreak_point = nil
+				end
+			elseif ((not p1) and p2) then
+				obj.drawpoly(prev2.x, prev2.y, 0, prev1.x, prev1.y, 0, v2.x, v2.y, 0, v2.x, v2.y, 0, 0,0, obj.w,0, obj.w,obj.h, 0,obj.h, polyalpha)
+			elseif (p1 and (not p2)) then
+				obj.setoption("blend", "alpha_sub")
+				obj.drawpoly(dx, dy, 0, prev1.x, prev1.y, 0, v2.x, v2.y, 0, v2.x, v2.y, 0, 0,0, obj.w,0, obj.w,obj.h, 0,obj.h, polyalpha)
+				obj.setoption("blend", 0)
+			else
+				--obj.drawpoly(dx, dy, 0, prev1.x, prev1.y, 0, v2.x, v2.y, 0, v2.x, v2.y, 0, 0,0, obj.w,0, obj.w,obj.h, 0,obj.h, polyalpha)
+			end
+			
+			--[[obj.setfont("MS UI Gothic", 50, 0, 0xff0000)
+			obj.load("text", tostring(math.floor(deg)))
+			--obj.draw((v2.x + prev1.x)/2, (v2.y + prev1.y)/2)
+			obj.draw((prev1.x)+30, (prev1.y))
+			rikky_module.image("r", "na_path_original")]]
 		end
 		i = i + 1
 	end
@@ -781,6 +1347,7 @@ for k,v in pairs(pathutl.paths) do
 		i = i + 1
 	end]]
 	obj.setoption("blend", 0)
+	obj.setoption("antialias", 1)
 end
 end
 
@@ -807,10 +1374,32 @@ for k,v in pairs(pathutl.paths) do
 			sin3, cos3 = math.sin(theta3), math.cos(theta3)
 			sin4, cos4 = math.sin(theta4), math.cos(theta4)
 			
+			if (not (v.gradient == nil)) then
+				local length = math.sqrt(math.pow((v2.x - prev.x), 2) + math.pow((v2.y - prev.y), 2))
+				obj.effect("リサイズ", "X", math.max(length, 1), "Y", obj.track0, "ドット数でサイズ指定", 1)
+				if (v.gradient.wholescale) then
+					local h1,s1,v1 = HSV(v.color1)
+					local h2,s2,v2 = HSV(v.gradient.gradend)
+					local h3,s3,v3 = h1 + (((h2 - h1) / #v.paths) * (i-1)),s1 + (((s2 - s1) / #v.paths) * (i-1)),v1 + (((v2 - v1) / #v.paths) * (i-1))
+					local h4,s4,v4 = h1 + (((h2 - h1) / #v.paths) * i),s1 + (((s2 - s1) / #v.paths) * i),v1 + (((v2 - v1) / #v.paths) * i)
+					
+					local col1,col2 = HSV(h3, s3, v3),HSV(h4, s4, v4)
+					
+					if (obj.w == 1) then
+						obj.effect("単色化", "color", col1, "輝度を保持する", 0)
+					else
+						obj.effect("グラデーション", "角度", -90, "幅", length, "color", col1, "color2", col2)
+					end
+				else
+					obj.effect("グラデーション", "角度", -90, "幅", length, "color", v.color1, "color2", v.gradient.gradend)
+				end
+			end
+			
 			if ((bdm == 1) and (not (prevpos == nil))) then
 				sin1, cos1, sin2, cos2 = prevpos.sin3, prevpos.cos3, prevpos.sin4, prevpos.cos4
 				obj.drawpoly(prev.x+(b * cos1), prev.y+(b * sin1), 0, v2.x+(b * cos4), v2.y+(b * sin4), 0, v2.x+(b * cos3), v2.y+(b * sin3), 0, prev.x+(b * cos2), prev.y+(b * sin2), 0)
 			end
+			
 			obj.drawpoly(prev.x+(b * cos1), prev.y+(b * sin1), 0, v2.x+(b * cos4), v2.y+(b * sin4), 0, v2.x+(b * cos3), v2.y+(b * sin3), 0, prev.x+(b * cos2), prev.y+(b * sin2), 0)
 			
 			if (bdm == 1) then prevpos = {sin3 = sin3, cos3 = cos3, sin4 = sin4, cos4 = cos4} end

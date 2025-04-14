@@ -1,0 +1,161 @@
+@[Sheet] Create Sheet
+--dialog:ColumnWidth,columnwidth={};
+na_sheet = {rows = {}, columnwidth = columnwidth}
+
+@[Sheet] Add Row
+--track0:Height,0,9999,100,0.1
+--dialog:Values,cells={};Background/col,bgcolor=0x222222;Foreground/col,fgcolor=0xffffff;Font,font="MS UI Gothic";FontSize,fontsize=50;
+
+if (na_sheet == nil) then return end
+
+local celllist = {}
+for k,v in pairs(cells) do
+	local cell = {
+	text = v,
+	bgcolor = bgcolor,
+	fgcolor = fgcolor,
+	merged_top = false,
+	merged_left = false,
+	font = font,
+	fontsize = fontsize}
+	table.insert(celllist, cell)
+end
+
+local row = {height = obj.track0, cells = celllist}
+table.insert(na_sheet.rows, row)
+
+@[Sheet] Draw
+--dialog:Invert/chk,inverted=0;EachObj[0-7],eachobj=0;
+
+--[[
+EachObj
+0: 全まとめ
+1: 行ごと
+2: 列ごと
+3: セルごと
+4: 行ごとの背景とテキスト
+5: 列ごとの背景とテキスト
+6: 背景とテキスト
+7: 全バラバラ
+]]
+
+if (na_sheet == nil) then return end
+if (rikky_module == nil) then require("rikky_module") end
+
+inverted = inverted == 1
+if (inverted) then
+	local columns = {}
+	local rowindex = 1
+	for _,v in pairs(na_sheet.rows) do
+		local column = 1
+		for _,cell in pairs(v.cells) do
+			columns[column] = columns[column] or {height = v.height, cells = {}}
+			table.insert(columns[column].cells, cell)
+			column = column + 1
+		end
+		rowindex = rowindex + 1
+	end
+	
+	na_sheet.rows = columns
+end
+
+local sum_width = 0
+local sum_height = 0
+local max_text = {}
+local cachenum = 0
+for _,v in pairs(na_sheet.rows) do
+	local column = 1
+	for _,cell in pairs(v.cells) do
+		obj.setfont(cell.font, cell.fontsize, 0, cell.fgcolor)
+		obj.load(cell.text)
+		if (na_sheet.columnwidth[column] == nil) then
+			max_text[column] = math.max(max_text[column] or 2, obj.w)
+		else
+			max_text[column] = na_sheet.columnwidth[column]
+		end
+		rikky_module.image("w", "na_sheet_cache_" .. tostring(cachenum))
+		
+		cachenum = cachenum + 1
+		column = column + 1
+	end
+	sum_height = sum_height + v.height
+end
+
+for i=1,#max_text do
+	sum_width = sum_width + max_text[i]
+end
+
+local cellinfo = {}
+local s_width = 0
+local s_height = 0
+
+local row = 0
+cachenum = 0
+for _,v in pairs(na_sheet.rows) do
+	s_width = 0
+	local height = v.height
+	local rowPos = (-sum_height / 2) + s_height + (height / 2)
+	local column = 1
+	
+	for _,cell in pairs(v.cells) do
+		local width = max_text[column]
+		local columnPos = (-sum_width / 2) + s_width + (width / 2)
+		s_width = s_width + width
+		obj.setoption("drawtarget", "tempbuffer", width, height)
+		
+		obj.load("figure", "四角形", cell.bgcolor, 1)
+		obj.effect("リサイズ", "X", width, "Y", height, "ドット数でサイズ指定", 1, "補間しない", 1)
+		obj.draw(0, 0)
+		rikky_module.image("r", "na_sheet_cache_" .. tostring(cachenum))
+		obj.draw(0, 0)
+		
+		obj.setoption("drawtarget", "framebuffer")
+		obj.load("tempbuffer")
+		
+		rikky_module.image("w", "na_sheet_cache_" .. tostring(cachenum))
+		
+		cellinfo[cachenum] = {x = columnPos, y = rowPos}
+		
+		cachenum = cachenum + 1
+		column = column + 1
+	end
+	
+	row = row + 1
+	s_height = s_height + v.height
+end
+
+if (eachobj == 0) then obj.setoption("drawtarget", "tempbuffer", sum_width, sum_height) end
+
+local objindex = 0
+row = 0
+cachenum = 0
+for _,v in pairs(na_sheet.rows) do
+	s_width = 0
+	local column = 1
+	
+	for _,cell in pairs(v.cells) do
+		local ci = cellinfo[cachenum]
+		rikky_module.image("r", "na_sheet_cache_" .. tostring(cachenum))
+		if (eachobj == 7) then
+			obj.ox = ci.x
+			obj.oy = ci.y
+			obj.oz = 0
+			obj.rz = 0
+			rikky_module.effect(objindex, #cellinfo)
+			obj.draw()
+			objindex = objindex + 1
+		elseif (eachobj == 0) then
+			obj.draw(ci.x, ci.y)
+		end
+		
+		cachenum = cachenum + 1
+		column = column + 1
+	end
+	
+	row = row + 1
+end
+
+if (eachobj == 0) then
+	obj.setoption("drawtarget", "framebuffer")
+	obj.load("tempbuffer")
+end

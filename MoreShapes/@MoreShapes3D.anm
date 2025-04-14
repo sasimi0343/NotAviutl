@@ -154,11 +154,38 @@ end
 --track0:X,-999,999,1,0.01
 --track1:Y,-999,999,1,0.01
 --track2:Z,-999,999,1,0.01
+--check0:Direct
+
+local avi3d = require("avi3d")
 
 for k,v in pairs(geos) do
-	v.rx = v.rx + obj.track0
-	v.ry = v.ry + obj.track1
-	v.rz = v.rz + obj.track2
+	if (obj.check0) then
+		for _,v2 in pairs(v.surface) do
+			local p1 = v2[1]
+			local p2 = v2[2]
+			local p3 = v2[3]
+			local p4 = v2[4]
+			
+			local pp1 = avi3d.PointRotate(p1, obj.track0, obj.track1, obj.track2)
+			local pp2 = avi3d.PointRotate(p2, obj.track0, obj.track1, obj.track2)
+			local pp3 = avi3d.PointRotate(p3, obj.track0, obj.track1, obj.track2)
+			local pp4 = avi3d.PointRotate(p4, obj.track0, obj.track1, obj.track2)
+			
+			p1 = { x = pp1[1], y = pp1[2], z = pp1[3] }
+			p2 = { x = pp2[1], y = pp2[2], z = pp2[3] }
+			p3 = { x = pp3[1], y = pp3[2], z = pp3[3] }
+			p4 = { x = pp4[1], y = pp4[2], z = pp4[3] }
+			
+			v2[1] = p1
+			v2[2] = p2
+			v2[3] = p3
+			v2[4] = p4
+		end
+	else
+		v.rx = v.rx + obj.track0
+		v.ry = v.ry + obj.track1
+		v.rz = v.rz + obj.track2
+	end
 end
 
 @[3D]Position
@@ -188,25 +215,28 @@ avi3d.SetPosition(obj, geos, indexA, indexB, obj.track0, obj.track1, obj.track2,
 --track3:Seed,0,9999,0,1
 --dialog:Random Option,randopt=0;
 
+local avi3d = require("avi3d")
+
 local seed = (obj.track3+1) * 6
 
 local subgeo = {}
 
 for k,v in pairs(geos) do
 	for i=0,obj.track0 do
-	
-local ng = {
-
-surface = v.surface,
-shading = {},
-ox = v.ox,
-oy = v.oy,
-oz = v.oz,
-rx = v.rx,
-ry = v.ry,
-rz = v.rz
-
-}
+		
+		--[[local ng = {
+		
+		surface = v.surface,
+		shading = {},
+		ox = v.ox,
+		oy = v.oy,
+		oz = v.oz,
+		rx = v.rx,
+		ry = v.ry,
+		rz = v.rz
+		
+		}]]
+		local ng = avi3d.CopyGeometry(v)
 		
 		ng.ox = rand(-obj.track1, obj.track1, i, seed+1)
 		ng.oy = rand(-obj.track1, obj.track1, i, seed+2)
@@ -242,6 +272,57 @@ for k,v in pairs(geos) do
 	
 end
 
+@[3D]RowPlace
+--track0:XScale,-9999,9999,0,0.1
+--track1:YScale,-9999,9999,0,0.1
+--track2:ZScale,-9999,9999,0,0.1
+--dialog:Center/chk,center=1;X count,rpx=0;Y count,rpy=0;Z count,rpz=0;
+
+local avi3d = require("avi3d")
+
+local subgeo = {}
+
+for k,v in pairs(geos) do
+	
+	for x=0,rpx do
+		
+		for y=0,rpy do
+			
+			for z=0,rpz do
+				
+				
+				--[[local ng = {
+				
+				surface = v.surface,
+				shading = {},
+				ox = v.ox,
+				oy = v.oy,
+				oz = v.oz,
+				rx = v.rx,
+				ry = v.ry,
+				rz = v.rz
+				
+				}]]
+				
+				local ng = avi3d.CopyGeometry(v)
+				
+				ng.ox = ng.ox + (obj.track0 * (x - (rpx/2 * center)))
+				ng.oy = ng.oy + (obj.track1 * (y - (rpy/2 * center)))
+				ng.oz = ng.oz + (obj.track2 * (z - (rpz/2 * center)))
+				
+				if (not (i == obj.track0)) then
+					table.insert(subgeo, ng)
+				end
+				
+			end
+			
+		end
+		
+	end
+	
+end
+
+geos = subgeo
 
 @[3D]RowPlace_1
 --track0:X,-9999,9999,0,1
@@ -261,6 +342,8 @@ RP.z = obj.track2
 --track2:ZScale,-9999,9999,0,1
 --dialog:Center/chk,center=1;
 
+local avi3d = require("avi3d")
+
 if (not (RP == nil)) then
 
 local subgeo = {}
@@ -274,7 +357,7 @@ for y=0,RP.y do
 for z=0,RP.z do
 
 
-local ng = {
+--[[local ng = {
 
 surface = v.surface,
 shading = {},
@@ -285,7 +368,9 @@ rx = v.rx,
 ry = v.ry,
 rz = v.rz
 
-}
+}]]
+
+local ng = avi3d.CopyGeometry(v)
 
 ng.ox = ng.ox + (obj.track0 * (x - (RP.x/2 * center)))
 ng.oy = ng.oy + (obj.track1 * (y - (RP.y/2 * center)))
@@ -315,34 +400,36 @@ end
 local subgeo = {}
 
 for k,v in pairs(geos) do
-
-for i=0,obj.track1 do
-
-local ng = {
-
-surface = v.surface,
-shading = {},
-ox = v.ox,
-oy = v.oy,
-oz = v.oz,
-rx = v.rx,
-ry = v.ry,
-rz = v.rz
-
-}
-
-local rad = math.rad(360 * (i/obj.track1))
-
-ng.ox = ng.ox + (math.sin(rad) * obj.track0 * sct[1])
-ng.oy = ng.oy + (math.cos(rad) * obj.track0 * sct[2])
-ng.oz = ng.oz + (math.cos(rad) * obj.track0 * sct[3])
-
-if (not (i == obj.track0)) then
-	table.insert(subgeo, ng)
-end
-
-end
-
+	
+	for i=0,obj.track1 do
+		
+		--[[local ng = {
+		
+		surface = v.surface,
+		shading = {},
+		ox = v.ox,
+		oy = v.oy,
+		oz = v.oz,
+		rx = v.rx,
+		ry = v.ry,
+		rz = v.rz
+		
+		}]]
+		
+		local ng = avi3d.CopyGeometry(v)
+		
+		local rad = math.rad(360 * (i/obj.track1))
+		
+		ng.ox = ng.ox + (math.sin(rad) * obj.track0 * sct[1])
+		ng.oy = ng.oy + (math.cos(rad) * obj.track0 * sct[2])
+		ng.oz = ng.oz + (math.cos(rad) * obj.track0 * sct[3])
+		
+		if (not (i == obj.track0)) then
+			table.insert(subgeo, ng)
+		end
+		
+	end
+	
 end
 
 geos = subgeo
@@ -419,7 +506,7 @@ end
 end
 
 @[3DLine]Function
---track0:Quality,1,9999,50,1
+--track0:Quality,1,9999,1,1
 --track1:XRange-,-9999,0,-600,1
 --track2:XRange+,0,9999,600,1
 --dialog:X[X|Y|Z],xaxis=0;Y[X|Y|Z],yaxis=1;Function,func="return 0";

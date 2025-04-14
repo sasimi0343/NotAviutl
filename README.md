@@ -6,12 +6,12 @@ AviUtl‚Åì‚Á‚Ä‚«‚½ƒXƒNƒŠƒvƒg‚ğ"ˆÈ‘O‚Ì‚â‚Â‚æ‚èŒµ‘I‚µ‚Ä"‚«‚Ü‚µ‚½B
 patch.aul‚¨‚æ‚Ñrikky_module (var1‚¾‚¯‚Å‚¢‚¢‚Æv‚¤‚¯‚Ç—¼•û“ü‚ê‚Ä‚¨‚­‚ÆˆÀS) ‚ª•K—v‚Å‚·B
 
 # ŠeƒXƒNƒŠƒvƒg
-## ExtremeTransion
+## ExtremeTransition
 ŒÂ•ÊƒIƒuƒWƒFƒNƒg‚Ì“oê—p‚Éì‚è‚Ü‚µ‚½B
 ƒAƒjƒ[ƒVƒ‡ƒ“Œø‰Ê‚Ì––’[‚É"@ET"‚ª‚Â‚¢‚Ä‚¢‚é‚à‚Ì‚ª‚±‚ÌƒXƒNƒŠƒvƒg‚Å‚·B
 
 ### ‹¤’Êƒpƒ‰ƒ[ƒ^
-[Global] ‚ªæ“ª‚É‚Â‚¢‚Ä‚¢‚é‚à‚Ì‚ÍExtremeTransion“à‹¤’Ê‚Ìƒpƒ‰ƒ[ƒ^‚Å‚·
+[Global] ‚ªæ“ª‚É‚Â‚¢‚Ä‚¢‚é‚à‚Ì‚ÍExtremeTransition“à‹¤’Ê‚Ìƒpƒ‰ƒ[ƒ^‚Å‚·
 * [Global]Delay
   * ŒÂ•ÊƒIƒuƒWƒFƒNƒg‚Ì”Ô†‡‚É‚¸‚ç‚µ‚Ä“oê‚³‚¹‚é‚Ì’x‰„(ƒtƒŒ[ƒ€”)‚Å‚·B
   * —á‚¦‚ÎDelay‚ª2‚Ìê‡A”Ô†1‚ÌƒIƒuƒWƒFƒNƒg‚Ì2ƒtƒŒ[ƒ€Œã‚É”Ô†2‚ÌƒIƒuƒWƒFƒNƒg‚ª“oê‚µ‚Ü‚·B
@@ -24,7 +24,7 @@ patch.aul‚¨‚æ‚Ñrikky_module (var1‚¾‚¯‚Å‚¢‚¢‚Æv‚¤‚¯‚Ç—¼•û“ü‚ê‚Ä‚¨‚­‚ÆˆÀS) ‚ª•K—
   * ƒC[ƒWƒ“ƒO‚Ì”Ô†‚Å‚·B **³‚Ì”‚Å‚ ‚ê‚ÎCurve Editor‚Ì”Ô†** A **•‰‚Ì”‚Å‚ ‚ê‚ÎƒC[ƒWƒ“ƒO‚Ì”Ô†** ‚É‚È‚è‚Ü‚·B
 
 (’ˆÓ: uMove@ETv‚ÌStartÀ•W‚ª”½“]‚µ‚Ä‚¢‚Ü‚·B)
-(’ˆÓ: uFanClipping@ETv‚Ìg—p‚É‚Írikky‚³‚ñ‚ÌuîƒNƒŠƒbƒsƒ“ƒOv‚ÌƒXƒNƒŠƒvƒg‚©‚çu"fan_clipping.lua"v‚ğExtremeTransion‚ÌƒtƒHƒ‹ƒ_‚É“ü‚ê‚é•K—v‚ª‚ ‚è‚Ü‚·B)
+(’ˆÓ: uFanClipping@ETv‚Ìg—p‚É‚Írikky‚³‚ñ‚ÌuîƒNƒŠƒbƒsƒ“ƒOv‚ÌƒXƒNƒŠƒvƒg‚©‚çu"fan_clipping.lua"v‚ğExtremeTransition‚ÌƒtƒHƒ‹ƒ_‚É“ü‚ê‚é•K—v‚ª‚ ‚è‚Ü‚·B)
 
 ### ’Ç‹L (2024/03/14)
 ŠeƒAƒjƒ[ƒVƒ‡ƒ“Œø‰Ê‚ÉuExitv‚Ìƒ`ƒFƒbƒN‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B
@@ -66,26 +66,40 @@ patch.aul‚¨‚æ‚Ñrikky_module (var1‚¾‚¯‚Å‚¢‚¢‚Æv‚¤‚¯‚Ç—¼•û“ü‚ê‚Ä‚¨‚­‚ÆˆÀS) ‚ª•K—
 | [Camera] | obj/cam | ¦g—p”ñ„§AƒJƒƒ‰‚ÌˆÊ’u‚ğ•”•ª“I‚É•Ï‚¦‚æ‚¤‚Æ‚µ‚Ü‚µ‚½B |
 | [Effect] | anm | ƒGƒtƒFƒNƒg‘S”ÊAˆê•”“®ì•sˆÀ’è‚È‚à‚Ì‚ª‚ ‚è‚Ü‚·B |
 | [Glitch] | obj | ƒOƒŠƒbƒ`Œn‚ğˆµ‚¢‚Ü‚·Bˆêí—Ş‚Ì‚İB |
-| [Group] | anm/obj | ƒOƒ‹[ƒv‚ğˆµ‚¢‚Ü‚·B **g—p•û–@‚ÍŒãq‚µ‚Ü‚·B** |
+| [Graph] | anm | (2025/04/14’Ç‰Á)—lX‚ÈƒOƒ‰ƒt‚ğì¬‚µ‚Ü‚·B |
+| [Group] | anm/obj | ƒOƒ‹[ƒv‚ğˆµ‚¢‚Ü‚·B **~~g—p•û–@‚ÍŒãq‚µ‚Ü‚·B~~** |
 | [Liquid] | anm | ‰t‘Ì•—‚ÌƒGƒtƒFƒNƒg‚ğ‚©‚¯‚Ü‚·Bˆêí—Ş‚Ì‚İB |
+| [MathShape] | obj | (2025/04/14’Ç‰Á)”®‚ğ•`‰æ‚µ‚Ü‚·B‚Ü‚¾“®ì‚ª•sˆÀ’è‚Å‚·B |
 | [Motion] | anm | “®‚«‚É‡‚í‚¹‚½ƒGƒtƒFƒNƒg‚ğ‚©‚¯‚Ü‚·Bˆêí—Ş‚Ì‚İB |
+| [Objects] | anm | (2025/04/14’Ç‰Á)ŒÂ•ÊƒIƒuƒWƒFƒNƒg‚Ì‚¤‚¿“Á’è‚Ì‚à‚Ì‚Ì‚İ‚ğ‘€ì‚·‚éƒXƒNƒŠƒvƒg‚Å‚·B |
 | [Path] | anm | ‘¼‚Ìƒ\ƒtƒg‚É‚ ‚è‚ª‚¿‚È"ƒpƒX"‚Æ‚¢‚¤ŠT”O‚ğ’Ç‰Á‚µ‚Ü‚·B |
 | Pen/NewPen | anm | ƒyƒ“‚Å‚·B |
 | [Prefab] | obj/anm | ƒIƒuƒWƒFƒNƒg‚ğŒã‚ÌƒtƒŒ[ƒ€‚©‚çŒÄ‚Ño‚¹‚Ü‚·B |
 | [Screen] | obj | ‰æ–Ê‘S‘Ì‚É‚©‚¯‚éƒGƒtƒFƒNƒg‚ğ’Ç‰Á‚µ‚Ü‚·B |
+| [Sheet] | anm | (2025/04/14’Ç‰Á)•\‚ğ•`‰æ‚µ‚Ü‚·B |
 | [Text] | anm | ƒeƒLƒXƒg—p‚Éì‚è‚Ü‚µ‚½B(ControlPad‚Ìg—p‚Í”ñ„§) |
 | [Utility] | anm | ‚ ‚Á‚½‚ç•Ö—˜‚¾‚È‚Æ‚¢‚¤ƒmƒŠ‚Åì‚è‚Ü‚µ‚½B |
 | [Value] | obj | ƒgƒ‰ƒbƒNƒo[‚Å•Ï”‚ğ‘€ì‚µ‚Ü‚·BƒXƒNƒŠƒvƒg§Œä‚âAƒAƒjƒ[ƒVƒ‡ƒ“Œø‰Ê‚Ìƒpƒ‰ƒ[ƒ^İ’è‚È‚Ç‚Åg—p‚·‚é—p‚Å‚·B |
 
 ### ƒOƒ‹[ƒv§Œä‡¬‚Ì•û–@ (Å‚àˆÀ’è‚³‚Æ—eˆÕ‚³‚ğd‹)
-1. ‡¬‚µ‚½‚¢ƒIƒuƒWƒFƒNƒg‚Ìã‚ÌƒŒƒCƒ„[‚ÉƒJƒXƒ^ƒ€ƒIƒuƒWƒFƒNƒgu[Group] InitializeGroupv‚ğ’Ç‰Á‚µ‚Ü‚·B
-2. ‡¬‚µ‚½‚¢ƒIƒuƒWƒFƒNƒg‚ÉƒOƒ‹[ƒv§Œä‚ğ’Ç‰Á‚µ‚Ü‚·B
-3. ƒOƒ‹[ƒv§Œä‚ÉƒAƒjƒ[ƒVƒ‡ƒ“Œø‰Êu[Utility] MakeGroupv‚ğ’Ç‰Á‚µ‚Ü‚·B
-4. ‡¬‚µ‚½‚¢ƒIƒuƒWƒFƒNƒg‚Ì **‰º** ‚ÌƒŒƒCƒ„[‚ÉƒJƒXƒ^ƒ€ƒIƒuƒWƒFƒNƒgu[Group] ShowGroupv‚ğ’Ç‰Á‚µ‚Ü‚·B
+~~1. ‡¬‚µ‚½‚¢ƒIƒuƒWƒFƒNƒg‚Ìã‚ÌƒŒƒCƒ„[‚ÉƒJƒXƒ^ƒ€ƒIƒuƒWƒFƒNƒgu[Group] InitializeGroupv‚ğ’Ç‰Á‚µ‚Ü‚·B~~
+~~2. ‡¬‚µ‚½‚¢ƒIƒuƒWƒFƒNƒg‚ÉƒOƒ‹[ƒv§Œä‚ğ’Ç‰Á‚µ‚Ü‚·B~~
+~~3. ƒOƒ‹[ƒv§Œä‚ÉƒAƒjƒ[ƒVƒ‡ƒ“Œø‰Êu[Utility] MakeGroupv‚ğ’Ç‰Á‚µ‚Ü‚·B~~
+~~4. ‡¬‚µ‚½‚¢ƒIƒuƒWƒFƒNƒg‚Ì **‰º** ‚ÌƒŒƒCƒ„[‚ÉƒJƒXƒ^ƒ€ƒIƒuƒWƒFƒNƒgu[Group] ShowGroupv‚ğ’Ç‰Á‚µ‚Ü‚·B~~
 
-([Group]“à‚É—‚½‚æ‚¤‚È‚à‚Ì‚ª‚ ‚è‚Ü‚·‚ªA‚Ù‚Æ‚ñ‚Ç‰ºˆÊŒİŠ·‚È‚Ì‚ÅAg—p‚Í‚¨‚·‚·‚ß‚µ‚Ü‚¹‚ñB)
+~~([Group]“à‚É—‚½‚æ‚¤‚È‚à‚Ì‚ª‚ ‚è‚Ü‚·‚ªA‚Ù‚Æ‚ñ‚Ç‰ºˆÊŒİŠ·‚È‚Ì‚ÅAg—p‚Í‚¨‚·‚·‚ß‚µ‚Ü‚¹‚ñB)~~
+
+(2025/04/14’Ç‹L)
+sigma-axis—l‚Ì[InlineScene_S](https://github.com/sigma-axis/aviutl_script_InlineScene_S)‚ª‚±‚ÌƒXƒNƒŠƒvƒg‚æ‚è‚àƒoƒO‚ª­‚È‚­AƒŒƒCƒ„[”‚àíŒ¸‚Å‚«‚é‚½‚ßA‚±‚¿‚ç‚Ìg—p‚ğ‚¨‚·‚·‚ß‚µ‚Ü‚·B
 
 # XV—š—ğ
+## 2025/04/14
+* [Audio] Midi‚Ì‰¹•„‚ª–Â‚Á‚½‚Æ‚«‚ÉF‚ğ•ÏX‚·‚é‹@”\‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B
+* GraphAMathShapeAObjectsASheet‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B
+* PathAUtilityAValue‚É‹@”\‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B
+* ƒ^ƒCƒ| "ExtremeTransion" ¨ "ExtremeTransition" (ˆê•”C³‚³‚ê‚Ä‚¢‚È‚¢ê‡‚ª‚ ‚è‚Ü‚·)
+* [ExtremeTransition] + [MoreShapes3D] 3DƒIƒuƒWƒFƒNƒg‚Ì“oêE‘ŞêƒAƒjƒ[ƒVƒ‡ƒ“‚ğw’è‚Å‚«‚éƒAƒjƒ[ƒVƒ‡ƒ“Œø‰Ê‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B
+
 ## 2024/08/15
 * Pen‚ÆNewPen‚ğ—p‚¢‚ÄA•`‚¢‚½‹O“¹‚©‚çPath‚É•ÏŠ·‚Å‚«‚é‚æ‚¤‚É‚µ‚Ü‚µ‚½B
 * AudioAPrefab‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B

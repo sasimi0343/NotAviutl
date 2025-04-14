@@ -1,0 +1,56 @@
+@[3DTransition] Move
+--dialog:[Global]Exit/chk,gexit=0;[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Start X,sx=0;Start Y,sy=0;Start Z,sz=0;End X,ex=0;End Y,ey=0;End Z,ez=0;Reverse Mode,revmode=0;
+
+local et = require("et")
+
+local i = 0
+for k,v in pairs(geos) do
+	v.ox = v.ox + et.easing(eas, obj, gexit, gt, 0, sx, ex, ggd + (gd * i))
+	v.oy = v.oy + et.easing(eas, obj, gexit, gt, 0, sy, ey, ggd + (gd * i))
+	v.oz = v.oz + et.easing(eas, obj, gexit, gt, 0, sz, ez, ggd + (gd * i))
+	i = i + 1
+end
+
+@[3DTransition] Rotate
+--dialog:[Global]Exit/chk,gexit=0;[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Start X,sx=0;Start Y,sy=0;Start Z,sz=0;End X,ex=0;End Y,ey=0;End Z,ez=0;Reverse Mode,revmode=0;
+
+local et = require("et")
+
+local i = 0
+for k,v in pairs(geos) do
+	v.rx = v.rx + et.easing(eas, obj, gexit, gt, 0, sx, ex, ggd + (gd * i))
+	v.ry = v.ry + et.easing(eas, obj, gexit, gt, 0, sy, ey, ggd + (gd * i))
+	v.rz = v.rz + et.easing(eas, obj, gexit, gt, 0, sz, ez, ggd + (gd * i))
+	i = i + 1
+end
+
+@[3DTransition] Scale
+--dialog:[Global]Exit/chk,gexit=0;[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Start X,sx=1;Start Y,sy=1;Start Z,sz=1;End X,ex=1;End Y,ey=1;End Z,ez=1;Reverse Mode,revmode=0;
+
+local et = require("et")
+
+local function scale(v2, ssx, ssy, ssz)
+	for k,v in pairs(v2.surface) do
+		local p1 = v[1]
+		local p2 = v[2]
+		local p3 = v[3]
+		local p4 = v[4]
+		
+		p1 = { x = p1.x * ssx, y = p1.y * ssy, z = p1.z * ssz }
+		p2 = { x = p2.x * ssx, y = p2.y * ssy, z = p2.z * ssz }
+		p3 = { x = p3.x * ssx, y = p3.y * ssy, z = p3.z * ssz }
+		p4 = { x = p4.x * ssx, y = p4.y * ssy, z = p4.z * ssz }
+		
+		v[1] = p1
+		v[2] = p2
+		v[3] = p3
+		v[4] = p4
+	end
+end
+
+local i = 0
+for k,v in pairs(geos) do
+	scale(v, et.easing(eas, obj, gexit, gt, 0, sx, ex, ggd + (gd * i)), et.easing(eas, obj, gexit, gt, 0, sy, ey, ggd + (gd * i)), et.easing(eas, obj, gexit, gt, 0, sz, ez, ggd + (gd * i)))
+	i = i + 1
+end
+

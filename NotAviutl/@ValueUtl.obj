@@ -35,3 +35,47 @@ else
 varutl[tostring(obj.track1)] = obj.track0
 
 end
+
+@[Value] Add Value
+--track0:Value,-9999,9999,0,0.1
+--track1:ID,0,9999,0,1
+
+if (varutl == nil) then
+	varutl = {}
+end
+
+if (lag < 1) then
+	lag = 1
+end
+
+varutl[tostring(obj.track1)] = varutl[tostring(obj.track1)] + obj.track0
+
+@[Value] Stack (Add)
+--track0:First,-9999,9999,0,0.001
+--track1:Amount,-9999,9999,0,0.001
+--track2:ID,0,9999,0,1
+--dialog:Frames,frames=1;
+
+local value = obj.track0
+
+if (frames > 0) then
+	for i=1,math.ceil(obj.frame/frames) do
+		local time = (i * frames) / obj.framerate
+		value = value + obj.getvalue(1, time)
+	end
+end
+
+varutl[tostring(obj.track2)] = value
+
+@[Value] BeatSync
+--track0:Value,-9999,9999,0,0.001
+--track1:BPM,0,9999,120,0.01
+--dialog:ID,id=0;
+
+if (varutl == nil) then
+	varutl = {}
+end
+
+local time = (obj.time % (60 / obj.track1)) * obj.totaltime
+
+varutl[tostring(id)] = obj.getvalue(0, time, 0)

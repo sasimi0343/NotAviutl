@@ -110,7 +110,7 @@ local t = motion_blur[index]
 
 local x,y = obj.getvalue("x") + obj.ox - obj.cx, obj.getvalue("y") + obj.oy - obj.cy
 
-if (t == nil or obj.frame == 1) then
+if (t == nil or obj.frame == 0) then
 	t = {
 		x = x,
 		y = y,

@@ -1,0 +1,23 @@
+@[Layout] X
+--param:1
+local ins = layout.instances[obj.getpoint("param")]
+if (ins == nil) then return 0 end
+return ins.x
+
+@[Layout] Y
+--param:1
+local ins = layout.instances[obj.getpoint("param")]
+if (ins == nil) then return 0 end
+return ins.y
+
+@[Layout] Width
+--param:1
+local ins = layout.instances[obj.getpoint("param")]
+if (ins == nil) then return 0 end
+return ins.w
+
+@[Layout] Height
+--param:1
+local ins = layout.instances[obj.getpoint("param")]
+if (ins == nil) then return 0 end
+return ins.h

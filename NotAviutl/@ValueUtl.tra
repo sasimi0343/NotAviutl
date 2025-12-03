@@ -5,5 +5,27 @@ return varutl[tostring(obj.getpoint("param"))] or 0
 @[Value] Single Variable (Additional)
 --param:1
 local index,ratio = math.modf(obj.getpoint("index"))
+local st = obj.getpoint(0)
+local ed = obj.getpoint(obj.getpoint("num")-1)
+return ((varutl[tostring(obj.getpoint("param"))] * ed) or 0) + st
+
+@[Value] Object X
+return obj.ox + obj.x
+
+@[Value] Object Y
+return obj.oy + obj.y
+
+@[Value] Object Z
+return obj.oz + obj.z
+
+@[Value] Object Width
+local index,ratio = math.modf(obj.getpoint("index"))
 local st = obj.getpoint(index)
-return (varutl[tostring(obj.getpoint("param"))] or 0) + st
+local ed = obj.getpoint(obj.getpoint("num")-1)
+return (obj.w * ed) + st
+
+@[Value] Object Height
+local index,ratio = math.modf(obj.getpoint("index"))
+local st = obj.getpoint(index)
+local ed = obj.getpoint(obj.getpoint("num")-1)
+return (obj.h * ed) + st

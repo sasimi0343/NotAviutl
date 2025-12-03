@@ -129,7 +129,9 @@ end
 
 local top,left,right,bottom = (obj.track0 / 100),(obj.track2 / 100),(obj.track3 / 100),(obj.track1 / 100)
 
-obj.effect("クリッピング", "上", top * obj.h, "下", bottom * obj.h, "左", left * obj.w, "右", right * obj.w)
+local zoom = obj.zoom * obj.getvalue("zoom") / 100
+
+obj.effect("クリッピング", "上", top * obj.h / zoom, "下", bottom * obj.h / zoom, "左", left * obj.w / zoom, "右", right * obj.w / zoom)
 
 @[Utility] LuaLoad
 --file:

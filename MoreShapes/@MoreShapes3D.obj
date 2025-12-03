@@ -48,8 +48,8 @@ end
 end
 
 @[3DStructure] Check / Save
---check0:Write
 --file:
+--check0:Write
 
 if (world == nil) then return end
 
@@ -100,7 +100,13 @@ else
 		end
 	end
 	
-	print(kansei)
+	if (not (file == "")) then
+		io.output(file)
+		io.write(kansei)
+		io.close()
+	end
+	
+	--print(kansei)
 end
 
 @[3DStructure] Load
@@ -109,14 +115,24 @@ end
 --track2:Arg3,-9999,9999,0,0.1
 --track3:Arg4,-9999,9999,0,0.1
 --file:
+--check0:Reload
 
-local fh, err = io.open(file)
-if (not (err == nil)) then
-	return
+if (ms_struct_cache == nil) then
+	ms_struct_cache = {}
 end
 
-local str = fh:read("*a")
-fh:close()
+if (ms_struct_cache[file] == nil or obj.check0) then
+	
+	local fh, err = io.open(file)
+	if (not (err == nil)) then
+		return
+	end
+	
+	ms_struct_cache[file] = fh:read("*a")
+	fh:close()
+end
+
+local str = ms_struct_cache[file]
 
 local did = false
 
@@ -130,7 +146,7 @@ geos = {}
 
 local function runCode()
 	local geo = nil
-	local function setCurrentGeometory(ox, oy, oz, rx, ry, rz, alpha)
+	function setCurrentGeometory(ox, oy, oz, rx, ry, rz, alpha)
 		if (not (geo == nil)) then
 			table.insert(geos, geo)
 		end
@@ -146,10 +162,10 @@ local function runCode()
 			alpha = alpha,
 		}
 	end
-	local function Point(x, y, z)
+	function Point(x, y, z)
 		return {x = x, y = y, z = z}
 	end
-	local function addSurface(p1, p2, p3, p4, brightness)
+	function addSurface(p1, p2, p3, p4, brightness)
 		table.insert(geo.surface, {p1, p2, p3, p4, brightness})
 	end
 	
@@ -157,6 +173,8 @@ local function runCode()
 end
 
 runCode()
+
+obj.load("figure", "四角形", 0xffffff, 1)
 
 @[3D]Arrow_Type2
 --track0:サイズ,0,2000,100,1

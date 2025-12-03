@@ -12,7 +12,7 @@ audio_visual.measure = measure
 audio_visual.time = obj.track2
 audio_visual.xoffset = obj.track3
 audio_visual.objs = {}
-audio_visual.barsettings = {color1 = 0xff0000}
+audio_visual.barsettings = {color1 = 0xff0000, flow = false, alpha = 1.0, flowlength = 4}
 audio_visual.objsettings = {color1 = 0xffffff, color2 = 0xffffff}
 
 audio_visual.time2pos = function(time)
@@ -68,12 +68,25 @@ local obje = {
 table.insert(audio_visual.objs, obje)
 
 @[Audio] BarSettings
---dialog:Color/col,color1=0xffffff;
-audio_visual.barsettings = {color1 = color1}
+--track0:FlowLength,0.25,9999,4,0.01
+--dialog:Color/col,color1=0xffffff;Alpha,alpha=1.0;Flow/chk,flow=0;
+if (alpha == nil) then
+	alpha = 1
+end
+if (flow == nil) then
+	flow = 0
+end
+audio_visual.barsettings = {color1 = color1, flow = flow == 1, alpha = alpha, flowlength = obj.track0}
 
 @[Audio] NoteSettings
---dialog:Color(Normal)/col,color1=0xffffff;Color(Ring)/col,color2=0xffffff;
-audio_visual.objsettings = {color1 = color1, color2 = color2}
+--dialog:Color(Normal)/col,color1=0xffffff;Color(Ring)/col,color2=0xffffff;Alpha(Normal),alpha1=1.0;Alpha(Ring),alpha2=1.0;
+if (alpha1 == nil) then
+	alpha1 = 1.0
+end
+if (alpha2 == nil) then
+	alpha2 = 1.0
+end
+audio_visual.objsettings = {color1 = color1, color2 = color2, alpha1 = alpha1, alpha2 = alpha2}
 
 @[Audio] Composer
 
@@ -82,34 +95,205 @@ require("rikky_module")
 if (audio_visual == nil) then return end
 
 local elapsedTime = audio_visual.time + (obj.time * (audio_visual.bpm / 120))
+local realelapsedTime = audio_visual.time + obj.time
 
 obj.setoption("drawtarget", "tempbuffer", obj.screen_w, obj.screen_h)
+
+local flowlength = audio_visual.barsettings.flowlength * (60 / audio_visual.bpm)
+local currentflow,flowrate = math.modf(realelapsedTime/flowlength)
+currentflow = currentflow * flowlength * (audio_visual.bpm / 120)
+local flowvisualength = audio_visual.time2pos(flowlength)
+local xoffset = audio_visual.xoffset
 
 for k,v in pairs(audio_visual.objs) do
 	if (v.type == "midi") then
 		obj.load("figure", "éläpå`", audio_visual.objsettings.color1, 1)
 		for _,v2 in pairs(v.notes) do
 			for _,v3 in pairs(v2) do
-				local y1pos = ((((v3[1] - v.min + 1) / (v.range+1)) - 0.5)) * -obj.screen_h
-				local y2pos = y1pos + (obj.screen_h/(v.range+1))
-				local x1pos = audio_visual.time2pos(v3[2] - elapsedTime)
-				local x2pos = audio_visual.time2pos(v3[3] - elapsedTime)
 				
-				if ((v3[2] < elapsedTime) and (elapsedTime < v3[3])) then
-					obj.load("figure", "éläpå`", audio_visual.timecolor(audio_visual.objsettings.color2, audio_visual.objsettings.color1, ((elapsedTime - v3[2]) / (v3[3] - v3[2]))), 1)
-					obj.drawpoly(x1pos, y1pos, 0, x2pos, y1pos, 0, x2pos, y2pos, 0, x1pos, y2pos, 0)
-					obj.load("figure", "éläpå`", audio_visual.objsettings.color1, 1)
-				else
-					obj.drawpoly(x1pos, y1pos, 0, x2pos, y1pos, 0, x2pos, y2pos, 0, x1pos, y2pos, 0)
+				if ((not audio_visual.barsettings.flow) or ((currentflow <= v3[2] and v3[2] < currentflow + flowlength) or (v3[3] >= currentflow))) then
+					local y1pos = ((((v3[1] - v.min + 1) / (v.range+1)) - 0.5)) * -obj.screen_h
+					local y2pos = y1pos + (obj.screen_h/(v.range+1))
+					local x1pos = audio_visual.time2pos(v3[2] - elapsedTime)+xoffset
+					local x2pos = audio_visual.time2pos(v3[3] - elapsedTime)+xoffset
+					
+					if (audio_visual.barsettings.flow) then
+						x1pos = audio_visual.time2pos(v3[2] - currentflow)+xoffset
+						x2pos = audio_visual.time2pos(v3[3] - currentflow)+xoffset
+					end
+					
+					if ((v3[2] < elapsedTime) and (elapsedTime < v3[3])) then
+						local normtime = (elapsedTime - v3[2]) / (v3[3] - v3[2])
+						obj.load("figure", "éläpå`", audio_visual.timecolor(audio_visual.objsettings.color2, audio_visual.objsettings.color1, normtime), 1)
+						obj.drawpoly(x1pos, y1pos, 0, x2pos, y1pos, 0, x2pos, y2pos, 0, x1pos, y2pos, 0, -obj.w/2, -obj.h/2, obj.w/2, -obj.h/2, obj.w/2, obj.h/2, -obj.w/2, obj.h/2,
+						audio_visual.objsettings.alpha2 + (audio_visual.objsettings.alpha1 - audio_visual.objsettings.alpha2) * normtime)
+						obj.load("figure", "éläpå`", audio_visual.objsettings.color1, 1)
+					else
+						obj.drawpoly(x1pos, y1pos, 0, x2pos, y1pos, 0, x2pos, y2pos, 0, x1pos, y2pos, 0, -obj.w/2, -obj.h/2, obj.w/2, -obj.h/2, obj.w/2, obj.h/2, -obj.w/2, obj.h/2,
+						audio_visual.objsettings.alpha1)
+					end
 				end
-				
 			end
 		end
 	end
 end
 
+local barx = xoffset
+if (audio_visual.barsettings.flow) then
+	barx = audio_visual.time2pos(elapsedTime - currentflow)+xoffset
+end
+
 obj.load("figure", "éläpå`", audio_visual.barsettings.color1, 1)
-obj.drawpoly(-1, -obj.screen_h, 0, 1, -obj.screen_h, 0, 1, obj.screen_h, 0, -1, obj.screen_h, 0)
+obj.drawpoly(barx-1, -obj.screen_h, 0, barx+1, -obj.screen_h, 0, barx+1, obj.screen_h, 0, barx-1, obj.screen_h, 0, -obj.w/2, -obj.h/2, obj.w/2, -obj.h/2, obj.w/2, obj.h/2, -obj.w/2, obj.h/2, audio_visual.barsettings.alpha)
 
 obj.setoption("drawtarget", "framebuffer")
 obj.load("tempbuffer")
+
+@[Audio] âπÉQÅ[File
+--track0:BPM,0,9999,120,0.1
+--track1:Measure/4,0.25,1024,4,0.1
+--track2:Reset,0,1,0,1
+--file:
+
+if (obj.track2 == 1) then na_otogedata_cache[file] = nil end
+
+local readOtoge = require("otoge")
+readOtoge(file, obj.track0, obj.track1)
+
+@[Audio] âπÉQÅ[Lane
+--track0:Angle,-9999,9999,0,0.1
+--track1:Zoom,0.1,9999,200,0.1
+--track2:Time,-100,9999,0,0.1
+
+if (na_currentotogedata == nil) then
+	return
+end
+
+local tim = obj.time + obj.track2
+local otogedata = na_currentotogedata
+
+local r1 = {0, (obj.h/3)*2, obj.w, (obj.h/3)*2, obj.w, obj.h, 0, obj.h}
+local r2 = {0, (obj.h/3), obj.w, (obj.h/3), obj.w, (obj.h/3)*2, 0, (obj.h/3)*2}
+local r3 = {0, 0, obj.w, 0, obj.w, (obj.h/3), 0, (obj.h/3)}
+local hw,hh = obj.w/2, obj.h / 6
+local anythingdraw = false
+
+for k,v in pairs(otogedata.notes) do
+	local deltaTime,rad,x,y = 0,0,0,0
+	local drawnormalnote = false
+	if ((v.timing > tim) or (v.type == 2 and v.endtiming > tim)) then
+		
+		deltaTime = v.timing - tim
+		
+		if (v.type == 2 and v.timing <= tim) then
+			deltaTime = 0
+		end
+		
+		rad = math.rad(obj.track0)
+		x = math.cos(rad) * deltaTime * obj.track1
+		y = math.sin(rad) * deltaTime * obj.track1
+		
+		anythingdraw = true
+		drawnormalnote = true
+		
+	end
+	if (v.type == 2 and v.endtiming > tim) then
+		local deltaTime2 = v.endtiming - tim
+		local x2 = math.cos(rad) * deltaTime2 * obj.track1
+		local y2 = math.sin(rad) * deltaTime2 * obj.track1
+		
+		obj.drawpoly(
+		-hw + x2, hh + y2, 0,
+		hw + x2, hh + y2, 0,
+		hw + x, -hh + y, 0,
+		-hw + x, -hh + y, 0,
+		r2[1],r2[2],
+		r2[3],r2[4],
+		r2[5],r2[6],
+		r2[7],r2[8]
+		)
+		
+		obj.drawpoly(
+		-hw + x2, -hh + y2, 0,
+		hw + x2, -hh + y2, 0,
+		hw + x2, hh + y2, 0,
+		-hw + x2, hh + y2, 0,
+		r3[1],r3[2],
+		r3[3],r3[4],
+		r3[5],r3[6],
+		r3[7],r3[8]
+		)
+		anythingdraw = true
+	end
+	if (drawnormalnote) then
+		obj.drawpoly(
+		-hw + x, -hh + y, 0,
+		hw + x, -hh + y, 0,
+		hw + x, hh + y, 0,
+		-hw + x, hh + y, 0,
+		r1[1],r1[2],
+		r1[3],r1[4],
+		r1[5],r1[6],
+		r1[7],r1[8]
+		)
+	end
+end
+
+if (not anythingdraw) then
+	obj.alpha = 0
+end
+
+@[Audio] âπÉQÅ[É^ÉCÉ~ÉìÉO
+--track0:Value,-9999,9999,0,0.1
+--track1:ID,0,9999,0,1
+--track2:DefaultLength,1,9999,30,1
+--track3:Time,-100,9999,0,0.1
+
+if (na_currentotogedata == nil) then
+	return
+end
+
+if (varutl == nil) then
+	varutl = {}
+end
+
+local tim = obj.time + obj.track3
+local otogedata = na_currentotogedata
+local thevalue = obj.getvalue(0, obj.totaltime)
+for k,v in pairs(otogedata.notes) do
+	if (v.timing <= tim) then
+		if (v.timing + (obj.track2 / obj.framerate) > tim) then
+			thevalue = obj.getvalue(0, (math.max(tim - v.timing, 0) / (obj.track2 / obj.framerate)) * obj.totaltime)
+		end
+	end
+end
+
+varutl[tostring(obj.track1)] = thevalue
+
+@[Audio] âπÉQÅ[écãø
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Zoom,0,9999,100,0.1
+--track3:Alpha,0,100,100,0.1
+--dialog:DefaultLength,deflen=30;Time,time=0;
+
+if (na_currentotogedata == nil) then
+	return
+end
+
+local tim = obj.time + time
+local otogedata = na_currentotogedata
+local isany = false
+for k,v in pairs(otogedata.notes) do
+	if (v.timing <= tim) then
+		if (v.timing + (deflen / obj.framerate) > tim) then
+			local thetime = (math.max(tim - v.timing, 0) / (deflen / obj.framerate)) * obj.totaltime
+			obj.draw(obj.getvalue(0, thetime), obj.getvalue(1, thetime), 0, obj.getvalue(2, thetime) / 100, obj.getvalue(3, thetime) / 100)
+			isany = true
+		end
+	end
+end
+
+if (not isany) then
+	obj.alpha = 0
+end

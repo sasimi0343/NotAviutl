@@ -399,65 +399,7 @@ obj.effect("斜めクリッピング", "中心X", w * bias, "中心Y", h * -bias, "角度", -1
 
 if (rikky_module == nil) then require("rikky_module") end
 
-local figurelist = {
-	function()
-		obj.load("figure", "四角形", color, obj.track0)
-	end,
-	function()
-		obj.load("figure", "四角形", color, obj.track0, obj.track0 / 4)
-	end,
-	function()
-		obj.load("figure", "円", color, obj.track0)
-	end,
-	function()
-		obj.load("figure", "円", color, obj.track0, obj.track0 / 4)
-	end,
-	function()
-		obj.load("figure", "四角形", color, obj.track0 / 2)
-	end,
-	function()
-		obj.load("figure", "四角形", color, obj.track0, obj.track0 / 4)
-		obj.draw()
-		obj.load("figure", "四角形", color, obj.track0 / 3)
-	end,
-	function(index)
-		obj.load("figure", "四角形", color, obj.track0)
-		obj.draw(obj.track0 / 3 * -2)
-		obj.load("figure", "四角形", color, obj.track0)
-		obj.draw(obj.track0 / 3 * 2)
-		
-		obj.load("figure", "四角形", color, 0)
-	end,
-	function()
-		obj.load("figure", "四角形", color, obj.track0)
-		obj.draw(obj.track0 / 3 * -2, obj.track0 / 3 * -2)
-		obj.load("figure", "四角形", color, obj.track0)
-		obj.draw(obj.track0 / 3 * 2, obj.track0 / 3 * -2)
-		obj.load("figure", "四角形", color, obj.track0)
-		obj.draw(obj.track0 / 3 * -2, obj.track0 / 3 * 2)
-		obj.load("figure", "四角形", color, obj.track0)
-		obj.draw(obj.track0 / 3 * 2, obj.track0 / 3 * 2)
-		
-		obj.load("figure", "四角形", color, 0)
-	end,
-	function(index)
-		obj.load("figure", "円", color, obj.track0 * 2)
-		obj.draw(obj.track0 / 2, obj.track0 / 2)
-		obj.load("figure", "四角形", color, 0)
-	end,
-	function()
-		obj.load("figure", "四角形", color, obj.track0)
-		obj.effect("斜めクリッピング", "角度", 45, "幅", obj.track0 / 4)
-	end,
-	function()
-		obj.load("figure", "四角形", color, obj.track0)
-		obj.draw(obj.track0 / -3, obj.track0 / 3 * 2)
-		obj.load("figure", "四角形", color, obj.track0)
-		obj.draw(obj.track0 / 3, obj.track0 / -3 * 2)
-		
-		obj.load("figure", "四角形", color, 0)
-	end,
-}
+local figurelist = require("shapelist")
 
 local num = obj.track1 * obj.track2
 local skipped = {}
@@ -477,7 +419,7 @@ for x=1,obj.track1 do
 			end
 			
 			obj.setoption("drawtarget", "tempbuffer", obj.track0, obj.track0)
-			if not (figurelist[fig] == nil) then figurelist[fig](index) else obj.load("figure", "四角形", color, 0) end
+			if not (figurelist[fig] == nil) then figurelist[fig](obj.track0, index) else obj.load("figure", "四角形", color, 0) end
 			obj.draw()
 			obj.setoption("drawtarget", "framebuffer")
 			obj.load("tempbuffer")
@@ -519,6 +461,203 @@ end
 obj.setoption("drawtarget", "framebuffer")
 obj.load("tempbuffer")
 
+@[RandomFigures] Divide
+--track0:MaxCount,0,9999,100,0.1
+--track1:Width,0,9999,500,0.1
+--track2:Height,0,9999,500,0.1
+--track3:Seed,1,9999,1,1
+--dialog:Color/col,color=0xffffff;EachObject/chk,eachobject=0;Figures,figures={1};Padding%,padding=10;MinimumSize,minsize=10;
+--check0:Debug
+
+local figurelist = require("shapelist")
+local seed = 0
+
+if (rikky_module == nil) then require("rikky_module") end
+
+function loadfigure(fig, size, index)
+	if (eachobject == 0) then
+		obj.load("tempbuffer")
+		rikky_module.image("w", "ms_random_cache")
+	end
+	obj.setoption("drawtarget", "tempbuffer", size, size)
+	if not (figurelist[fig] == nil) then figurelist[fig](size, index) else obj.load("figure", "四角形", color, 0) end
+	obj.draw()
+	obj.setoption("drawtarget", "framebuffer")
+	if (eachobject == 0) then
+		obj.load("tempbuffer")
+		rikky_module.image("w", "ms_random_cache2")
+		rikky_module.image("r", "ms_random_cache")
+		obj.setoption("drawtarget", "tempbuffer", obj.track1, obj.track2)
+		obj.draw()
+		rikky_module.image("r", "ms_random_cache2")
+	end
+end
+
+if (eachobject == 0) then obj.setoption("drawtarget", "tempbuffer", obj.track1, obj.track2) end
+
+function find(w, h, x, y)
+	if (seed >= obj.track0) then
+		return
+	end
+	
+	seed = seed + 1
+	
+	local fig = figures[math.floor(obj.rand(1, #figures, obj.track3, seed * 4))]
+	w = w * (1-(padding/100))
+	h = h * (1-(padding/100))
+	
+	if ((w < minsize) or (h < minsize)) then
+		loadfigure(fig, math.max(w, h), seed)
+		if (eachobject == 1) then
+			obj.ox = x
+			obj.oy = y
+			obj.oz = z
+			obj.rz = rz
+			obj.effect("リサイズ", "X", w, "Y", h, "ドット数でサイズ指定", 1, "補間なし", 1)
+			rikky_module.effect(seed, seed)
+			obj.draw()
+		else
+			obj.drawpoly(
+			x - (w/2), y - (h/2), 0,
+			x + (w/2), y - (h/2), 0,
+			x + (w/2), y + (h/2), 0,
+			x - (w/2), y + (h/2), 0
+			)
+		end
+		if (obj.check0) then
+			obj.load("figure", "四角形", 0xff0000, 1)
+			obj.drawpoly(
+			x - (w/2), y - (h/2), 0,
+			x + (w/2), y - (h/2), 0,
+			x + (w/2), y + (h/2), 0,
+			x - (w/2), y + (h/2), 0,
+			-obj.w/2, -obj.h/2,
+			obj.w/2, -obj.h/2,
+			obj.w/2, obj.h/2,
+			-obj.w/2, obj.h/2, 0.25
+			)
+		end
+		return
+	end
+	
+	local sizer = rand(0, 100, obj.track3, seed * 4 + 1)
+	local v_h = rand(0, 100, obj.track3, seed * 4 + 2)
+	
+	if (sizer < 60) then
+		local rate = sizer / 60
+		local deltaX, deltaY = 0, 0
+		local mx,my = 0, 0
+		local ow, oh = w, h
+		local aw, ah = w, h
+		local ax, ay = x, y
+		if (v_h >= 50) then
+			loadfigure(fig, w, seed)
+			h = h * rate
+			ah = h * (1-rate)
+			if (v_h >= 75) then
+				deltaY = oh/2 - (h/2)
+				ay = -oh/2 + (ah/2)
+				my = 1
+			else
+				deltaY = -oh/2 + (h/2)
+				ay = oh/2 - (ah/2)
+				my = -1
+			end
+			y = y + deltaY
+		else
+			loadfigure(fig, h, seed)
+			w = w * rate
+			aw = h * (1-rate)
+			if (v_h >= 75) then
+				deltaX = ow/2 - (w/2)
+				ax = -ow/2 + (aw/2)
+				mx = 1
+			else
+				deltaX = -ow/2 + (w/2)
+				ax = ow/2 - (aw/2)
+				mx = -1
+			end
+			x = x + deltaX
+		end
+		
+		if (eachobject == 1) then
+			obj.ox = x
+			obj.oy = y
+			obj.oz = z
+			obj.rz = rz
+			obj.effect("リサイズ", "X", w, "Y", h, "ドット数でサイズ指定", 1, "補間なし", 1)
+			rikky_module.effect(seed, seed)
+			obj.draw()
+		else
+			obj.drawpoly(
+			x - (w/2), y - (h/2), 0,
+			x + (w/2), y - (h/2), 0,
+			x + (w/2), y + (h/2), 0,
+			x - (w/2), y + (h/2), 0
+			)
+		end
+		
+		if (obj.check0) then
+			obj.load("figure", "四角形", 0xff0000, 1)
+			obj.drawpoly(
+			x - (w/2), y - (h/2), 0,
+			x + (w/2), y - (h/2), 0,
+			x + (w/2), y + (h/2), 0,
+			x - (w/2), y + (h/2), 0,
+			-obj.w/2, -obj.h/2,
+			obj.w/2, -obj.h/2,
+			obj.w/2, obj.h/2,
+			-obj.w/2, obj.h/2, 0.25
+			)
+		end
+		
+		--if ((w > minsize) and (h > minsize)) then find(w, h, x, y) end
+		find(w, h, x, y)
+		find(aw, ah, ax, ay)
+	else
+		loadfigure(fig, math.max(w, h), seed)
+		if (eachobject == 1) then
+			obj.ox = x
+			obj.oy = y
+			obj.oz = z
+			obj.rz = rz
+			obj.effect("リサイズ", "X", w, "Y", h, "ドット数でサイズ指定", 1, "補間なし", 1)
+			rikky_module.effect(seed, seed)
+			obj.draw()
+		else
+			obj.drawpoly(
+			x - (w/2), y - (h/2), 0,
+			x + (w/2), y - (h/2), 0,
+			x + (w/2), y + (h/2), 0,
+			x - (w/2), y + (h/2), 0
+			)
+		end
+		
+		if (obj.check0) then
+			obj.load("figure", "四角形", 0xff0000, 1)
+			obj.drawpoly(
+			x - (w/2), y - (h/2), 0,
+			x + (w/2), y - (h/2), 0,
+			x + (w/2), y + (h/2), 0,
+			x - (w/2), y + (h/2), 0,
+			-obj.w/2, -obj.h/2,
+			obj.w/2, -obj.h/2,
+			obj.w/2, obj.h/2,
+			-obj.w/2, obj.h/2, 0.25
+			)
+		end
+		
+		find(w, h, x, y)
+	end
+	
+	
+end
+
+find(obj.track1, obj.track2, 0, 0)
+if (eachobject == 0) then
+	obj.setoption("drawtarget", "framebuffer")
+	obj.load("tempbuffer")
+end
 
 @[Vertical|Horizontal] Line
 --track0:Start%,0,100,0,0.1

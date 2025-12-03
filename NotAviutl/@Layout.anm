@@ -1,0 +1,94 @@
+@[Layout] ConstrcutDesign (Image)
+--track0:ID,1,9999,1,1
+--3x3分割の画像によって成り立つ
+
+if (layout == nil) then layout = {} end
+if (layout.designs == nil) then layout.designs = {} end
+
+layout.designs[obj.track0] = {type = 0, imageid = "layout_design_" .. tostring(obj.track0)}
+
+@[Layout] ConstructDesign (Path)
+--track0:ID,1,9999,1,1
+--track0:PathID,0,9999,0,1
+
+if (layout == nil) then layout = {} end
+if (layout.designs == nil) then layout.designs = {} end
+
+layout.designs[obj.track0] = {type = 1, path = pathutl_savedpath[tostring(obj.track0)], settings = pathutl}
+
+@[Layout] Add Position
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Width,0,9999,100,0.1
+--track3:Height,0,9999,100,0.1
+--dialog:PositionID,posId=0;PivotX,pivotX=0.5;PivotY,pivotY=0.5;
+--check0:確認
+
+if (layout == nil) then layout = {} end
+if (layout.positions == nil) then layout.positions = {} end
+
+local x,y,w,h = obj.track0,obj.track1,obj.track2,obj.track3
+
+x = x - (w * (pivotX-0.5))
+y = y - (h * (pivotY-0.5))
+
+if (obj.check0) then
+obj.load("figure", "四角形", 0x114514, 1)
+obj.drawpoly(
+x-(w/2), y-(h/2), 0,
+x+(w/2), y-(h/2), 0,
+x+(w/2), y+(h/2), 0,
+x-(w/2), y+(h/2), 0,
+0,0,w,0,w,h,0,h, 0.5)
+end
+
+layout.positions[tostring(posId)] = {x = x, y = y, w = w, h = h}
+
+@[Layout] Prepare Instance
+--track0:InstanceID,1,9999,1,1
+--track1:PositionID,-1,9999,1,1
+--track2:PrevPosID,-1,9999,1,1
+--track3:Rate,0,100,100,0.1
+if (layout == nil) then layout = {} end
+if (layout.instances == nil) then layout.instances = {} end
+
+local rate = obj.track3 / 100
+local instance = {prevPos = obj.track2, pos = obj.track1, rate = obj.track3}
+
+layout.positions["-1"] = {x = obj.ox, y = obj.oy, w = obj.w, h = obj.h}
+
+if ((rate == 0) or (obj.track1 == obj.track2)) then
+	local pos = layout.positions[tostring(obj.track2)];
+	instance.x = pos.x
+	instance.y = pos.y
+	instance.w = pos.w
+	instance.h = pos.h
+elseif (rate == 1) then
+	local pos = layout.positions[tostring(obj.track1)];
+	instance.x = pos.x
+	instance.y = pos.y
+	instance.w = pos.w
+	instance.h = pos.h
+else
+	local pos1 = layout.positions[tostring(obj.track2)];
+	local pos2 = layout.positions[tostring(obj.track1)];
+	instance.x = ((pos2.x - pos1.x) * rate) + pos1.x
+	instance.y = ((pos2.y - pos1.y) * rate) + pos1.y
+	instance.w = ((pos2.w - pos1.w) * rate) + pos1.w
+	instance.h = ((pos2.h - pos1.h) * rate) + pos1.h
+end
+
+layout.instances[obj.track0] = instance
+
+@[Layout] Build Instance
+--track0:InstanceID,1,9999,1,1
+--track1:DesignID,1,9999,1,1
+--dialog:AutoAdjustSize/chk,autoadjustsize=0;
+
+local instance = layout.instances[obj.track0]
+if (autoadjustsize == 1) then
+	obj.effect("リサイズ", "X", instance.w, "Y", instance.h, "ドット数でサイズ指定", 1)
+end
+
+obj.ox = instance.x
+obj.oy = instance.y

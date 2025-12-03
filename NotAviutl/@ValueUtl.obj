@@ -76,6 +76,8 @@ if (varutl == nil) then
 	varutl = {}
 end
 
-local time = (obj.time % (60 / obj.track1)) * obj.totaltime
+local beat = (60 / obj.track1)
+
+local time = ((obj.time % (60 / obj.track1)) / beat) * obj.totaltime
 
 varutl[tostring(id)] = obj.getvalue(0, time, 0)

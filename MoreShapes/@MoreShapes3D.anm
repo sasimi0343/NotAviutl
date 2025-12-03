@@ -397,6 +397,8 @@ end
 --track1:Count,0,9999,3,1
 --dialog:SinCosTan,sct={1,1,1};
 
+local avi3d = require("avi3d")
+
 local subgeo = {}
 
 for k,v in pairs(geos) do
@@ -434,6 +436,40 @@ end
 
 geos = subgeo
 
+@[3D]Combine
+
+local avi3d = require("avi3d")
+
+local sur = {}
+geo = {
+
+surface = sur,
+shading = {},
+ox = 0,
+oy = 0,
+oz = 0,
+rx = 0,
+ry = 0,
+rz = 0,
+
+}
+
+for k,v in pairs(geos) do
+	
+	local ng = avi3d.CopyGeometry(v)
+	
+	for _,v2 in pairs(ng.surface) do
+		for i=1,4 do
+			v2[i].x = v2[i].x + ng.ox
+			v2[i].y = v2[i].y + ng.oy
+			v2[i].z = v2[i].z + ng.oz
+		end
+		table.insert(sur, v2)
+	end
+	
+end
+
+geos = {geo}
 
 @[3DShading]LightsSettings_1
 --track0:Intensity,0,200,100,0.1

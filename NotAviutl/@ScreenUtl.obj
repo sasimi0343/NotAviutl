@@ -203,3 +203,22 @@ if (obj.check0 or obj.getinfo("saving")) then
 	
 	obj.load("image", filn)
 end
+
+@[Screen] FrameBufferCall
+--track0:Frame,-9999,9999,0,1
+--track1:Speed,-999,999,100,0.1
+--check0:Absolute,0
+
+if (rikky_module == nil) then require("rikky_module") end
+
+if (rikky_module.reloadbuffer()) then
+return
+end
+
+local frame = math.floor(obj.track0 + ((obj.track1 / 100) * obj.frame))
+local absolute = nil
+if (obj.check0) then
+	absolute = "absolute"
+end
+
+rikky_module.reloadbuffer(frame, absolute, false, {}, false)

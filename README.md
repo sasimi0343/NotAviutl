@@ -65,10 +65,12 @@ patch.aul‚¨‚æ‚Ñrikky_module (var1‚¾‚¯‚Å‚¢‚¢‚Æv‚¤‚¯‚Ç—¼•û“ü‚ê‚Ä‚¨‚­‚ÆˆÀS) ‚ª•K—
 | [Audio] | anm | (2024/08/15’Ç‰Á) |
 | [Camera] | obj/cam | ¦g—p”ñ„§AƒJƒƒ‰‚ÌˆÊ’u‚ğ•”•ª“I‚É•Ï‚¦‚æ‚¤‚Æ‚µ‚Ü‚µ‚½B |
 | [Effect] | anm | ƒGƒtƒFƒNƒg‘S”ÊAˆê•”“®ì•sˆÀ’è‚È‚à‚Ì‚ª‚ ‚è‚Ü‚·B |
+| [Fractal] | anm | ƒtƒ‰ƒNƒ^ƒ‹‚ğ¶¬‚µ‚Ü‚·B(“®ì‚Í‚©‚È‚èd‚­AAviUtl‚ª—‚¿‚é‚±‚Æ‚à‚ ‚è‚Ü‚·B) |
 | [Glitch] | obj | ƒOƒŠƒbƒ`Œn‚ğˆµ‚¢‚Ü‚·Bˆêí—Ş‚Ì‚İB |
 | [Graph] | anm | (2025/04/14’Ç‰Á)—lX‚ÈƒOƒ‰ƒt‚ğì¬‚µ‚Ü‚·B |
 | [Group] | anm/obj | ƒOƒ‹[ƒv‚ğˆµ‚¢‚Ü‚·B **~~g—p•û–@‚ÍŒãq‚µ‚Ü‚·B~~** |
 | [Liquid] | anm | ‰t‘Ì•—‚ÌƒGƒtƒFƒNƒg‚ğ‚©‚¯‚Ü‚·Bˆêí—Ş‚Ì‚İB |
+| [Layout] | anm | İ’è‚³‚ê‚½ƒŒƒCƒAƒEƒg“¯m‚ğƒV[ƒ€ƒŒƒX‚ÉØ‚è‘Ö‚¦‚ç‚ê‚éƒXƒNƒŠƒvƒg‚Å‚·B“®ì‚Í”äŠr“I•sˆÀ’èB |
 | [MathShape] | obj | (2025/04/14’Ç‰Á)”®‚ğ•`‰æ‚µ‚Ü‚·B‚Ü‚¾“®ì‚ª•sˆÀ’è‚Å‚·B |
 | [Motion] | anm | “®‚«‚É‡‚í‚¹‚½ƒGƒtƒFƒNƒg‚ğ‚©‚¯‚Ü‚·Bˆêí—Ş‚Ì‚İB |
 | [Objects] | anm | (2025/04/14’Ç‰Á)ŒÂ•ÊƒIƒuƒWƒFƒNƒg‚Ì‚¤‚¿“Á’è‚Ì‚à‚Ì‚Ì‚İ‚ğ‘€ì‚·‚éƒXƒNƒŠƒvƒg‚Å‚·B |
@@ -93,6 +95,16 @@ patch.aul‚¨‚æ‚Ñrikky_module (var1‚¾‚¯‚Å‚¢‚¢‚Æv‚¤‚¯‚Ç—¼•û“ü‚ê‚Ä‚¨‚­‚ÆˆÀS) ‚ª•K—
 sigma-axis—l‚Ì[InlineScene_S](https://github.com/sigma-axis/aviutl_script_InlineScene_S)‚ª‚±‚ÌƒXƒNƒŠƒvƒg‚æ‚è‚àƒoƒO‚ª­‚È‚­AƒŒƒCƒ„[”‚àíŒ¸‚Å‚«‚é‚½‚ßA‚±‚¿‚ç‚Ìg—p‚ğ‚¨‚·‚·‚ß‚µ‚Ü‚·B
 
 # XV—š—ğ
+## 2025/12/03
+* [Audio] Flowİ’è‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B˜A‘±“I‚ÉƒXƒNƒ[ƒ‹‚·‚é‚Ì‚Å‚Í‚È‚­Aˆê’è”‚²‚Æ‚Éˆê‹C‚ÉƒXƒNƒ[ƒ‹‚µ‚Ü‚·B
+* [Path] ƒvƒŠƒ~ƒeƒBƒu‚ÉRandom Type1‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B
+* [Path] PathClipBA‚¨‚æ‚ÑTrackObjects‚ÉProportionalƒIƒvƒVƒ‡ƒ“‚ğ’Ç‰Á‚µ‚Ü‚µ‚½BƒpƒXã‚ÌˆÊ’u‚ÌŒvZ•û–@‚ª•ÏX‚³‚ê‚Ü‚·B
+* [Value] BeatSync‚ÌŒvZ•û–@‚ÌŒë‚è‚ğC³‚µ‚Ü‚µ‚½B
+* [Value] ˆÚ“®•û–@: Single Variable (Additional)‚É‚ÄAI—¹ˆÊ’u‚ğŠ|‚¯Z‚É‚µ‚Ü‚µ‚½B
+* [Utility] Clipping%‚É‚ÄAŠg‘å—¦•ÏX‚ğl—¶‚·‚é‚æ‚¤‚É‚È‚è‚Ü‚µ‚½B
+* FractalALayout‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B
+* ‚»‚Ì‘¼Œy”÷‚ÈƒoƒOC³‚ğs‚¢‚Ü‚µ‚½B
+
 ## 2025/04/14
 * [Audio] Midi‚Ì‰¹•„‚ª–Â‚Á‚½‚Æ‚«‚ÉF‚ğ•ÏX‚·‚é‹@”\‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B
 * GraphAMathShapeAObjectsASheet‚ğ’Ç‰Á‚µ‚Ü‚µ‚½B

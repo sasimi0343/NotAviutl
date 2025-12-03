@@ -258,6 +258,43 @@ for i=0,obj.track0-1 do
 	table.insert(upath.paths, {x = x, y = y})
 end
 
+@[Path] AddPaths (AnyDeg)
+--track0:Count,1,16,4,1
+--track1:Snap,0,180,60,0.1
+--dialog:Pos,pos={};AddPrev/chk,addprev=0;
+
+obj.setanchor("pos", obj.track0, "line")
+
+local upath
+
+if (addprev == 1 and #pathutl.paths > 0) then
+	
+	upath = pathutl.paths[#pathutl.paths]
+	
+else
+	upath = {paths = {}, color1 = nil, color2 = nil}
+	table.insert(pathutl.paths, upath)
+end
+
+for i=0,obj.track0-1 do
+	local x,y = pos[i*2+1], pos[i*2+2]
+	if (i > 0) then
+		local px,py = pos[(i-1)*2+1], pos[(i-1)*2+2]
+		local dist = math.sqrt(math.pow(x-px, 2) + math.pow(y-py, 2))
+		local deg = math.deg(math.atan2(y-py, x-px))
+		
+		deg = math.floor((deg / obj.track1) + 0.5) * obj.track1
+		deg = math.rad(deg)
+		
+		local fx,fy = math.cos(deg) * dist + px, math.sin(deg) * dist + py
+		pos[i*2+1] = fx
+		pos[i*2+2] = fy
+		x = fx
+		y = fy
+	end
+	table.insert(upath.paths, {x = x, y = y})
+end
+
 @[Path] AddPaths (Random)
 --track0:Count,1,9999,5,1
 --track1:Range,0,9999,100,0.1
@@ -419,6 +456,29 @@ for i=1,obj.track0 do
 			table.insert(pathutl.paths, upath)
 		end
 	end
+end
+
+@[Path] Primitive_Polygon
+--track0:Count,1,9999,3,1
+--track1:Radius,0,9999,100,0.1
+--track2:X,-9999,9999,0,0.1
+--track3:Y,-9999,9999,0,0.1
+--dialog:AddPrev/chk,addprev=0;
+
+local upath
+
+if (addprev == 1 and #pathutl.paths > 0) then
+	upath = pathutl.paths[#pathutl.paths]
+else
+	upath = {paths = {}, color1 = nil, color2 = nil}
+	table.insert(pathutl.paths, upath)
+end
+
+for i=1,obj.track0 do
+	local rad = math.rad(360 * ((i-1)/obj.track0))
+	local x,y = obj.track1 * math.cos(rad), obj.track1 * math.sin(rad)
+	
+	table.insert(upath.paths, {x = x + obj.track2, y = y + obj.track3})
 end
 
 @[Path] Colors
@@ -694,7 +754,11 @@ end
 --track0:Start%,0,100,0,0.1
 --track1:End%,0,100,0,0.1
 
-for k,v in pairs(pathutl.paths) do
+local pathutll = require("pathutl")
+
+pathutll.PathClipA(pathutl.paths, obj.track0, obj.track1)
+
+--[[for k,v in pairs(pathutl.paths) do
 	local index_start, per_start = math.modf((obj.track0 / 100) * #v.paths)
 	local index_end, per_end = math.modf((1 - (obj.track1 / 100)) * #v.paths)
 	local i = 0
@@ -727,7 +791,17 @@ for k,v in pairs(pathutl.paths) do
 		table.remove(v.paths, v2 - i)
 		i = i + 1
 	end
-end
+end]]
+
+@[Path] PathClipB
+--track0:Start%,0,100,0,0.1
+--track1:End%,0,100,0,0.1
+
+local pathutll = require("pathutl")
+
+package.loaded["pathutl"] = nil
+
+pathutll.PathClipB(pathutl.paths, obj.track0, obj.track1)
 
 @[Path] ConstantTended
 --track0:Length,0,9999,20,0.1
@@ -839,6 +913,9 @@ local function getCenter(paths)
 end
 
 local function morphPath(pathA, rate, index)
+	if (#pathA.paths <= 0) then
+		return pathA
+	end
 	local path = {paths = {}, color1 = pathA.color1, color2 = pathA.color2}
 	if (del_path == 1) then
 		local ox,oy = getCenter(pathA.paths)
@@ -915,16 +992,27 @@ for i=1,count_path do
 			local pA = pathA.paths[l]
 			local pB = pathB.paths[l]
 			local point = {x = 0, y = 0}
-			if (pA == nil and pB == nil) then
-			elseif (pA == nil) then
-				point.x = (pB.x - prev.x) * rate + prev.x
-				point.y = (pB.y - prev.y) * rate + prev.y
-			elseif (pB == nil) then
-				point.x = (prev.x - pA.x) * rate + pA.x
-				point.y = (prev.y - pA.y) * rate + pA.y
+			if (prev == nil) then
+				if (not (pA == nil or pB == nil)) then
+					point.x = (pB.x - pA.x) * rate + pA.x
+					point.y = (pB.y - pA.y) * rate + pA.y
+				else
+					
+				end
 			else
-				point.x = (pB.x - pA.x) * rate + pA.x
-				point.y = (pB.y - pA.y) * rate + pA.y
+				
+				if (pA == nil and pB == nil) then
+				elseif (pA == nil) then
+					point.x = (pB.x - prev.x) * rate + prev.x
+					point.y = (pB.y - prev.y) * rate + prev.y
+				elseif (pB == nil) then
+					point.x = (prev.x - pA.x) * rate + pA.x
+					point.y = (prev.y - pA.y) * rate + pA.y
+				else
+					point.x = (pB.x - pA.x) * rate + pA.x
+					point.y = (pB.y - pA.y) * rate + pA.y
+				end
+				
 			end
 			
 			prev = point
@@ -953,16 +1041,20 @@ pathutl_savedpath[tostring(obj.track0)] = {upath}
 --track1:Index,0,9999,1,1
 --track2:Space,-100,9999,100,0.1
 --track3:Position,0,100,0,0.1
---dialog:ConstantRotation/chk,constrot=0;CalculateMethod,method=0;Width,linewidth=30;InterpolateRotation,introt=0;
+--dialog:ConstantRotation/chk,constrot=0;CalculateMethod,method=0;Width,linewidth=30;InterpolateRotation,introt=0;Proportional/chk,prop=0;
 
 if (pathutl_savedpath == nil) then return end
 local pa = pathutl_savedpath[tostring(obj.track0)]
 if (pa == nil) then return end
 if (pa[obj.track1+1] == nil) then return end
+if (prop == nil) then prop = 0 end
 local pat = pa[obj.track1+1]
 local rate = ((math.max(obj.track3 - (obj.track2 * obj.index), 0)) / 100)
 
 	local index_start, per_start = math.modf(rate * (#pat.paths-1))
+	if (prop == 1) then
+		index_start, per_start = require("pathutl").CalcProportional(pat, rate)
+	end
 	local i = 0
 	local ox,oy = 0,0
 	local tan = 0
@@ -1016,6 +1108,50 @@ obj.ox = ox
 obj.oy = oy
 if (constrot == 0) then obj.rz = obj.rz + tan end
 
+@[Path] PathBorderize
+--track0:Border,0,9999,30,0.1
+
+local b = obj.track0
+
+for k,v in pairs(pathutl.paths) do
+	local i = 1
+	local prevpos = nil
+	local lastX, lastY = 0, 0
+	local path = {paths = {}, color1 = v.color1, color2 = v.color2}
+	local pathcount = 1
+	for _,v2 in pairs(v.paths) do
+		if (i-1 > 0) then
+			local prev = v.paths[i-1]
+			
+			local theta1 = math.atan2(v2.y-prev.y, v2.x-prev.x) + math.rad(135)
+			local theta2 = theta1 - (math.rad(135) * 2)
+			local theta3 = math.atan2(prev.y-v2.y, prev.x-v2.x) + math.rad(135)
+			local theta4 = theta3 - (math.rad(135) * 2)
+			local sin1, cos1, sin2, cos2 = 0, 0, 0, 0
+			local sin3, cos3, sin4, cos4 = 0, 0, 0, 0
+			sin1, cos1 = math.sin(theta1), math.cos(theta1)
+			sin2, cos2 = math.sin(theta2), math.cos(theta2)
+			sin3, cos3 = math.sin(theta3), math.cos(theta3)
+			sin4, cos4 = math.sin(theta4), math.cos(theta4)
+			
+			--if (not (prevpos == nil)) then sin1, cos1, sin2, cos2 = (prevpos.sin3 + sin1) / 2, (prevpos.cos3 + cos1) / 2, (prevpos.sin4 + sin2) / 2, (prevpos.cos4 + cos2) / 2 end
+			
+			table.insert(path.paths, pathcount, {x = prev.x+(b * cos1), y = prev.y+(b * sin1)})
+			table.insert(path.paths, pathcount + 1, {x = v2.x+(b * cos4), y = v2.y+(b * sin4)})
+			pathcount = pathcount + 2
+			table.insert(path.paths, pathcount, {x = prev.x+(b * cos2), y = prev.y+(b * sin2)})
+			table.insert(path.paths, pathcount, {x = v2.x+(b * cos3), y = v2.y+(b * sin3)})
+			
+			--obj.drawpoly(prev.x+(b * cos1), prev.y+(b * sin1), 0, v2.x+(b * cos4), v2.y+(b * sin4), 0, v2.x+(b * cos3), v2.y+(b * sin3), 0, prev.x+(b * cos2), prev.y+(b * sin2), 0)
+			
+			prevpos = {sin3 = sin3, cos3 = cos3, sin4 = sin4, cos4 = cos4}
+		end
+		i = i + 1
+	end
+	if (#path.paths >= 1) then table.insert(path.paths, {x = path.paths[1].x, y = path.paths[1].y}) end
+	pathutl.paths[k] = path
+end
+
 @[Pen->Path]
 --track0:Speed,0,9999,0,0.1
 --file:
@@ -1056,13 +1192,14 @@ end
 
 @[NewPen->Path]
 --track0:Speed,0,9999,0,0.1
+--track1:Reload,0,1,0,1
 --file:
 
 require("rikky_module")
 
 if (penpath_prevfile == nil) then penpath_prevfile = {} end
 
-if ((drawdata == nil and (penpath_prevfile[file] == nil)) and (not (file == ""))) then
+if (((drawdata == nil and (penpath_prevfile[file] == nil)) and (not (file == ""))) or (obj.track1 == 1)) then
 	local fh = io.open(file)
 	if (not (fh == nil)) then
 		local str = fh:read("*a")
@@ -1397,12 +1534,16 @@ for k,v in pairs(pathutl.paths) do
 			
 			if ((bdm == 1) and (not (prevpos == nil))) then
 				sin1, cos1, sin2, cos2 = prevpos.sin3, prevpos.cos3, prevpos.sin4, prevpos.cos4
-				obj.drawpoly(prev.x+(b * cos1), prev.y+(b * sin1), 0, v2.x+(b * cos4), v2.y+(b * sin4), 0, v2.x+(b * cos3), v2.y+(b * sin3), 0, prev.x+(b * cos2), prev.y+(b * sin2), 0)
+				--obj.drawpoly(prev.x+(b * cos1), prev.y+(b * sin1), 0, v2.x+(b * cos4), v2.y+(b * sin4), 0, v2.x+(b * cos3), v2.y+(b * sin3), 0, prev.x+(b * cos2), prev.y+(b * sin2), 0)
+			end
+			if ((bdm == 2) and (not (prevpos == nil))) then
+				sin1, cos1, sin2, cos2 = (prevpos.sin3 + sin1) / 2, (prevpos.cos3 + cos1) / 2, (prevpos.sin4 + sin2) / 2, (prevpos.cos4 + cos2) / 2
+				--obj.drawpoly(prev.x+(b * cos1), prev.y+(b * sin1), 0, v2.x+(b * cos4), v2.y+(b * sin4), 0, v2.x+(b * cos3), v2.y+(b * sin3), 0, prev.x+(b * cos2), prev.y+(b * sin2), 0)
 			end
 			
 			obj.drawpoly(prev.x+(b * cos1), prev.y+(b * sin1), 0, v2.x+(b * cos4), v2.y+(b * sin4), 0, v2.x+(b * cos3), v2.y+(b * sin3), 0, prev.x+(b * cos2), prev.y+(b * sin2), 0)
 			
-			if (bdm == 1) then prevpos = {sin3 = sin3, cos3 = cos3, sin4 = sin4, cos4 = cos4} end
+			if (bdm == 1 or bdm == 2) then prevpos = {sin3 = sin3, cos3 = cos3, sin4 = sin4, cos4 = cos4} end
 		end
 		i = i + 1
 	end

@@ -1,0 +1,78 @@
+@[Fractal] Point
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Zoom,0,9999,100,0.1
+--track3:Rotate,-9999,9999,0,0.1
+--check0:Check,1
+
+if (na_fractal == nil) then na_fractal = {} end
+
+table.insert(na_fractal, {
+	x = obj.track0,
+	y = obj.track1,
+	zoom = obj.track2/100,
+	rz = obj.track3
+})
+
+if (obj.check0) then obj.draw(obj.track0, obj.track1, 0, obj.track2 / 100, 0.5, 0, 0, obj.track3) end
+
+
+
+@[Fractal] Draw
+--track0:MaxAttempt,1,999,5,1
+--track1:Progress,-9999,9999,0,0.01
+--dialog:DestinationX,destX=0;DestinationY,destY=0;DestinationZoom,destZoom=1.0;DestinationRZ,destRZ=0;
+
+if (na_fractal == nil) then return end
+
+local function SetParent(fractal, parent)
+	return {
+		x = fractal.x,
+		y = fractal.y,
+		zoom = fractal.zoom,
+		rz = fractal.rz,
+		parent = parent
+	}
+end
+
+local function CheckStart(fractal)
+	
+	if (fractal.parent == nil) then
+		return {x = fractal.x, y = fractal.y, zoom = fractal.zoom, rz = fractal.rz}
+	end
+	
+	local st = CheckStart(fractal.parent)
+	local zoom = st.zoom * fractal.zoom
+	local r = math.sqrt(math.pow(fractal.x, 2) + math.pow(fractal.y, 2)) * st.zoom
+	local ang = math.atan2(fractal.y, fractal.x)
+	local theta = math.rad(st.rz)
+	local x = st.x + (r * math.cos(ang + theta))
+	local y = st.y + (r * math.sin(ang + theta))
+	
+	return {x = x, y = y, zoom = zoom, rz = st.rz + fractal.rz}
+end
+
+local function Attempt(fractals, parent, remain)
+	
+	if (remain <= 0) then
+		return
+	end
+	
+	for k,v in pairs(fractals) do
+		local st = CheckStart(SetParent(v, parent))
+		
+		obj.draw(st.x, st.y, 0, st.zoom, 1, 0, 0, st.rz)
+		
+		local newfractals = {}
+		for _,v2 in pairs(fractals) do
+			table.insert(newfractals, SetParent(v2, v))
+		end
+		
+		Attempt(newfractals, v, remain-1)
+	end
+	
+end
+
+Attempt(na_fractal, nil, obj.track0)
+
+na_fractal = {}

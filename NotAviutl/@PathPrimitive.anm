@@ -25,3 +25,52 @@ end
 if (obj.check0) then table.insert(upath.paths, upath.paths[1]) end
 
 table.insert(pathutl.paths, upath)
+
+@[Path][Primitive] Random Type1
+--track0:Count,0,9999,4,1
+--track1:AngleSnap,0,360,90,0.1
+--track2:Length,0,9999,800,0.1
+--track3:Seed,-9999,9999,1,1
+--dialog:MinimumSpace,minspace=30;Range,range=1080;MaxLength,maxlength=300;MaxAngle,maxangle=360;DisarrowStraight/chk,disback=0;
+--check0:ClosePath
+
+if (pathutl == nil) then return end
+
+for i=1,obj.track0 do
+	local lengthleft = obj.track2
+	local upath = {paths = {}, color1 = nil, color2 = nil}
+	local rad = math.rad(rand(0, 360, obj.track3, i))
+	local x,y = math.cos(rad) * range, math.sin(rad) * range
+	table.insert(upath.paths, {x = x, y = y})
+	
+	local l = 1
+	local prevdeg = 0
+	while (lengthleft > 0) do
+		local deg = rand(0, maxangle, obj.track3, ((l*2)*i)) + prevdeg
+		local dist = rand(minspace + 10, math.min(maxlength, lengthleft), obj.track3, ((l*2)*i)+1)
+		lengthleft = lengthleft - dist
+		
+		deg = math.floor((deg / obj.track1) + 0.5) * obj.track1
+		if (l > 1 and disback == 1 and ((deg - prevdeg) == 0 or (deg - prevdeg) == 180)) then
+			deg = deg + obj.track1
+		end
+		rad = math.rad(deg)
+		
+		x = math.cos(rad) * dist + x
+		y = math.sin(rad) * dist + y
+		
+		table.insert(upath.paths, {x = x, y = y})
+		
+		l = l + 1
+		
+		prevdeg = deg
+	end
+	
+	if (obj.check0) then
+		
+		
+		table.insert(upath.paths, upath.paths[1])
+	end
+	
+	table.insert(pathutl.paths, upath)
+end

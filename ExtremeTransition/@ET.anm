@@ -200,12 +200,27 @@ et.FlatShadow(obj, gexit, gt, gd, ggd, {
 	color = color,
 })
 
+@Colorlize
+--dialog:[Global]Exit/chk,gexit=0;[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Start Hue,sx=0;Start Sat,sy=0;Start Val,sz=0;End Hue,ex=0;End Sat,ey=0;End Val,ez=0;
+
+local et = require("et")
+et.Colorlize(obj, gexit, gt, gd, ggd, {
+    hue1 = sx,
+    sat1 = sy,
+    val1 = sz,
+    hue2 = ex,
+    sat2 = ey,
+    val2 = ez,
+    eas = eas,
+})
 
 @ValueChange
 --track0:ID,0,9999,0,1
 --track1:StartValue,-99999,99999,0,0.1
 --track2:EndValue,-99999,99999,0,0.1
 --dialog:[Global]Exit/chk,gexit=0;[Global]Delay,gd=1;[Global]Time,gt=10;[Global]GlobalDelay,ggd=0;Easing,eas=-1;Color/col,color=0xffffff;CenterTo/chk,dontadjust=0;
+
+if (varutl == nil) then varutl = {} end
 
 local et = require("et")
 varutl[tostring(obj.track0)] = et.easing(eas, obj, gexit, gt, gd, obj.track1, obj.track2, ggd)

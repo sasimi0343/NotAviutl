@@ -111,6 +111,7 @@ obj.effect("Šg‘å—¦", "X", ((rate * ((obj.track0 / 100) - 1)) + 1) * 100, "Y", ((
 
 @[Objects][Basic] Alpha
 --track0:“§–¾“x,0,100,0,0.1
+--check0:Set
 
 if (na_obj_selection[tostring(obj.index)] == nil) then
 	return
@@ -118,4 +119,8 @@ end
 
 local rate = na_obj_selection[tostring(obj.index)]
 
-obj.alpha = (1-(rate * obj.track0 / 100)) * obj.alpha
+if (obj.check0) then
+	obj.alpha = (1-(rate * obj.track0 / 100))
+else
+	obj.alpha = (1-(rate * obj.track0 / 100)) * obj.alpha
+end

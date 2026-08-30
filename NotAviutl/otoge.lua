@@ -5,10 +5,14 @@ if (na_otogedata_cache == nil) then
 	na_otogedata_cache = {}
 end
 
-function readOtoge(file, bpm, measure)
-	if (not (na_otogedata_cache[file] == nil)) then
-		na_currentotogedata = na_otogedata_cache[file]
-		return na_otogedata_cache[file]
+function readOtoge(file, bpm, measure, reload)
+	local keyfilename = string.gsub(file, "\\", "_")
+	if (reload) then
+		na_otogedata_cache[keyfilename] = nil
+	end
+	if (not (na_otogedata_cache[keyfilename] == nil)) then
+		na_currentotogedata = na_otogedata_cache[keyfilename]
+		return na_otogedata_cache[keyfilename]
 	end
 	local fh = io.open(file)
 	if (not (fh == nil)) then
@@ -47,11 +51,12 @@ function readOtoge(file, bpm, measure)
 				end
 				currentmeasure = {}
 				measureindex = measureindex + 1
+			elseif (char == "\n") then
 			else
 				table.insert(currentmeasure, 0)
 			end
 		end
-		na_otogedata_cache[file] = otogedata
+		na_otogedata_cache[keyfilename] = otogedata
 		na_currentotogedata = otogedata
 		return otogedata
 	end

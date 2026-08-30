@@ -74,3 +74,84 @@ for i=1,obj.track0 do
 	
 	table.insert(pathutl.paths, upath)
 end
+
+@[Path][Primitive] Random Type2
+--track0:Count,0,9999,4,1
+--track1:Frequency,0,9999,100,0.1
+--track2:Length,0,9999,800,1
+--track3:Seed,-9999,9999,1,1
+--dialog:Range,range=1080;MinFreq,minfreq=1;MaxFreq,maxfreq=5;Radius,radius=500;
+--check0:ClosePath
+
+if (pathutl == nil) then return end
+
+for i=1,obj.track0 do
+	local upath = {paths = {}, color1 = nil, color2 = nil}
+	local rad = math.rad(rand(0, 360, obj.track3, i))
+	local x,y = math.cos(rad) * range, math.sin(rad) * range
+	--table.insert(upath.paths, {x = x, y = y})
+	
+	local remains = obj.track2
+	
+	local timeX = 0
+	local timeY = 0
+	
+	local prevX = 0
+	local prevY = 0
+	
+	local lenX = 0
+	local lenY = 0
+	
+	local gridX = 1
+	local gridY = 1
+	
+	while (remains > 0) do
+		
+		local ox,oy = 0,0
+		
+		if (timeX/lenX <= 1) then
+			timeX = timeX + ((obj.track1/1000)/lenX)
+		else
+			prevX = lenX
+			lenX = rand(minfreq * 100, maxfreq * 100, gridX, 1 + i + obj.track3) / 100
+			gridX = gridX + 1
+			timeX = 0
+		end
+		
+		if (timeY/lenY <= 1) then
+			timeY = timeY + ((obj.track1/1000)/lenY)
+		else
+			prevY = lenY
+			lenY = rand(minfreq * 100, maxfreq * 100, gridY, 2 + i + obj.track3) / 100
+			gridY = gridY + 1
+			timeY = 0
+		end
+		
+		local pX,pY = 0,0
+		
+		pX = math.cos(math.rad((timeX / prevX) * 360)) * radius
+		pY = math.cos(math.rad((timeY / prevY) * 360)) * radius
+		
+		ox = math.cos(math.rad((timeX / lenX) * 360)) * radius
+		oy = math.cos(math.rad((timeY / lenY) * 360)) * radius
+		
+		if (not (prevX == 0)) then
+			ox = pX + ((ox - pX) * (timeX / lenX))
+		end
+		if (not (prevY == 0)) then
+			oy = pY + ((oy - pY) * (timeY / lenY))
+		end
+		
+		table.insert(upath.paths, {x = x + ox, y = y + oy})
+		
+		remains = remains - 1
+	end
+	
+	if (obj.check0) then
+		
+		
+		table.insert(upath.paths, upath.paths[1])
+	end
+	
+	table.insert(pathutl.paths, upath)
+end

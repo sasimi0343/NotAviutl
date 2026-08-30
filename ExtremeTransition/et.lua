@@ -547,6 +547,49 @@ local function Rotate(obj, disappear, time, delay, gld, data)
 end
 
 
+local function Colorlize(obj, disappear, time, delay, gld, data)
+	if (isValid(data)) then
+		if (timeIn(obj, disappear, time, delay, gld)) then
+			--local t = timeCalc(obj, disappear, time, delay, gld)
+
+			local hue1 = 0
+			local sat1 = 0
+			local val1 = 0
+			local hue2 = 0
+			local sat2 = 0
+			local val2 = 0
+			local eas = -1
+
+			if (isValid(data.hue1)) then
+				hue1 = data.hue1
+			end
+			if (isValid(data.sat1)) then
+				sat1 = data.sat1
+			end
+			if (isValid(data.val1)) then
+				val1 = data.val1
+			end
+			if (isValid(data.hue2)) then
+				hue2 = data.hue2
+			end
+			if (isValid(data.sat2)) then
+				sat2 = data.sat2
+			end
+			if (isValid(data.val2)) then
+				val2 = data.val2
+			end
+			if (isValid(data.eas)) then
+				eas = data.eas
+			end
+			
+			local hue = easing(eas, obj, disappear, time, delay, hue1, hue2, gld)
+			local sat = easing(eas, obj, disappear, time, delay, sat1, sat2, gld)
+			local val = easing(eas, obj, disappear, time, delay, val1, val2, gld)
+			
+			obj.effect("íPêFâª", "color", HSV(hue, sat, val), "ãPìxÇï€éùÇ∑ÇÈ", 0)
+		end
+	end
+end
 
 local function FanClipping(obj, disappear, time, delay, gld, data)
 	if (isValid(data)) then
@@ -753,5 +796,6 @@ return {
 	SquareClip = SquareClip,
 	Mozaic = Mozaic,
 	FlatShadow = FlatShadow,
+	Colorlize = Colorlize,
 	easing = easing,
 }

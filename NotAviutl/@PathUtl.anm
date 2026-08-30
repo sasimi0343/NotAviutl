@@ -1028,13 +1028,38 @@ pathutl.paths = paths
 --track0:TargetID,0,9999,0,1
 --track1:X,-9999,9999,0,0.1
 --track2:Y,-9999,9999,0,0.1
+--dialog:Connect/chk,connect=1;ZeroAlphaExclude/chk,zeroalphaexclude=1;
 
 if (pathutl_savedpath == nil) then
 	pathutl_savedpath = {}
 end
 
-local upath = {paths = {{x = obj.track1 + obj.ox - obj.cx + obj.getvalue("x"), y = obj.track2 + obj.oy - obj.cy + obj.getvalue("y")}}, color1 = nil, color2 = nil}
-pathutl_savedpath[tostring(obj.track0)] = {upath}
+if (pathutl_cache == nil) then
+	pathutl_cache = {}
+end
+
+local connect = (connect == 1)
+
+if (connect) then
+	if (obj.index == 0) then
+		pathutl_cache = {paths = {}, color1 = nil, color2 = nil}
+	end
+	if ((zeroalphaexclude == 0) or (obj.alpha > 0)) then
+		local point = {x = obj.track1 + obj.ox - obj.cx + obj.getvalue("x"), y = obj.track2 + obj.oy - obj.cy + obj.getvalue("y")}
+		table.insert(pathutl_cache.paths, point)
+	end
+	if (obj.index == obj.num-1) then
+		pathutl_savedpath[tostring(obj.track0)] = {pathutl_cache}
+	end
+else
+	if (obj.index == 0) then
+		pathutl_savedpath[tostring(obj.track0)] = {}
+	end
+	if ((zeroalphaexclude == 0) or (obj.alpha > 0)) then
+		local upath = {paths = {{x = obj.track1 + obj.ox - obj.cx + obj.getvalue("x"), y = obj.track2 + obj.oy - obj.cy + obj.getvalue("y")}}, color1 = nil, color2 = nil}
+		table.insert(pathutl_savedpath[tostring(obj.track0)], upath)
+	end
+end
 
 @[Path] TrackObjects
 --track0:ID,0,9999,0,1
@@ -1152,6 +1177,88 @@ for k,v in pairs(pathutl.paths) do
 	pathutl.paths[k] = path
 end
 
+
+@[Path] RandomPlace (along Path)
+--track0:ID,0,9999,0,1
+--track1:Index,0,9999,1,1
+--track2:Density,0,9999,100,0.1
+--track3:Position,0,100,0,0.1
+--dialog:ConstantRotation/chk,constrot=0;CalculateMethod,method=0;Width,linewidth=30;InterpolateRotation,introt=0;Proportional/chk,prop=0;Random Rotation,rrz=10;Position Rotation,prz=10;Range,range=10;
+
+if (pathutl_savedpath == nil) then return end
+local pa = pathutl_savedpath[tostring(obj.track0)]
+if (pa == nil) then return end
+if (pa[obj.track1+1] == nil) then return end
+if (prop == nil) then prop = 0 end
+
+for l=0,math.floor(obj.track2) do
+	local pat = pa[obj.track1+1]
+	local rate = ((obj.track3 / 100) - (l / obj.track2))%1
+
+	local index_start, per_start = math.modf(rate * (#pat.paths-1))
+	if (prop == 1) then
+		index_start, per_start = require("pathutl").CalcProportional(pat, rate)
+	end
+	local i = 0
+	local ox,oy = 0,0
+	local tan = 0
+	for _,v2 in pairs(pat.paths) do
+		if (index_start == i) then
+			local nex = pat.paths[i+2]
+			if (not (nex == nil)) then
+				if (method > 0) then
+					local t = math.atan2(nex.y - v2.y, nex.x - v2.x)
+					local sin,cos = math.sin(t),math.cos(t)
+					ox = ((nex.x - v2.x + (cos * linewidth)) * per_start) + v2.x
+					oy = ((nex.y - v2.y + (sin * linewidth)) * per_start) + v2.y
+				else
+					ox = ((nex.x - v2.x) * per_start) + v2.x
+					oy = ((nex.y - v2.y) * per_start) + v2.y
+				end
+				if (constrot == 0) then
+					tan = math.deg(math.atan2(nex.y - v2.y, nex.x - v2.x))
+					if (introt > 0) then
+						if (per_start > (1-(introt / 100)) and (not (pat.paths[i+3] == nil))) then
+							local paa = (per_start - (1-(introt / 100))) / (introt / 100)
+							local nexttan = math.deg(math.atan2(pat.paths[i+3].y - nex.y, pat.paths[i+3].x - nex.x))
+							if (tan > 90 and nexttan < -90) then
+								nexttan = nexttan + 360
+							elseif (tan < -90 and nexttan > 90) then
+								nexttan = nexttan - 360
+							end
+							tan = ((nexttan - tan) * paa / 2) + tan
+						elseif (per_start < (introt / 100) and (not (pat.paths[i] == nil))) then
+							local paa = ((introt / 100) - per_start) / (introt / 100)
+							local prevtan = math.deg(math.atan2(v2.y - pat.paths[i].y, v2.x - pat.paths[i].x))
+							if (tan > 90 and prevtan < -90) then
+								prevtan = prevtan + 360
+							elseif (tan < -90 and prevtan > 90) then
+								prevtan = prevtan - 360
+							end
+							tan = ((prevtan - tan) * paa / 2) + tan
+						end
+					end
+				end
+			else
+				ox = v2.x
+				oy = v2.y
+			end
+			break
+		end
+		i = i + 1
+	end
+	
+	tan = tan + rand(-rrz, rrz, 1, l) + (prz * rate)
+	
+	local theta = math.rad(rand(-180, 180, 1, l))
+	
+	ox = ox + (range * math.cos(theta))
+	oy = oy + (range * math.sin(theta))
+	
+	obj.draw(ox, oy, 0, 1, 1, 0, 0, tan)
+	
+end
+
 @[Pen->Path]
 --track0:Speed,0,9999,0,0.1
 --file:
@@ -1248,14 +1355,16 @@ drawdata = nil
 --track0:Size,0,9999,10,1
 --track1:Border,0,9999,4000,1
 --track2:Alpha,0,100,100,0.1
---dialog:Selection,selection=nil;Figure/fig,figure=nil;Color/col,color=0xffffff;
+--dialog:Selection,selection=nil;Figure/fig,figure="";Color/col,color=0xffffff;Blendmode,blendmode=0;DrawCondition,condition=0;
 
 table.insert(pathutl.drawpoint, {
 	size = obj.track0,
 	border = obj.track1,
 	figure = figure,
 	color = color,
-	alpha = obj.track2
+	alpha = obj.track2,
+	blendmode = blendmode,
+	condition = condition
 })
 
 @[Path] ClosePath
@@ -1296,14 +1405,20 @@ if (not (color == nil or color == "")) then
 	obj.effect("íPêFâª", "color", color, "ãPìxÇï€éùÇ∑ÇÈ", 0)
 end
 
+local figuremaxsize = 0
+
+for k,v in pairs(pathutl.drawpoint) do
+	figuremaxsize = math.max(figuremaxsize, v.size/2)
+end
+
 local maxx,maxy,minx,miny = 0,0,0,0
 
 for k,v in pairs(pathutl.paths) do
 	for _,v2 in pairs(v.paths) do
-		maxx = math.max(maxx, v2.x)
-		maxy = math.max(maxy, v2.y)
-		minx = math.min(minx, v2.x)
-		miny = math.min(miny, v2.y)
+		maxx = math.max(maxx, v2.x + figuremaxsize)
+		maxy = math.max(maxy, v2.y + figuremaxsize)
+		minx = math.min(minx, v2.x - figuremaxsize)
+		miny = math.min(miny, v2.y - figuremaxsize)
 	end
 end
 
@@ -1550,6 +1665,13 @@ for k,v in pairs(pathutl.paths) do
 end
 
 for _,points in pairs(pathutl.drawpoint) do
+	
+	if (points.blendmode == 1) then
+		obj.setoption("blend", "alpha_sub", "force")
+	else
+		obj.setoption("blend", 0, "force")
+	end
+	
 	for k,v in pairs(pathutl.paths) do
 		local i = 1
 		
@@ -1588,5 +1710,6 @@ end
 
 obj.setoption("drawtarget", "framebuffer")
 obj.load("tempbuffer")
+obj.setoption("blend", 0)
 
 obj.ox, obj.oy, obj.oz, obj.rx, obj.ry, obj.rz, obj.zoom, obj.alpha, obj.aspect, obj.cx, obj.cy, obj.cz = ox,oy,oz,rx,ry,rz,zoom,alpha,aspect,cx,cy,cz

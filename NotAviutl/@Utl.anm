@@ -133,6 +133,121 @@ local zoom = obj.zoom * obj.getvalue("zoom") / 100
 
 obj.effect("クリッピング", "上", top * obj.h / zoom, "下", bottom * obj.h / zoom, "左", left * obj.w / zoom, "右", right * obj.w / zoom)
 
+@[Utility] AbsoluteClipping
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Width,0,9999,100,0.1
+--track3:Height,0,9999,100,0.1
+--check0:Center
+
+local top = (obj.h/2) - (obj.track3/2) + obj.track1
+local bottom = (obj.h/2) - (obj.track3/2) - obj.track1
+local left = (obj.w/2) - (obj.track2/2) + obj.track0
+local right = (obj.w/2) - (obj.track2/2) - obj.track0
+
+local zoom = obj.zoom * obj.getvalue("zoom") / 100
+local check0 = 0
+if (obj.check0) then
+	check0 = 1
+end
+
+obj.effect("クリッピング", "上", top / zoom, "下", bottom / zoom, "左", left / zoom, "右", right / zoom, "中心の位置を変更", check0)
+
+@[Utility] Place
+--track0:X,-9999,9999,0,0.1
+--track1:Y,-9999,9999,0,0.1
+--track2:Z,-9999,9999,0,0.1
+--track3:Zoom,0,9999,100,0.01
+--dialog:Count,count=4;Alpha,alpha=1;ResetPosition/chk,resetpos=0;
+
+if (resetpos == 1) then
+	obj.ox = 0
+	obj.oy = 0
+	obj.oz = 0
+	obj.zoom = 1
+end
+
+local rate = obj.index / (obj.num-1)
+
+obj.ox = obj.ox + (rate * obj.track0)
+obj.oy = obj.oy + (rate * obj.track1)
+obj.oz = obj.oz + (rate * obj.track2)
+obj.zoom = obj.zoom + (((obj.track3/100) - obj.zoom) * rate)
+obj.alpha = obj.alpha + ((alpha - obj.alpha) * rate)
+
+@[Utility] Align/Origin
+--track0:alignX,0,100,50,0.1
+--track1:alignY,0,100,50,0.1
+--track2:originX,0,100,50,0.1
+--track3:originY,0,100,50,0.1
+--check0:ChangeCenter
+
+obj.ox = obj.ox + ((0.5-(obj.track0 / 100)) * obj.screen_w)
+obj.oy = obj.oy + ((0.5-(obj.track1 / 100)) * obj.screen_h)
+
+if (obj.check0) then
+	obj.cx = obj.cx + ((0.5-(obj.track2 / 100)) * obj.w)
+	obj.cy = obj.cy + ((0.5-(obj.track3 / 100)) * obj.h)
+else
+	obj.ox = obj.ox + ((0.5-(obj.track2 / 100)) * obj.w)
+	obj.oy = obj.oy + ((0.5-(obj.track3 / 100)) * obj.h)
+end
+
+@[Utility] Audio_Timing_Video
+--track0:AudioTime,-100,9999,0,0.1
+--track1:VideoTime,1,99999,1,1
+--track2:AutoHide,0,9999,0,1
+--file:
+
+if (na_currentotogedata == nil) then
+	return
+end
+
+if (varutl == nil) then
+	varutl = {}
+end
+
+local tim = obj.time + obj.track0
+local otogedata = na_currentotogedata
+local thevalue = obj.track1
+local prevnote = nil
+for k,v in pairs(otogedata.notes) do
+	if (v.timing <= tim) then
+		thevalue = (math.max(tim - v.timing, 0) * obj.framerate)
+	end
+end
+
+if ((obj.track2 > 0) and (thevalue >= obj.track2)) then
+	return
+end
+
+obj.load("movie", file, (obj.track1 + thevalue)/obj.framerate)
+
+@[Utility] Audio_Timing_Flip
+--track0:AudioTime,-100,9999,0,0.1
+--check0:Flipped
+
+if (na_currentotogedata == nil) then
+	return
+end
+
+if (varutl == nil) then
+	varutl = {}
+end
+
+local tim = obj.time + obj.track0
+local otogedata = na_currentotogedata
+local thevalue = obj.check0
+for k,v in pairs(otogedata.notes) do
+	if (v.timing <= tim) then
+		thevalue = not thevalue
+	end
+end
+
+if (thevalue) then
+	obj.effect("反転", "左右反転", 1)
+end
+
 @[Utility] LuaLoad
 --file:
 

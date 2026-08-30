@@ -222,3 +222,85 @@ if (obj.check0) then
 end
 
 rikky_module.reloadbuffer(frame, absolute, false, {}, false)
+
+
+@[Screen] DataMoshLike
+--track0:Threshold,1,255,4,1
+
+if (rikky_module == nil) then require("rikky_module") end
+
+obj.load("framebuffer")
+
+if (obj.frame == 0) then
+	rikky_module.image("w", "na_datamosh_original")
+	rikky_module.image("w", "na_datamosh_2")
+	return
+end
+
+obj.setoption("drawtarget", "tempbuffer", obj.w, obj.h)
+
+rikky_module.image("w", "na_datamosh_1")
+
+rikky_module.image("r", "na_datamosh_2")
+
+obj.draw()
+
+obj.load("framebuffer")
+
+rikky_module.image("w", "na_datamosh_2")
+
+obj.load("figure", "éläpå`", 1, 0xfffff)
+
+rikky_module.image("r", "na_datamosh_1")
+
+obj.setoption("blend", 12)
+
+obj.draw()
+
+obj.setoption("blend", 0)
+
+obj.setoption("drawtarget", "framebuffer")
+
+obj.load("tempbuffer")
+
+local pfunc = function(r, g, b, a, x, y)
+	if (r < obj.track0 and g < obj.track0 and b < obj.track0) then
+		return 0,0,0,a
+	end
+	r = 255
+	g = 255
+	b = 255
+	return r,g,b,a
+end
+
+rikky_module.pixelfunction(pfunc)
+
+rikky_module.image("w", "na_datamosh_1")
+
+--[[local pfunction = function(objr, objg, objb, obja, argr, argg, argb, arga, x, y)
+	local r, g, b, a = objr, objg, objb, obja
+	--print(tostring(r) .. ", " .. tostring(g) .. ", " .. tostring(b) .. ", " .. tostring(a))
+	local same = (r == argr and g == argg and b == argb and a == arga)
+	if ((not same) and obj.track0 > 0) then
+		local s_r = ((r >= argr - obj.track0) and (r <= argr + obj.track0))
+		local s_g = ((g >= argg - obj.track0) and (g <= argg + obj.track0))
+		local s_b = ((b >= argb - obj.track0) and (b <= argb + obj.track0))
+		same = (s_r and s_g and s_b)
+	end
+	if ((reverse == 0 and same) or (reverse == 1 and (not same))) then
+		if (alphagain == 1) then
+			a = 255
+		end
+		return r, g, b, a
+	end
+	if (obj.check0) then a = 0 else a = 255 end
+	return 0, 0, 0, a
+end
+local imgdata, w, h = rikky_module.image("i", "na_datamosh_1")
+local _, w2, h2 = rikky_module.image("i", "na_datamosh_2")
+
+if (w2 == w and h2 == h) then rikky_module.pixelfunction(pfunction, imgdata) end
+
+	rikky_module.image("w", "na_datamosh_1")
+	
+	]]
